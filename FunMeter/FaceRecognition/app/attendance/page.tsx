@@ -1,0 +1,556 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import { useWs } from "@/components/providers/WsProvider";
+import { toast } from "@/lib/toast";
+import { request } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { fmtAttendanceWIB } from "@/lib/format";
+import * as Cam from "@/lib/cameraManager";
+
+
+interface AttendanceRecord {
+  label: string;
+  person_id?: string;
+  ts: string;
+  score: number;
+}
+
+//
+
+export default function AttendancePage() {
+  const { t } = useI18n();
+  const { useSetting } = useSettings();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const DPRRef = useRef(1);
+  const snapCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sendHeightRef = useRef(0);
+  const isMountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [lastResults, setLastResults] = useState<any[]>([]);
+  const [sending, setSending] = useState(false);
+  
+  const [cameraActive, setCameraActive] = useState(false);
+  // simplified state for this page (no realtime results shown)
+  const [logItems, setLogItems] = useState<AttendanceRecord[]>([]);
+  const [logMeta, setLogMeta] = useState({
+    page: 1,
+    total_pages: 1,
+    per_page: 25,
+    total: 0,
+    has_prev: false,
+    has_next: false,
+  });
+  const [perPage, setPerPage] = useState<number>(10);
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
+
+  // Settings
+  type SettingBinding = { model: number; setModel: (v: number) => void };
+  const baseInterval = useSetting("baseInterval", { clamp: { max: 5000, round: true } }) as unknown as SettingBinding;
+  const { model: attSendWidth } = useSetting("attendance.sendWidth", { clamp: { min: 160, max: 1920, round: true } });
+  const { model: jpegQuality } = useSetting("attendance.jpegQuality", { clamp: { min: 0, max: 1 } });
+  // other settings omitted in this compact view
+
+  // WebSocket for attendance
+  const socket = useWs({
+    url: "",
+    root: true,
+    on: {
+      att_result(data: any) {
+        const results = Array.isArray(data?.results) ? data.results : [];
+        setLastResults(results);
+        draw(results);
+      },
+    },
+  });
+
+  // Camera functions
+  const startCamera = async () => {
+    if (!videoRef.current) return;
+    try {
+      await Cam.attach(videoRef.current);
+      setCameraActive(true);
+      fitCanvasToVideo();
+    } catch {
+      toast.error(t("attendance.toast.cameraError", "Gagal mengakses kamera"));
+    }
+  };
+
+  const stopCamera = () => {
+    Cam.detach(videoRef.current);
+    setCameraActive(Cam.isActive());
+    // Clear canvas and reset results
+    const overlay = overlayRef.current;
+    const ctx = ctxRef.current;
+    if (overlay && ctx) {
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+    setLastResults([]);
+  };
+
+  // Helpers for drawing and sending (inside component)
+  const fitCanvasToVideo = () => {
+    const overlay = overlayRef.current;
+    const host = videoRef.current;
+    if (!overlay || !host) return;
+    const rect = host.getBoundingClientRect();
+    const DPR = window.devicePixelRatio || 1;
+    DPRRef.current = DPR;
+    overlay.width = Math.round(rect.width * DPR);
+    overlay.height = Math.round(rect.height * DPR);
+    overlay.style.width = rect.width + "px";
+    overlay.style.height = rect.height + "px";
+    const ctx = ctxRef.current;
+    if (ctx) {
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+  };
+
+  const ensureSnapSize = () => {
+    const v = videoRef.current;
+    if (!v) return false;
+    const vw = v.videoWidth, vh = v.videoHeight;
+    if (!vw || !vh) return false;
+    sendHeightRef.current = Math.round((Number(attSendWidth) * vh) / vw);
+    if (!snapCanvasRef.current) snapCanvasRef.current = document.createElement("canvas");
+    snapCanvasRef.current.width = Number(attSendWidth);
+    snapCanvasRef.current.height = sendHeightRef.current;
+    return true;
+  };
+
+  const toBytes = async () => {
+    if (!snapCanvasRef.current) return null;
+    const canvas = snapCanvasRef.current;
+    const preferWebP = !!document.createElement("canvas").toDataURL("image/webp").match("data:image/webp");
+    const type = preferWebP ? "image/webp" : "image/jpeg";
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, type, Number(jpegQuality)));
+    if (!blob) return null;
+    return new Uint8Array(await blob.arrayBuffer());
+  };
+
+  const pushAttFrame = async () => {
+    if (!socket || !socket.socket?.connected || sending || !ensureSnapSize() || !isMountedRef.current) return;
+    setSending(true);
+    try {
+      const snapCanvas = snapCanvasRef.current;
+      const video = videoRef.current;
+      if (!snapCanvas || !video || !isMountedRef.current) return;
+      const sctx = snapCanvas.getContext("2d");
+      if (!sctx) return;
+      sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+      const bytes = await toBytes();
+      if (bytes && socket && isMountedRef.current) {
+        socket.emit("att_frame", bytes);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setSending(false);
+      }
+    }
+  };
+
+  const getLetterboxTransform = () => {
+    const overlay = overlayRef.current;
+    const host = overlay?.parentElement || videoRef.current;
+    if (!overlay || !host || !snapCanvasRef.current) return { sx: 1, sy: 1, ox: 0, oy: 0 };
+    
+    const rect = host.getBoundingClientRect();
+    const dispW = rect.width;
+    const dispH = rect.height;
+    
+    // Account for DPR since canvas uses DPR scaling
+    const DPR = DPRRef.current;
+    const canvasW = overlay.width / DPR;
+    const canvasH = overlay.height / DPR;
+    
+    // Bounding box dari server menggunakan koordinat snapCanvas
+    const snapW = snapCanvasRef.current.width; // attSendWidth
+    const snapH = snapCanvasRef.current.height; // sendHeightRef.current
+    
+    // Calculate letterbox offset for object-contain behavior
+    const video = videoRef.current;
+    if (!video) {
+      // Fallback: simple scale without letterbox
+      return { sx: canvasW / snapW, sy: canvasH / snapH, ox: 0, oy: 0 };
+    }
+    
+    const vw = video.videoWidth || 1;
+    const vh = video.videoHeight || 1;
+    const videoAspect = vw / vh;
+    const displayAspect = dispW / dispH;
+    
+    // Calculate how video is displayed in container (object-contain scaling)
+    let videoDisplayW = 0, videoDisplayH = 0;
+    if (videoAspect > displayAspect) {
+      // Video is wider - fit to width, letterbox on top/bottom
+      videoDisplayW = dispW;
+      videoDisplayH = dispW / videoAspect;
+    } else {
+      // Video is taller - fit to height, letterbox on left/right
+      videoDisplayH = dispH;
+      videoDisplayW = dispH * videoAspect;
+    }
+    
+    // Letterbox offset in canvas coordinates
+    const ox = ((canvasW - videoDisplayW) / 2);
+    const oy = ((canvasH - videoDisplayH) / 2);
+    
+    // Scale from snapCanvas to video display area (not full container)
+    const sx = videoDisplayW / snapW;
+    const sy = videoDisplayH / snapH;
+    
+    return { sx, sy, ox, oy };
+  };
+
+  const draw = (results: any[]) => {
+    const overlay = overlayRef.current;
+    const ctx = ctxRef.current;
+    if (!overlay || !ctx) return;
+    
+    // Always clear canvas first
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+    
+    // Only draw if camera is active and there are results
+    if (!cameraActive || !results || results.length === 0) {
+      return;
+    }
+    
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const { sx, sy, ox, oy } = getLetterboxTransform();
+    
+    results.forEach((r: any) => {
+      const [bx, by, bw, bh] = r.bbox || r.box || [0, 0, 0, 0];
+      
+      // Transform bounding box coordinates with letterbox offset
+      const x = ox + bx * sx;
+      const y = oy + by * sy;
+      const w = bw * sx;
+      const h = bh * sy;
+      
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, w, h);
+      const label = r.label || r.name || t("attendance.labels.unknown", "Unknown");
+      ctx.font = "bold 12px sans-serif";
+      const pad = 4;
+      const textW = ctx.measureText(label).width;
+      ctx.fillStyle = "rgba(2,6,23,0.88)";
+      ctx.fillRect(x, y - 20, textW + pad * 2, 18);
+      ctx.fillStyle = "#e5e7eb";
+      ctx.fillText(label, x + pad, y - 6);
+    });
+  };
+
+  // Clear canvas when camera becomes inactive
+  useEffect(() => {
+    if (!cameraActive) {
+      const overlay = overlayRef.current;
+      const ctx = ctxRef.current;
+      if (overlay && ctx) {
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+      }
+      setLastResults([]);
+    }
+  }, [cameraActive]);
+
+  // Send frames periodically
+  useEffect(() => {
+    if (!cameraActive || !isMountedRef.current) return;
+    const id = setInterval(() => {
+      if (isMountedRef.current && cameraActive) {
+        void pushAttFrame();
+      }
+    }, Number(baseInterval.model ?? 500));
+    return () => clearInterval(id);
+  }, [cameraActive, baseInterval.model]);
+
+  // Fetch attendance log
+  type LogResponse = { items: AttendanceRecord[]; meta: typeof logMeta };
+  const refreshLog = React.useCallback(async (page = 1) => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new AbortController
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
+    try {
+      const response = await request<LogResponse>(`/attendance-log?page=${page}&per_page=${perPage}&order=${order}`, {
+        signal: abortController.signal,
+      });
+      
+      // Check if component is still mounted and request wasn't aborted
+      if (!isMountedRef.current || abortController.signal.aborted) return;
+      
+      setLogItems(response.items || []);
+      const meta = response.meta || logMeta;
+      const total = Number(meta.total ?? 0);
+      const totalPages = Math.max(1, Number(meta.total_pages ?? (total > 0 ? Math.ceil(total / perPage) : 1)));
+      const pageSafe = Math.max(1, Math.min(Number(meta.page ?? page), totalPages));
+      const computed = {
+        ...meta,
+        page: pageSafe,
+        per_page: perPage,
+        total_pages: totalPages,
+        total: total,
+        has_prev: pageSafe > 1,
+        has_next: pageSafe < totalPages,
+      };
+      setLogMeta(computed);
+    } catch (error: unknown) {
+      // Ignore errors if request was aborted or component unmounted
+      const isAborted = error && typeof error === 'object' && ('name' in error) && error.name === 'AbortError';
+      if (isAborted || abortController.signal.aborted || !isMountedRef.current) {
+        return;
+      }
+      toast.error(t("attendance.toast.fetchError", "Gagal memuat data absensi"));
+    }
+  }, [order, perPage, t]);
+
+  // Load initial data and react to perPage/order changes
+  useEffect(() => {
+    void refreshLog(1);
+  }, [refreshLog, perPage, order]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    // Capture refs at mount time
+    const video = videoRef.current;
+    const overlay = overlayRef.current;
+    
+    // init canvas ctx
+    if (overlay) {
+      ctxRef.current = overlay.getContext("2d");
+      fitCanvasToVideo();
+    }
+    
+    const onResize = () => {
+      if (!isMountedRef.current) return;
+      ensureSnapSize();
+      fitCanvasToVideo();
+      if (lastResults.length) draw(lastResults);
+    };
+    
+    const onVideoLoadedMetadata = () => {
+      if (!isMountedRef.current) return;
+      ensureSnapSize();
+      fitCanvasToVideo();
+      if (lastResults.length) draw(lastResults);
+    };
+    
+    window.addEventListener("resize", onResize);
+    if (video) {
+      video.addEventListener("loadedmetadata", onVideoLoadedMetadata);
+    }
+    
+    return () => {
+      // Mark as unmounted immediately to prevent any state updates
+      isMountedRef.current = false;
+      
+      // Cancel any pending requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      
+      // Clean up event listeners
+      window.removeEventListener("resize", onResize);
+      if (video) {
+        video.removeEventListener("loadedmetadata", onVideoLoadedMetadata);
+      }
+      
+      // Stop camera immediately (non-blocking) - use captured refs
+      const currentCameraActive = cameraActive;
+      if (currentCameraActive && video) {
+        Cam.detach(video);
+        // Use captured overlay ref
+        if (overlay) {
+          const ctx = overlay.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, overlay.width, overlay.height);
+          }
+        }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount/unmount
+
+  //
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Left: Camera card */}
+        <div className="bg-card rounded-lg border p-6 self-start">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("attendance.sections.camera.title", "Kamera")}
+          </p>
+          <h3 className="text-lg font-semibold mb-4">{t("attendance.sections.camera.subtitle", "Streaming absensi")}</h3>
+          <div className="relative rounded-lg border bg-muted/30 overflow-hidden mb-4">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-auto object-contain block"
+            />
+            <canvas
+              ref={overlayRef}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+            />
+          </div>
+
+          <div className="mt-2">
+            <label className="text-sm font-medium block mb-1">{t("attendance.fields.interval", "Interval (ms)")}</label>
+            <input
+              type="number"
+              value={baseInterval.model as number}
+              onChange={(e) => baseInterval.setModel(Number(e.target.value))}
+              className="w-full px-3 py-2 border rounded-md"
+              min="200"
+              max="5000"
+            />
+          </div>
+          <p className="m-4 text-sm text-muted-foreground">
+            {t("attendance.status.waiting", "Tekan mulai untuk mengirim frame ke server attendance.")}
+          </p>
+          <div className="mb-2">
+            <Button
+              onClick={cameraActive ? stopCamera : startCamera}
+              variant={cameraActive ? "outline" : "default"}
+            >
+              {cameraActive
+                ? t("attendance.actions.stopCamera", "Stop Camera")
+                : t("attendance.actions.startCamera", "Start Camera")}
+            </Button>
+          </div>
+        </div>
+
+        {/* Right: Attendance log card */}
+        <div className="bg-card rounded-lg border p-6 self-start">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("attendance.sections.log.title", "Log absensi")}</p>
+              <div className="text-lg font-semibold">{t("attendance.sections.log.subtitle", "Riwayat kedatangan")}</div>
+            </div>
+            <Button 
+              onClick={() => refreshLog()} 
+              size="sm" 
+              variant="outline"
+              className="aspect-square p-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <label className="space-y-1">
+              <span className="text-sm font-medium">{t("attendance.fields.perPage", "Jumlah per halaman")}</span>
+              <select
+                value={perPage}
+                onChange={(e) => { setPerPage(Number(e.target.value)); refreshLog(1); }}
+                className="h-9 w-full rounded-md border px-3 py-1 text-sm"
+              >
+                {[10, 25, 50].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-1">
+              <span className="text-sm font-medium">{t("attendance.fields.order", "Urutan")}</span>
+              <select
+                value={order}
+                onChange={(e) => { const v = e.target.value as "asc" | "desc"; setOrder(v); refreshLog(1); }}
+                className="h-9 w-full rounded-md border px-3 py-1 text-sm"
+              >
+                <option value="desc">{t("attendance.order.desc", "Terbaru")}</option>
+                <option value="asc">{t("attendance.order.asc", "Terlama")}</option>
+              </select>
+            </label>
+          </div>
+          <div className="rounded-lg border p-0 text-sm overflow-x-auto">
+            {logItems.length === 0 ? (
+              <div className="p-6">
+                <p className="text-muted-foreground">{t("attendance.table.empty", "Belum ada data absensi.")}</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left p-3 font-medium w-16">{t("attendance.table.no", "No")}</th>
+                    <th className="text-left p-3 font-medium">{t("attendance.table.name", "Nama")}</th>
+                    <th className="text-left p-3 font-medium">{t("attendance.table.dateTime", "Waktu & tanggal")}</th>
+                    <th className="text-right p-3 font-medium w-24">{t("attendance.table.score", "Skor")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logItems.map((item, idx) => {
+                    const no = (logMeta.page - 1) * perPage + idx + 1;
+                    return (
+                      <tr key={`${item.ts}-${idx}`} className="border-b last:border-0">
+                        <td className="p-3">{no}</td>
+                        <td className="p-3">{item.label || "-"}</td>
+                        <td className="p-3">{fmtAttendanceWIB(item.ts)}</td>
+                        <td className="p-3 text-right font-mono">{(item.score || 0).toFixed(3)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+            <div>
+              {t("attendance.pagination.totalLabel", "Total")} {logMeta.total || 0}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshLog(1)}
+                disabled={logMeta.page <= 1}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshLog(Math.max(1, logMeta.page - 1))}
+                disabled={logMeta.page <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="px-3 py-1 rounded-md bg-gray-100 text-foreground">{logMeta.page}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshLog(Math.min(logMeta.total_pages, logMeta.page + 1))}
+                disabled={logMeta.page >= logMeta.total_pages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshLog(logMeta.total_pages || 1)}
+                disabled={logMeta.page >= logMeta.total_pages}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

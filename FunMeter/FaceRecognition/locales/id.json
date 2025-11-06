@@ -1,0 +1,1449 @@
+{
+  "nav": {
+    "home": "Beranda",
+    "attendanceFunMeter": "Absensi & Fun Meter",
+    "attendance": "Absensi",
+    "funMeter": "Fun Meter",
+    "registerFace": "Registrasi Wajah",
+    "adminRegisterDb": "Daftar Anggota",
+    "adminDashboard": "Dashboard",
+    "adminAttendance": "Data Absensi",
+    "adminAttendanceSummary": "Ringkasan Absensi",
+    "adminSchedule": "Jadwal",
+    "adminUsers": "Manajemen Pengguna",
+    "adminConfig": "Konfigurasi Sistem"
+  },
+  "pages": {
+    "home": {
+      "title": "Pengenalan Wajah"
+    },
+    "attendanceFunMeter": {
+      "title": "Absensi & Fun Meter"
+    },
+    "funMeter": {
+      "title": "Fun Meter"
+    },
+    "registerFace": {
+      "title": "Registrasi Wajah"
+    },
+    "adminRegisterDb": {
+      "title": "Daftar Anggota"
+    },
+    "adminDashboard": {
+      "title": "Dashboard "
+    },
+    "adminAttendance": {
+      "title": "Data Absensi"
+    },
+    "adminAttendanceSummary": {
+      "title": "Ringkasan Absensi"
+    },
+    "adminSchedule": {
+      "title": "Jadwal"
+    },
+    "adminUsers": {
+      "title": "Manajemen Pengguna"
+    },
+    "adminConfig": {
+      "title": "Konfigurasi Sistem"
+    }
+  },
+  "adminAttendanceSummary": {
+    "title": "Attendance Summary",
+    "subtitle": "Insight kehadiran berdasarkan rentang tanggal yang dipilih.",
+    "filters": {
+      "noRange": "Semua tanggal",
+      "quick": {
+        "7d": "7 Hari",
+        "30d": "30 Hari",
+        "90d": "90 Hari",
+        "all": "Semua tanggal"
+      }
+    },
+    "state": {
+      "loading": "Memuat ringkasan absensi...",
+      "empty": "Belum ada data absensi pada rentang ini."
+    },
+    "stats": {
+      "totalDays": "Total Hari",
+      "presentDays": "Hari Hadir",
+      "lateDays": "Hari Terlambat",
+      "uniquePeople": "Anggota Terlibat"
+    },
+    "table": {
+      "title": "Status Kehadiran",
+      "status": "Status",
+      "count": "Jumlah"
+    },
+    "chart": {
+      "title": "Ringkasan Bulanan",
+      "subtitle": "Distribusi status per bulan dalam rentang yang dipilih.",
+      "empty": "Belum ada data bulanan untuk rentang ini.",
+      "weekLabel": "{period}",
+      "series": {
+        "present": "Hadir",
+        "late": "Terlambat",
+        "leftEarly": "Pulang Awal",
+        "off": "Libur"
+      }
+    },
+    "statuses": {
+      "present": "Hadir",
+      "late": "Terlambat",
+      "leftEarly": "Pulang Awal",
+      "lateAndLeftEarly": "Terlambat & Pulang Awal",
+      "off": "Libur"
+    },
+    "leaders": {
+      "lateTitle": "Top Terlambat",
+      "lateSubtitle": "Anggota dengan akumulasi menit terlambat terbanyak.",
+      "presentTitle": "Kehadiran Terbanyak",
+      "presentSubtitle": "Anggota dengan jumlah hari hadir terbanyak.",
+      "member": "Anggota",
+      "days": "Hari",
+      "minutes": "Menit",
+      "events": "Event",
+      "empty": "Tidak ada data terlambat pada rentang ini.",
+      "presentEmpty": "Belum ada data kehadiran pada rentang ini.",
+      "unknown": "Tanpa Nama"
+    }
+  },
+  "adminSchedule": {
+    "header": {
+      "breadcrumb": "Dashboard › Jadwal",
+      "title": "Jadwal",
+      "hasErrors": "Beberapa hari masih memiliki input yang perlu diperbaiki.",
+      "subtitle": "Kelola jam kerja per hari dan toleransinya."
+    },
+    "actions": {
+      "resetDefault": "Atur Ulang ke Bawaan",
+      "resetChanges": "Batalkan Perubahan",
+      "saving": "Menyimpan...",
+      "save": "Simpan Jadwal",
+      "customSchedule": "Jadwal Khusus",
+      "editOverride": "Edit Override",
+      "deleteOverride": "Hapus Override",
+      "deleteLog": "Hapus Log",
+      "copyToAll": "Salin ke hari lain",
+      "applyToWorkdays": "Terapkan ke hari kerja",
+      "applyToWeekend": "Terapkan ke weekend"
+    },
+    "state": {
+      "loadingConfig": "Memuat konfigurasi jadwal…"
+    },
+    "days": {
+      "monday": "Senin",
+      "tuesday": "Selasa",
+      "wednesday": "Rabu",
+      "thursday": "Kamis",
+      "friday": "Jumat",
+      "saturday": "Sabtu",
+      "sunday": "Minggu"
+    },
+    "daysShort": {
+      "monday": "Sen",
+      "tuesday": "Sel",
+      "wednesday": "Rab",
+      "thursday": "Kam",
+      "friday": "Jum",
+      "saturday": "Sab",
+      "sunday": "Min"
+    },
+    "week": {
+      "Senin": "Senin",
+      "Selasa": "Selasa",
+      "Rabu": "Rabu",
+      "Kamis": "Kamis",
+      "Jumat": "Jumat",
+      "Sabtu": "Sabtu",
+      "Minggu": "Minggu"
+    },
+    "badge": {
+      "work": "Hari Kerja",
+      "holiday": "Libur / Nonaktif",
+      "noSchedule": "Tanpa jadwal"
+    },
+    "presets": {
+      "workday": {
+        "label": "Jam Normal",
+        "description": "08:30-17:00, grace 10/5m",
+        "dataLabel": "Jam Kerja Normal",
+        "notes": ""
+      },
+      "halfday": {
+        "label": "Shift Pagi",
+        "description": "08:30-13:00",
+        "dataLabel": "Shift Pagi",
+        "notes": "Shift pagi setengah hari."
+      },
+      "evening": {
+        "label": "Shift Sore",
+        "description": "13:00-21:00",
+        "dataLabel": "Shift Sore",
+        "notes": "Shift sore / closing."
+      },
+      "wfh": {
+        "label": "WFH Fleksibel",
+        "description": "09:00-17:00, grace 30m",
+        "dataLabel": "WFH Fleksibel",
+        "notes": "WFH dengan toleransi keterlambatan 30 menit."
+      },
+      "off": {
+        "label": "Libur / Nonaktif",
+        "description": "Matikan jadwal",
+        "dataLabel": "Hari Libur",
+        "notes": "Tidak ada jam kerja terjadwal."
+      }
+    },
+    "overrides": {
+      "title": "Override Jadwal",
+      "description": "Tambahkan rentang tanggal khusus untuk menimpa jadwal mingguan (misalnya cuti bersama, lembur, atau libur mendadak).",
+      "content-title": "Tambahkan rentang tanggal khusus untuk menimpa jadwal mingguan (misalnya cuti bersama, lembur, atau libur mendadak).",
+      "add": "Tambah Override",
+      "defaultLabel": "Jadwal Khusus",
+      "range": "{start} -> {end}",
+      "timeRange": "{start} - {end}",
+      "offSummary": "Nonaktif / Libur",
+      "graceOff": "0 / 0",
+      "graceRange": "{in} / {out}",
+      "table": {
+        "range": "Rentang Tanggal",
+        "label": "Label",
+        "status": "Status",
+        "time": "Jam",
+        "grace": "Grace (Masuk/Pulang)",
+        "notes": "Catatan",
+        "actions": "Aksi"
+      },
+      "noNotes": "—",
+      "actions": {
+        "edit": "Edit",
+        "duplicate": "Salin",
+        "delete": "Hapus",
+        "save": "Simpan Override"
+      },
+      "loadPeopleError": "Gagal memuat daftar wajah.",
+      "scope": {
+        "all": "Berlaku untuk semua",
+        "individual": "Perorangan"
+      },
+      "people": {
+        "loading": "Memuat daftar wajah..."
+      },
+      "empty": "Belum ada override tanggal khusus.",
+      "modal": {
+        "title": "Override Jadwal",
+        "description": "Tentukan rentang tanggal dan jam kerja yang menimpa jadwal mingguan."
+      },
+      "form": {
+        "active": "Aktif",
+        "singleDay": "Single Day",
+        "pickDate": "Pilih tanggal",
+        "range": "Rentang Tanggal",
+        "label": "Label",
+        "scope": "Penerapan",
+        "scopeHelpAll": "Override berlaku untuk semua anggota.",
+        "scopeHelpIndividual": "Pilih anggota tertentu yang menerima jadwal khusus ini.",
+        "personLabel": "Pilih Anggota",
+        "personPlaceholder": "Cari nama...",
+        "noMatches": "Tidak ada hasil untuk pencarian ini.",
+        "noPeople": "Belum ada data wajah yang dapat dipilih.",
+        "start": "Tanggal Mulai",
+        "end": "Tanggal Akhir",
+        "checkIn": "Check In",
+        "checkOut": "Check Out",
+        "graceIn": "Grace Masuk (menit)",
+        "graceOut": "Grace Pulang (menit)",
+        "notes": "Catatan"
+      }
+    },
+    "sidebar": {
+      "daysTitle": "Hari",
+      "noSchedule": "Tanpa jadwal",
+      "errorCount": "{count} isu"
+    },
+    "detail": {
+      "subtitle": "Atur jam kerja dan kebijakan hari ini."
+    },
+    "copy": {
+      "copyOther": "Salin ke hari lain",
+      "copyWorkdays": "Terapkan ke hari kerja",
+      "copyWeekend": "Terapkan ke weekend",
+      "panelTitle": "Salin {day} ke:",
+      "apply": "Terapkan",
+      "cancel": "Batal"
+    },
+    "common": {
+      "active": "Aktif",
+      "off": "Nonaktif",
+      "holiday": "Libur",
+      "offHoliday": "Nonaktif / Libur",
+      "workingDay": "Hari Kerja",
+      "onLabel": "Hari Masuk",
+      "offLabel": "Hari Libur"
+    },
+    "form": {
+      "label": "Label Jadwal",
+      "notes": "Catatan",
+      "checkIn": "Check In",
+      "checkOut": "Check Out",
+      "graceIn": "Grace Masuk (menit)",
+      "graceOut": "Grace Pulang (menit)",
+      "labelPlaceholder": "Contoh: Jam Kerja Normal",
+      "notesPlaceholder": "Opsional",
+      "defaultGraceIn": "Grace masuk default",
+      "defaultGraceOut": "Grace pulang default"
+    },
+    "defaults": {
+      "weekendLabel": "Hari Libur",
+      "holidayLabel": "Hari Libur",
+      "workdayLabel": "Jam Kerja Normal",
+      "weekendNotes": "Libur akhir pekan"
+    },
+    "errors": {
+      "overrideStartRequired": "Tanggal mulai wajib diisi.",
+      "overrideCheckInFormat": "Jam masuk override harus format HH:MM.",
+      "overrideCheckOutFormat": "Jam pulang override harus format HH:MM.",
+      "overrideCheckOrder": "Jam pulang override harus lebih besar dari jam masuk.",
+      "overrideTargetsRequired": "Pilih minimal satu orang untuk override ini.",
+      "labelRequired": "Label tidak boleh kosong.",
+      "checkInFormat": "Jam masuk harus dalam format HH:MM.",
+      "checkOutFormat": "Jam pulang harus dalam format HH:MM.",
+      "checkOutOrder": "Jam pulang harus lebih besar dari jam masuk.",
+      "checkInInvalid": "Jam masuk tidak valid.",
+      "checkOutInvalid": "Jam pulang tidak valid.",
+      "graceInRange": "Grace masuk harus 0-240 menit.",
+      "graceOutRange": "Grace pulang harus 0-240 menit.",
+      "hasIssues": "Periksa kembali input jadwal yang masih bermasalah."
+    },
+    "error": {
+      "loadConfig": "Gagal memuat konfigurasi jadwal.",
+      "saveConfig": "Gagal menyimpan jadwal.",
+      "loadPeople": "Gagal memuat daftar wajah."
+    },
+    "modals": {
+      "view": { "title": "Lihat Override" },
+      "edit": { "title": "Edit Override" },
+      "deleteOverride": {
+        "title": "Hapus Override?",
+        "body": "Tindakan ini akan menghapus override terpilih. Lanjutkan?"
+      },
+      "deleteLog": {
+        "title": "Hapus Log?",
+        "body": "Tindakan ini akan menghapus log terkait jadwal ini. Lanjutkan?"
+      }
+    },
+    "toast": {
+      "overrideSaved": "Override disimpan.",
+      "overrideRemoved": "Override dihapus.",
+      "scheduleSaved": "Jadwal berhasil disimpan.",
+      "graceApplied": "Grace default diterapkan ke seluruh hari.",
+      "presetApplied": "Preset {preset} diterapkan ke {day}.",
+      "copyTargetsMissing": "Tidak ada hari tujuan yang dipilih.",
+      "copyApplied": "Pengaturan {source} diterapkan ke {targets}."
+    },
+    "confirm": {
+      "removeOverride": "Hapus override jadwal ini?"
+    }
+  },
+  "adminDashboard": {
+    "state": {
+      "loading": "Memuat dashboard…"
+    },
+    "error": {
+      "unauthorized": "Masuk sebagai admin untuk membuka dashboard.",
+      "generic": "Gagal memuat dashboard.",
+      "rotateKey": "Gagal memutar API key."
+    },
+    "toast": {
+      "modelReloaded": "Model berhasil dimuat ulang.",
+      "serverReloaded": "Server dimuat ulang.",
+      "apiKeyRotated": "API key diperbarui.",
+      "fetchError": "Gagal memuat data dashboard"
+    },
+    "confirm": {
+      "reloadServer": "Memuat ulang server akan menerapkan ulang konfigurasi. Lanjutkan?",
+      "rotateKey": "Generate API key baru untuk akun kamu? Kamu harus memperbarui Authorization header setelah ini."
+    },
+    "breadcrumb": "Admin Console",
+    "greeting": "Halo, {name}",
+    "welcome": "Selamat datang, {name}!",
+    "fallbackName": "Admin",
+    "lastUpdated": "Terakhir diperbarui {time} WIB.",
+    "actions": {
+      "reloadModel": "Muat Ulang Model",
+      "reloadServer": "Muat Ulang Server",
+      "rotateKey": "Putar API Key",
+      "processing": "Memproses…",
+      "refresh": "Segarkan",
+      "viewAll": "Lihat Semua"
+    },
+    "stats": {
+      "users": {
+        "label": "Users",
+        "caption": "Akun terdaftar"
+      },
+      "faces": {
+        "label": "Known Faces",
+        "caption": "Embedding di memori"
+      },
+      "attendance": {
+        "label": "Attendance Events",
+        "caption": "Total entri log"
+      },
+      "totalUsers": "Total Pengguna",
+      "totalAttendance": "Total Absensi",
+      "todayAttendance": "Absensi Hari Ini",
+      "activeUsers": "Pengguna Aktif"
+    },
+    "systemStatus": {
+      "title": "Status Sistem",
+      "online": "Online",
+      "offline": "Offline",
+      "maintenance": "Maintenance",
+      "database": "Database",
+      "websocket": "WebSocket",
+      "faceRecognition": "Pengenalan Wajah"
+    },
+    "recentActivities": {
+      "title": "Aktivitas Terbaru",
+      "empty": "Belum ada aktivitas terbaru"
+    },
+    "quickActions": {
+      "title": "Aksi Cepat",
+      "addUser": "Tambah Pengguna",
+      "manageDatabase": "Kelola Database",
+      "viewReports": "Lihat Laporan",
+      "systemSettings": "Pengaturan Sistem"
+    },
+    "apiKey": {
+      "title": "API Key Kamu",
+      "hint": "Kirim lewat header Authorization: Bearer <API_KEY>",
+      "empty": "Belum ada API key",
+      "show": "Tampilkan",
+      "hide": "Sembunyikan",
+      "copy": "Copy API Key",
+      "copying": "Menyalin…",
+      "copied": "API key disalin ke clipboard.",
+      "notAvailable": "API key tidak tersedia.",
+      "copyError": "Gagal menyalin API key."
+    },
+    "model": {
+      "title": "Model Aktif",
+      "viewJson": "Lihat JSON",
+      "jsonTitle": "Model Summary (Raw)",
+      "backendLabel": "Backend",
+      "unknown": "unknown",
+      "backendMeta": "ID backend {backendId} • target {targetId}",
+      "emotionLabel": "Emotion Model",
+      "none": "Tidak ada",
+      "emotionCount": "Labels: {count}",
+      "registeredLabels": "Registered Labels",
+      "noLabels": "Tidak ada label"
+    }
+  },
+  "adminFaceDb": {
+    "header": {
+      "breadcrumb": "Database",
+      "title": "Manajemen wajah",
+      "subtitle": "Kelola embedding, foto, dan metadata yang sudah terdaftar."
+    },
+    "state": {
+      "loading": "Memuat…",
+      "loginRequired": "Butuh login.",
+      "adminRequired": "Harus admin untuk melihat Register DB.",
+      "error": "Terjadi kesalahan."
+    },
+    "error": {
+      "fetch": "Gagal memuat Register DB.",
+      "adminInactive": "Admin mode belum aktif",
+      "labelEmpty": "Label tidak boleh kosong.",
+      "zipFailed": "Gagal membaca ZIP {name}."
+    },
+    "info": {
+      "selectImage": "Pilih gambar atau ambil foto",
+      "noSelection": "Tidak ada item yang dipilih"
+    },
+    "toast": {
+      "labelUpdated": "Label diperbarui",
+      "deleteSuccess": "Terhapus",
+      "photoReplaced": "Foto diganti",
+      "reembedQueued": "Re-embed diproses",
+      "exportDone": "Export selesai.",
+      "zipAdded": "ZIP {name} ditambahkan ({count} foto)."
+    },
+    "warn": {
+      "exportEmpty": "Tidak ada foto yang bisa diekspor.",
+      "zipNoImages": "ZIP {name} tidak berisi gambar yang valid.",
+      "zipNone": "Tidak ada foto yang berhasil diambil dari {name}.",
+      "fileIgnored": "{name} diabaikan (format tidak didukung)."
+    },
+    "confirm": {
+      "deleteRow": "Hapus {target}?",
+      "deleteBulk": "Hapus {count} item?"
+    },
+    "filters": {
+      "searchLabel": "Cari Nama",
+      "searchPlaceholder": "Cari Nama…",
+      "perPage": "Per halaman",
+      "order": "Urutan",
+      "orderNewest": "Terbaru",
+      "orderOldest": "Terlama",
+      "refresh": "Segarkan",
+      "selected": "Dipilih: {count}"
+    },
+    "actions": {
+      "bulkUpload": "Bulk Upload",
+      "reembed": "Re-embed",
+      "delete": "Hapus",
+      "export": "Export"
+    },
+    "table": {
+      "columns": {
+        "label": "Nama",
+        "photo": "Foto",
+        "embedding": "Embedding",
+        "bbox": "BBox",
+        "timestamp": "Timestamp",
+        "actions": "Aksi"
+      },
+      "inline": {
+        "save": "Simpan",
+        "idPrefix": "ID",
+        "noLabel": "(tanpa label)",
+        "edit": "Edit label"
+      },
+      "photo": {
+        "none": "Tidak ada foto",
+        "replace": "Ganti foto"
+      },
+      "empty": "Belum ada data ditemukan."
+    },
+    "pagination": {
+      "total": "Total: {total}",
+      "first": "Halaman pertama",
+      "prev": "Halaman sebelumnya",
+      "page": "Halaman {page}",
+      "ellipsis": "…",
+      "next": "Halaman berikutnya",
+      "last": "Halaman terakhir"
+    },
+    "bulk": {
+      "title": "Bulk Upload",
+      "messages": {
+        "fromZip": "Dari {name}",
+        "labelEmpty": "Label kosong, dilewati.",
+        "uploading": "Mengunggah…",
+        "registeredAs": "Terdaftar sebagai {label}.",
+        "uploaded": "Berhasil diunggah.",
+        "uploadFailed": "Upload gagal."
+      },
+      "forceReplace": "Force replace duplicates",
+      "clear": "Kosongkan",
+      "progressTitle": "Progress unggahan",
+      "uploadingWait": "Unggahan berjalan... tunggu sampai semua selesai.",
+      "emptyHint": "Belum ada file yang ditambahkan. Pilih beberapa gambar atau ZIP berisi foto wajah.",
+      "queueCount": "{count} file dalam antrean.",
+      "uploading": "Sedang mengunggah...",
+      "clearHint": "Kosongkan antrean jika sudah selesai.",
+      "start": "Mulai Upload",
+      "summary": {
+        "success": "Selesai. Sukses: {count}",
+        "duplicate": "Duplikat: {count}",
+        "error": "Gagal: {count}",
+        "skip": "Lewati: {count}"
+      },
+      "summaryLabels": {
+        "total": "Total",
+        "ready": "Siap",
+        "uploading": "Mengunggah",
+        "success": "Sukses",
+        "duplicate": "Duplikat",
+        "error": "Gagal",
+        "skip": "Lewati"
+      },
+      "statusLabel": {
+        "uploading": "Sedang mengunggah",
+        "success": "Sukses",
+        "duplicate": "Duplikat",
+        "error": "Gagal",
+        "skip": "Lewati",
+        "ready": "Siap"
+      }
+    },
+    "modal": {
+      "replacePhotoFor": "Ganti foto untuk {label}"
+    }
+  },
+  "adminConfig": {
+    "breadcrumb": "Dashboard › Konfigurasi",
+    "title": "Konfigurasi Sistem",
+    "subtitle": "Atur parameter face engine dengan hati-hati.",
+    "actions": {
+      "refresh": "Segarkan",
+      "refreshing": "Memuat…",
+      "viewJson": "Lihat JSON",
+      "resetFace": "Atur Ulang Face Engine",
+      "resetAttendance": "Atur Ulang Absensi",
+      "resetAll": "Atur Ulang Semua",
+      "saveFace": "Simpan Face Engine",
+      "saveAttendance": "Simpan Absensi"
+    },
+    "json": {
+      "current": "Konfigurasi (Saat ini)"
+    },
+    "state": {
+      "loading": "Memuat konfigurasi…"
+    },
+    "error": {
+      "title": "Terjadi kesalahan",
+      "fetch": "Gagal memuat konfigurasi.",
+      "generic": "Gagal menyimpan konfigurasi."
+    },
+    "errors": {
+      "mustNumber": "{field} harus berupa angka.",
+      "mustInteger": "{field} harus berupa bilangan bulat."
+    },
+    "toast": {
+      "noChanges": "Tidak ada perubahan untuk disimpan.",
+      "saved": "Konfigurasi tersimpan.",
+      "reset": "Konfigurasi direset."
+    },
+    "reset": {
+      "scopeAll": "seluruh konfigurasi",
+      "scopeFace": "konfigurasi face engine",
+      "scopeAttendance": "konfigurasi attendance",
+      "confirm": "Atur ulang {scope}?",
+      "title": "Konfirmasi Reset",
+      "ok": "Atur ulang"
+    },
+    "sections": {
+      "faceEngine": {
+        "title": "Face Engine",
+        "subtitle": "Atur interval WebSocket dan ambang YuNet."
+      },
+      "attendance": {
+        "title": "Absensi"
+      }
+    },
+    "fields": {
+      "minCosine": "Min Cosine Accept",
+      "funInterval": "Fun WS Interval (detik)",
+      "attInterval": "Attendance WS Interval (detik)",
+      "scoreThreshold": "YuNet Score Threshold",
+      "nmsThreshold": "YuNet NMS Threshold",
+      "topK": "YuNet Top K",
+      "cooldownSec": "Waktu tunggu",
+      "sameDayLock": "Kunci sekali per hari"
+    },
+    "help": {
+      "wsInterval": "Interval kirim frame (menit:detik)."
+    },
+    "defaults": {
+      "value": "Bawaan: {value}"
+    }
+  },
+  "adminUsers": {
+    "breadcrumb": "Dashboard › Pengguna",
+    "title": "Manajemen Pengguna",
+    "subtitle": "Kelola peran admin, API key, dan penghapusan akun.",
+    "actions": {
+      "refresh": "Segarkan",
+      "refreshing": "Memuat…",
+      "viewJson": "Lihat JSON",
+      "rotateKey": "Putar API Key",
+      "setPassword": "Setel Password",
+      "promote": "Naikkan",
+      "demote": "Turunkan",
+      "delete": "Hapus",
+      "processing": "Memproses…"
+    },
+    "error": {
+      "title": "Terjadi kesalahan",
+      "fetch": "Gagal memuat data pengguna.",
+      "generic": "Terjadi kesalahan."
+    },
+    "state": {
+      "loading": "Memuat data pengguna…"
+    },
+    "confirm": {
+      "promote": "Promosikan \"{user}\" menjadi admin?",
+      "demote": "Cabut peran admin dari \"{user}\"?",
+      "delete": "Hapus user \"{user}\"?",
+      "rotateSelf": "Generate API key baru untuk akun kamu? Kamu harus memperbarui Authorization header setelah ini.",
+      "rotateOther": "Generate API key baru untuk \"{user}\"? Pengguna tersebut harus memakai key baru setelah ini."
+    },
+    "toast": {
+      "promoted": "{user} kini admin.",
+      "demoted": "{user} diturunkan.",
+      "deleted": "{user} dihapus.",
+      "rotated": "API key diperbarui.",
+      "passwordSet": "Password diperbarui.",
+      "passwordTooShort": "Password minimal 6 karakter.",
+      "cannotDemotePromoter": "Tidak boleh mendemote admin yang mempromosikan kamu.",
+      "cannotDeletePromoter": "Tidak boleh menghapus orang yang mempromosikan kamu."
+    },
+    "passwordModal": {
+      "title": "Setel Password",
+      "description": "Masukkan password baru untuk {user}.",
+      "label": "Password Baru",
+      "placeholder": "Minimal 6 karakter",
+      "save": "Simpan Password"
+    },
+    "table": {
+      "title": "Daftar Pengguna",
+      "empty": "Belum ada user",
+      "columns": {
+        "username": "Nama pengguna",
+        "role": "Peran",
+        "actions": "Aksi"
+      }
+    },
+    "roles": {
+      "admin": "Admin",
+      "user": "User"
+    },
+    "badges": {
+      "you": "Kamu"
+    },
+    "json": {
+      "hint": "Dump data mentah untuk debugging"
+    }
+  },
+  "avatar": {
+    "menu": {
+      "login": "Masuk",
+      "logout": "Keluar"
+    }
+  },
+  "common": {
+    "close": "Tutup",
+    "cancel": "Batal",
+    "clear": "Bersihkan",
+    "delete": "Hapus"
+  },
+  "aside": {
+    "brand": {
+      "title": "Absensi Wajah"
+    },
+    "groups": {
+      "main": "Menu Utama",
+      "admin": "Admin"
+    },
+    "sections": {
+      "navigation": "Navigasi",
+      "administration": "Administrasi"
+    },
+    "actions": {
+      "expand": "Perluas",
+      "collapse": "Ciutkan",
+      "openSettings": "Buka Pengaturan"
+    }
+  },
+  "header": {
+    "breadcrumb": {
+      "admin": "Admin",
+      "website": "Website"
+    },
+    "actions": {
+      "live": "Langsung",
+      "openNavigation": "Buka navigasi"
+    },
+    "title": {
+      "default": "Pengenalan Wajah"
+    }
+  },
+  "auth": {
+    "welcome": "Selamat datang kembali",
+    "subtitle": "Masuk untuk akses dashboard dan fun meter kamu.",
+    "footer": "Dengan masuk, kamu setuju pada Ketentuan & Kebijakan Privasi.",
+    "title": "Akun",
+    "description": "Masuk atau daftar akun baru.",
+    "login": "Masuk",
+    "register": "Daftar",
+    "loading": "Memproses...",
+    "signin": "Masuk",
+    "signup": "Daftar",
+    "fields": {
+      "username": "Nama Pengguna",
+      "password": "Kata Sandi"
+    },
+    "confirmPassword": "Konfirmasi Kata Sandi",
+    "error": {
+      "fillFields": "Isi username dan password.",
+      "loginFailed": "Login gagal.",
+      "registerShortPassword": "Password minimal 6 karakter.",
+      "registerMismatch": "Konfirmasi password tidak cocok.",
+      "registerFailed": "Gagal mendaftar."
+    },
+    "toast": {
+      "loginSuccess": "Selamat datang, {username}!",
+      "registerSuccess": "Akun berhasil dibuat. Silakan login.",
+      "logoutSuccess": "Berhasil keluar."
+    }
+  },
+  "settings": {
+    "breadcrumb": "Preferensi",
+    "title": "Pengaturan Tampilan & Kualitas",
+    "language": {
+      "title": "Bahasa",
+      "help": "Mengatur bahasa antarmuka. Default: English.",
+      "options": {
+        "id": "Bahasa Indonesia",
+        "en": "English"
+      }
+    },
+    "theme": {
+      "title": "Tema",
+      "light": "Terang",
+      "dark": "Gelap"
+    },
+    "attendance": {
+      "title": "Streaming Absensi",
+      "width": {
+        "label": "Lebar Kirim (px)",
+        "help": "Mengatur resolusi frame untuk absensi."
+      },
+      "jpeg": {
+        "label": "Kualitas JPEG",
+        "help": "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar."
+      }
+    },
+    "funMeter": {
+      "title": "Streaming Fun Meter",
+      "width": {
+        "label": "Lebar Kirim (px)",
+        "help": "Mengatur resolusi frame untuk analisis emosi."
+      },
+      "jpeg": {
+        "label": "Kualitas JPEG",
+        "help": "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar."
+      },
+      "interval": {
+        "label": "Interval Attendance & FunMeter (ms)",
+        "help": "Default: 200. Jeda antar frame ke server attendance."
+      }
+    },
+    "actions": {
+      "reset": "Atur Ulang ke Bawaan",
+      "cancel": "Batal",
+      "save": "Simpan",
+      "close": "Tutup"
+    },
+    "toast": {
+      "saved": "Pengaturan tersimpan.",
+      "reset": "Pengaturan dikembalikan ke bawaan."
+    }
+  },
+  "cameraUpload": {
+    "title": "Upload Foto",
+    "fromFile": "Dari File",
+    "fromCamera": "Dari Kamera",
+    "preview": "Pratinjau",
+    "actions": {
+      "close": "Tutup",
+      "startCamera": "Mulai Kamera",
+      "stopCamera": "Matikan",
+      "capture": "Tangkap",
+      "cancel": "Batal",
+      "upload": "Unggah"
+    }
+  },
+  "home": {
+    "breadcrumb": "Deteksi Wajah",
+    "title": "Deteksi Wajah",
+    "subtitle": "Unggah gambar atau gunakan kamera untuk menjalankan proses identifikasi wajah.",
+    "tabs": {
+      "fromImage": "Dari Gambar",
+      "fromCamera": "Dari Kamera"
+    },
+    "sections": {
+      "results": {
+        "title": "Hasil",
+        "subtitle": "Deteksi wajah"
+      },
+      "input": {
+        "title": "Input",
+        "subtitle": "Unggah gambar"
+      },
+      "cameraResults": {
+        "title": "Hasil Kamera",
+        "subtitle": "Deteksi wajah"
+      },
+      "camera": {
+        "title": "Kamera",
+        "subtitle": "Kontrol"
+      }
+    },
+    "fields": {
+      "image": "Gambar"
+    },
+    "actions": {
+      "processing": "Memproses…",
+      "runRecognition": "Jalankan",
+      "capture": "Ambil Foto",
+      "reset": "Atur Ulang",
+      "startCamera": "Mulai",
+      "stopCamera": "Berhenti"
+    },
+    "results": {
+      "empty": "Belum ada wajah terdeteksi.",
+      "previewEmpty": "Pratinjau gambar akan tampil di sini.",
+      "waitingForImage": "Menunggu gambar."
+    },
+    "table": {
+      "label": "Nama",
+      "score": "Skor",
+      "bbox": "Kotak Pembatas"
+    },
+    "recognize": {
+      "status": {
+        "noImage": "Pilih gambar terlebih dahulu",
+        "running": "Memproses…",
+        "faces": "Jumlah wajah: {count}",
+        "error": "Kesalahan: {message}"
+      }
+    },
+    "camera": {
+      "waiting": "Aktifkan kamera untuk memulai.",
+      "status": {
+        "started": "Kamera aktif",
+        "stopped": "Kamera dihentikan",
+        "startFirst": "Aktifkan kamera terlebih dahulu",
+        "captureFailed": "Gagal mengambil gambar",
+        "recognizing": "Memproses…",
+        "faces": "Jumlah wajah: {count}",
+        "error": "Kesalahan: {message}"
+      }
+    }
+  },
+  "registerFace": {
+    "header": {
+      "breadcrumb": "Registrasi",
+      "title": "Tambah Data Wajah",
+      "subtitle": "Ambil foto dari kamera atau unggah gambar untuk menambahkan identitas baru ke database."
+    },
+    "sections": {
+      "camera": {
+        "title": "Kamera & Pratinjau",
+        "subtitle": "Tangkap wajah"
+      },
+      "details": {
+        "title": "Detail Wajah",
+        "subtitle": "Informasi Identitas"
+      }
+    },
+    "fields": {
+      "label": "Label / Nama",
+      "labelPlaceholder": "Nama lengkap",
+      "upload": "Unggah Gambar",
+      "chooseFile": "Pilih berkas",
+      "noFile": "Tidak ada berkas yang dipilih"
+    },
+    "actions": {
+      "capture": "Tangkap",
+      "reset": "Atur Ulang",
+      "openCamera": "Gunakan Kamera",
+      "stopCamera": "Hentikan Kamera",
+      "submit": "Daftarkan"
+    },
+    "status": {
+      "label": "Status deteksi",
+      "waiting": "Menunggu input wajah.",
+      "noImage": "Tidak ada gambar.",
+      "loadingImage": "Memuat gambar...",
+      "cameraReady": "Kamera siap.",
+      "detecting": "Mendeteksi...",
+      "faces": "Jumlah wajah: {count}",
+      "faceBadge": "{count} wajah",
+      "photoCaptured": "Foto diambil.",
+      "uploading": "Mengunggah...",
+      "registered": "Terdaftar: {label}",
+      "updated": "Diperbarui: {label}",
+      "replacing": "Mengganti data wajah...",
+      "duplicate": "Wajah sudah terdaftar.",
+      "processing": "Memproses...",
+      "failure": "Terjadi kesalahan.",
+      "error": "Kesalahan.",
+      "errorGeneric": "Kesalahan"
+    },
+    "toast": {
+      "noFaces": "Tidak ada wajah terdeteksi dalam gambar.",
+      "error": "Kesalahan.",
+      "failure": "Terjadi kesalahan.",
+      "loadedFromFile": "Gambar berhasil dimuat dari file.",
+      "cameraActive": "Kamera aktif. Siap untuk mengambil gambar.",
+      "captureSuccess": "Foto berhasil diambil.",
+      "labelRequired": "Label wajib diisi.",
+      "sourceRequired": "Pilih gambar atau ambil foto terlebih dahulu.",
+      "registerSuccess": "Terdaftar: {label}",
+      "updateSuccess": "Wajah diperbarui: {label}",
+      "labelMustMatch": "Wajah terdaftar sebagai {label}. Gunakan label tersebut untuk memperbarui."
+    },
+    "confirm": {
+      "replaceTitle": "Ganti foto?",
+      "replaceAction": "Ganti"
+    }
+  },
+  "attendance": {
+    "breadcrumb": "Absensi",
+    "title": "Absensi Otomatis",
+    "subtitle": "Kirim frame kamera ke server dan pantau log kedatangan secara real-time.",
+    "actions": {
+      "startCamera": "Mulai Kamera",
+      "stopCamera": "Hentikan",
+      "logRefresh": "Log tersegarkan.",
+      "refresh": "Segarkan"
+    },
+    "fields": {
+      "interval": "Interval (ms)",
+      "perPage": "Jumlah per halaman",
+      "order": "Urutan"
+    },
+    "order": {
+      "asc": "Terlama",
+      "desc": "Terbaru"
+    },
+    "sections": {
+      "camera": {
+        "title": "Kamera",
+        "subtitle": "Streaming absensi"
+      },
+      "log": {
+        "title": "Log absensi",
+        "subtitle": "Riwayat kedatangan"
+      }
+    },
+    "status": {
+      "waiting": "Tekan mulai untuk mengirim frame ke server attendance.",
+      "cameraStarted": "Kamera dimulai (WS)",
+      "cameraStopped": "Kamera dihentikan",
+      "faces": "Wajah: {count}",
+      "markedSuffix": " • Ditandai: {labels}",
+      "wsConnected": "WebSocket terhubung",
+      "wsDisconnected": "WebSocket terputus",
+      "wsReady": "WS terhubung • th(akurasi)={th} • mark={mode}",
+      "markOn": "Aktif",
+      "markOff": "Nonaktif",
+      "error": "Kesalahan: {message}"
+    },
+    "toast": {
+      "wsConnected": "Terhubung ke server (WebSocket).",
+      "wsDisconnected": "Koneksi WS terputus.",
+      "attendanceError": "Kesalahan attendance: {message}",
+      "success": "Absen berhasil.",
+      "successWithLabel": "Absen berhasil: {label}",
+      "blockedMessage": "{label}: {reason}{retry}",
+      "blockedReasonDefault": "Tidak bisa absen (aturan berlaku).",
+      "blockedRetry": " • Coba lagi: {time}",
+      "blockedFallback": "Tidak bisa absen (sudah absen hari ini atau masih dalam jeda).",
+      "cameraStopped": "Kamera dihentikan.",
+      "cameraError": "Gagal akses kamera: {message}",
+      "logError": "Gagal memuat Attendance Log. Coba lagi."
+    },
+    "labels": {
+      "unknown": "Tidak diketahui"
+    },
+    "table": {
+      "no": "No",
+      "name": "Nama",
+      "dateTime": "Waktu & tanggal",
+      "score": "Skor",
+      "empty": "Belum ada data absensi."
+    },
+    "pagination": {
+      "totalLabel": "Total"
+    }
+  },
+  "fun": {
+    "breadcrumb": "Fun Meter",
+    "title": "Analitik Ekspresi",
+    "subtitle": "Pantau tingkat kebahagiaan dan label emosi lain secara langsung dari kamera.",
+    "actions": {
+      "startCamera": "Mulai Kamera",
+      "stopCamera": "Hentikan"
+    },
+    "fields": {
+      "interval": "Interval (ms)",
+      "model": "Model",
+      "modelLoading": "Menunggu metadata…"
+    },
+    "sections": {
+      "camera": {
+        "title": "Kamera",
+        "subtitle": "Streaming fun meter"
+      },
+      "summary": {
+        "title": "Ringkasan",
+        "subtitle": "Label & hasil terakhir"
+      }
+    },
+    "summary": {
+      "copy": "Fun merepresentasikan probabilitas kebahagiaan (0–100%). Daftar label diperoleh langsung dari model di server.",
+      "empty": "Belum ada hasil dari kamera.",
+      "labelCount": {
+        "one": "1 label",
+        "other": "{count} label"
+      }
+    },
+    "cards": {
+      "faceNumber": "Wajah #{num}",
+      "funValue": "Fun {value}%"
+    },
+    "status": {
+      "waiting": "Tekan mulai untuk mengirim frame fun meter.",
+      "wsConnected": "WebSocket terhubung",
+      "wsDisconnected": "WebSocket terputus",
+      "wsReady": "WebSocket siap",
+      "wsMissing": "Endpoint WS belum dikonfigurasi",
+      "socketDisconnected": "Socket tidak terhubung",
+      "cameraStartedWs": "Kamera aktif (WS terhubung)",
+      "cameraStartedPending": "Kamera aktif (menyambungkan WS…)",
+      "cameraStopped": "Kamera dihentikan",
+      "faces": "Wajah: {count}",
+      "error": "Kesalahan: {message}"
+    },
+    "toast": {
+      "wsConnected": "Terhubung ke server (WebSocket).",
+      "wsDisconnected": "Koneksi WS terputus.",
+      "cameraError": "Gagal membuka kamera. Cek permission & device."
+    },
+    "labels": {
+      "unknown": "Tidak diketahui"
+    }
+  },
+  "attendanceFunMeter": {
+    "toast": {
+      "wsConnected": "Terhubung ke server (WebSocket).",
+      "wsDisconnected": "Koneksi WebSocket terputus.",
+      "cameraAccessError": "Gagal mengakses kamera.",
+      "funError": "Kesalahan Fun: {message}",
+      "attendanceSuccess": "Absen berhasil: {label}",
+      "attendanceBlocked": "{label}: Tidak bisa absen. Coba lagi pada {time}.",
+      "attendanceBlockedNoTime": "{label}: Tidak bisa absen.",
+      "attendanceError": "Terjadi kesalahan saat memproses absen.",
+      "adPlaying": "Iklan sedang diputar",
+      "adNext": "Iklan berikutnya"
+    },
+    "status": {
+      "cameraBlocked": "Kamera diblokir",
+      "wsConnecting": "Menghubungkan...",
+      "wsReady": "Siap",
+      "wsError": "Kesalahan koneksi WebSocket",
+      "facesDetected": "Jumlah wajah: {count}",
+      "marked": "Terverifikasi: {labels}",
+      "wsDisconnected": "Terputus"
+    }
+  },
+  "adminAttendance": {
+    "header": {
+      "breadcrumb": "Dashboard > Absensi",
+      "title": "Absensi"
+    },
+    "filters": {
+      "searchName": "Pencarian",
+      "searchPlaceholder": "Cari nama anggota...",
+      "status": "Status",
+      "allStatuses": "Semua status",
+      "perPage": "Per halaman",
+      "order": "Urutan",
+      "newest": "Terbaru",
+      "oldest": "Terlama",
+      "dateRange": "Rentang Tanggal",
+      "pickDateRange": "Pilih rentang tanggal",
+      "pickDate": "Pilih rentang tanggal",
+      "clear": "Bersihkan",
+      "rangeSeparator": "sampai",
+      "apply": "Terapkan",
+      "exportCsv": "Ekspor CSV",
+      "statusLabel": "Status",
+      "statusOptions": {
+        "all": "Semua status",
+        "present": "Hadir",
+        "late": "Terlambat",
+        "leftEarly": "Pulang awal",
+        "mixed": "Terlambat & Pulang awal",
+        "off": "Libur"
+      }
+    },
+    "status": {
+      "present": "Hadir",
+      "late": "Terlambat",
+      "leftEarly": "Pulang Awal",
+      "lateLeftEarly": "Terlambat & Pulang Awal",
+      "off": "Libur"
+    },
+    "table": {
+      "columns": {
+        "member": "Anggota",
+        "date": "Tanggal",
+        "checkIn": "Jam Masuk",
+        "checkOut": "Jam Pulang",
+        "schedule": "Jadwal",
+        "status": "Status",
+        "actions": "Aksi"
+      },
+      "scheduleFallback": "Jam Kerja Normal",
+      "scheduleSource": {
+        "override": "Override",
+        "weekly": "Mingguan",
+        "default": "Default"
+      },
+      "graceSummary": "Grace: {in}/{out} menit",
+      "notesPrefix": "Catatan: {notes}",
+      "status": {
+        "present": "Hadir",
+        "late": "Terlambat",
+        "early": "Pulang awal",
+        "mixed": "Terlambat & Pulang awal",
+        "off": "Libur"
+      },
+      "noData": "Tidak ada data"
+    },
+    "actions": {
+      "view": "Lihat",
+      "customSchedule": "Jadwal Khusus",
+      "editOverride": "Ubah Override",
+      "deleteOverride": "Hapus Override",
+      "deleteLog": "Hapus Log"
+    },
+    "pagination": {
+      "perPage": "Per halaman",
+      "rangeDate": "Range Tanggal",
+      "order": "Urutan",
+      "newest": "Terbaru",
+      "oldest": "Terlama",
+      "prev": "Sebelumnya",
+      "pageInfo": "Halaman {page} dari {total}",
+      "next": "Selanjutnya",
+      "first": "Halaman pertama",
+      "last": "Halaman terakhir",
+      "totalLabel": "Total",
+      "pageStatus": "Halaman {page} / {total}"
+    },
+    "state": {
+      "loading": "Memuat data attendance..."
+    },
+    "detailModal": {
+      "title": "{label} - {date}",
+      "desc": "Log untuk tanggal ini",
+      "close": "Tutup",
+      "columns": {
+        "time": "Waktu",
+        "score": "Skor"
+      },
+      "empty": "Tidak ada log"
+    },
+    "overrideModal": {
+      "titleCreate": "Jadwal Khusus",
+      "titleEdit": "Edit Override",
+      "close": "Tutup",
+      "loading": "Memuat konfigurasi override...",
+      "fields": {
+        "startDate": "Tanggal Mulai",
+        "endDate": "Tanggal Akhir",
+        "singleDay": "Satu hari",
+        "label": "Label Override",
+        "enabled": "Aktif",
+        "checkIn": "Check In",
+        "checkOut": "Check Out",
+        "graceIn": "Grace Masuk (menit)",
+        "graceOut": "Grace Pulang (menit)",
+        "notes": "Catatan",
+        "scope": "Penerapan",
+        "personLabel": "Pilih Anggota",
+        "personPlaceholder": "Cari nama...",
+        "setHoliday": "Set Hari Libur",
+        "holidayLabel": "Hari Libur"
+      },
+      "personPlaceholder": "Cari nama...",
+      "notesPlaceholder": "Opsional",
+      "actions": {
+        "cancel": "Batal",
+        "save": "Simpan",
+        "saving": "Menyimpan..."
+      },
+      "active": {
+        "label": "Hari Libur (Off) / Hari Masuk (On)",
+        "onFull": "Hari Masuk",
+        "offFull": "Hari Libur"
+      },
+      "scope": {
+        "all": "Seluruh anggota",
+        "individual": "Perorangan",
+        "helpAll": "Override berlaku untuk semua anggota.",
+        "helpIndividual": "Pilih anggota tertentu yang menerima jadwal khusus ini.",
+        "badgeAll": "Berlaku untuk semua"
+      },
+      "people": {
+        "loading": "Memuat daftar wajah...",
+        "noMatches": "Tidak ada hasil untuk pencarian ini.",
+        "noPeople": "Belum ada data wajah yang dapat dipilih.",
+        "allSelected": "Semua anggota telah dipilih."
+      },
+      "errors": {
+        "targetsRequired": "Pilih minimal satu orang."
+      }
+    },
+    "confirm": {
+      "removeOverride": "Hapus override untuk {label} pada {date}?",
+      "deleteLog": "Hapus log untuk {label} pada {date}?"
+    },
+    "override": {
+      "startRequired": "Tanggal mulai wajib diisi.",
+      "checkInFormat": "Jam masuk harus menggunakan format HH:MM.",
+      "checkOutFormat": "Jam pulang harus menggunakan format HH:MM.",
+      "checkOrder": "Jam pulang harus lebih besar dari jam masuk."
+    },
+    "schedule": {
+      "off": "Libur",
+      "type": "Tipe Jadwal",
+      "saved": "Jadwal tersimpan"
+    },
+    "error": {
+      "fetch": "Gagal memuat data absensi",
+      "fetchDaily": "Gagal memuat data attendance harian.",
+      "loadOverrides": "Gagal memuat konfigurasi override.",
+      "saveOverride": "Gagal menyimpan override.",
+      "deleteOverride": "Gagal menghapus override.",
+      "openLog": "Gagal membuka detail log.",
+      "deleteLog": "Gagal menghapus log.",
+      "addEvent": "Gagal menambah event.",
+      "updateEvent": "Gagal memperbarui event.",
+      "deleteEvent": "Gagal menghapus event.",
+      "exportError": "Gagal mengekspor data"
+    },
+    "toast": {
+      "exportSuccess": "Data berhasil diekspor.",
+      "overrideSaved": "Override jadwal tersimpan.",
+      "noOverrideForDate": "Tidak ada override untuk tanggal ini.",
+      "overrideDeleted": "Override dihapus.",
+      "logDeleted": "Log dihapus.",
+      "eventAdded": "Event ditambahkan.",
+      "eventUpdated": "Event diperbarui.",
+      "eventDeleted": "Event dihapus.",
+      "deleteError": "Gagal menghapus data"
+    },
+    "view": {
+      "title": "Detail Absensi",
+      "member": "Anggota",
+      "date": "Tanggal",
+      "checkIn": "Jam Masuk",
+      "checkOut": "Jam Pulang",
+      "schedule": "Jadwal",
+      "status": "Status"
+    }
+  },
+  "adminListMembers": {
+    "actions": {
+      "export": "Ekspor",
+      "bulkUpload": "Upload Massal",
+      "deleteSelected": "Hapus",
+      "refresh": "Segarkan",
+      "addMember": "Tambah Anggota",
+      "edit": "Edit",
+      "replacePhoto": "Ganti foto",
+      "delete": "Hapus"
+    },
+    "bulk": {
+      "title": "Upload Massal",
+      "description": "Unggah banyak foto sekaligus",
+      "selectFiles": "Pilih File",
+      "hint": "Pilih satu atau lebih file gambar",
+      "forceUpload": "Upload paksa (override duplikat)",
+      "uploading": "Mengunggah...",
+      "files": "File ({count})",
+      "statusReady": "Siap diunggah",
+      "labelEmpty": "Label kosong, dilewati",
+      "duplicate": "Duplikat: {msg}",
+      "error": "Error: {msg}",
+      "completed": "Selesai. {summary}",
+      "empty": "Belum ada file yang dipilih",
+      "totalFiles": "{count} file siap diupload",
+      "start": "Mulai Upload",
+      "cancel": "Tutup"
+    },
+    "toast": {
+      "fileNotImage": "{name} bukan gambar, dilewati",
+      "noBulkItems": "Tidak ada file yang dipilih"
+    },
+    "search": {
+      "placeholder": "Cari label…"
+    },
+    "table": {
+      "label": "Nama",
+      "photo": "Foto",
+      "timestamp": "Penanda waktu",
+      "actions": "Aksi",
+      "empty": "Belum ada anggota terdaftar"
+    },
+    "order": {
+      "newest": "Terbaru",
+      "oldest": "Terlama"
+    },
+    "perPage": {
+      "all": "Semua"
+    },
+    "pagination": {
+      "info": "Menampilkan {start}-{end} dari {total} anggota",
+      "infoAll": "Menampilkan semua {total} anggota",
+      "previous": "Sebelumnya",
+      "current": "Halaman {page} dari {total}",
+      "next": "Selanjutnya"
+    },
+    "grid": {
+      "edit": "Edit",
+      "replacePhoto": "Ganti foto"
+    },
+    "edit": {
+      "empty": "Label tidak boleh kosong",
+      "success": "Data berhasil diperbarui.",
+      "error": "Gagal menyimpan: {msg}",
+      "modalTitle": "Edit",
+      "modalSubtitle": "Ubah data anggota",
+      "saving": "Menyimpan...",
+      "photo": "Foto",
+      "currentPhoto": "Foto saat ini",
+      "photoHint": "Pilih foto baru untuk mengganti foto saat ini",
+      "dragDrop": "Tarik & letakkan foto ke sini atau klik untuk memilih",
+      "chooseFile": "Pilih File"
+    },
+    "replacePhoto": {
+      "title": "Ganti Foto",
+      "subtitle": "Untuk: {label}",
+      "currentPhoto": "Foto saat ini",
+      "hint": "Tarik & letakkan foto ke sini atau pilih dari perangkat",
+      "dragDrop": "Tarik & letakkan foto ke sini atau klik untuk memilih",
+      "chooseFile": "Pilih File",
+      "useCamera": "Gunakan Kamera",
+      "submit": "Ganti Sekarang",
+      "uploading": "Mengunggah...",
+      "success": "Foto berhasil diganti untuk: {label}",
+      "error": "Gagal mengganti foto: {error}",
+      "noFile": "Pilih file terlebih dahulu"
+    },
+    "confirm": {
+      "delete": {
+        "title": "Hapus Anggota",
+        "desc": "Apakah Anda yakin ingin menghapus {name}? Tindakan ini tidak dapat dibatalkan.",
+        "confirm": "Hapus",
+        "cancel": "Batal"
+      },
+      "deleteMultiple": {
+        "title": "Hapus Beberapa Anggota",
+        "desc": "Apakah Anda yakin ingin menghapus {count} anggota yang dipilih?",
+        "confirm": "Hapus Semua",
+        "cancel": "Batal"
+      }
+    },
+    "toast": {
+      "fetchError": "Gagal memuat data anggota",
+      "deleteSuccess": "Anggota berhasil dihapus: {name}",
+      "deleteError": "Gagal menghapus anggota: {error}",
+      "deleteMultipleSuccess": "{count} anggota berhasil dihapus",
+      "deleteMultipleError": "Gagal menghapus anggota: {error}",
+      "noSelection": "Tidak ada anggota yang dipilih"
+    },
+    "subtitle": "Kelola database wajah anggota ({total} anggota)"
+  }
+}

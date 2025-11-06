@@ -1,0 +1,541 @@
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { request } from "@/lib/api";
+import { toast } from "@/lib/toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Icon } from "@/components/common/Icon";
+
+interface User {
+  id: string;
+  username: string;
+  is_admin: boolean;
+  is_owner: boolean;
+  is_current: boolean;
+  api_key?: string;
+}
+
+interface CurrentUser extends User {
+  promoted_by?: string;
+}
+
+interface DashboardData {
+  users: User[];
+  current_user: CurrentUser;
+}
+
+export default function AdminUsersPage() {
+  const { t } = useI18n();
+  const { user, updateUser } = useAuth();
+  
+  const [state, setState] = useState({
+    loading: true,
+    error: "",
+    users: [] as User[],
+    currentUser: null as CurrentUser | null,
+  });
+
+  const [rotatingUser, setRotatingUser] = useState("");
+  const [jsonModal, setJsonModal] = useState({ open: false, title: "", content: "" });
+  const [passwordModal, setPasswordModal] = useState({
+    open: false,
+    saving: false,
+    username: "",
+    display: "",
+    password: "",
+    error: "",
+  });
+
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    processing: false,
+    title: "",
+    body: "",
+    confirmLabel: "",
+    variant: "default" as "default" | "destructive" | "outline",
+    onConfirm: null as null | (() => Promise<void> | void),
+  });
+
+  const openConfirm = (opts: { title?: string; body: string; confirmLabel: string; variant?: "default" | "destructive" | "outline"; onConfirm: () => Promise<void> | void; }) => {
+    setConfirmModal({
+      open: true,
+      processing: false,
+      title: opts.title || t("adminUsers.confirm.title", "Konfirmasi"),
+      body: opts.body,
+      confirmLabel: opts.confirmLabel,
+      variant: opts.variant || "default",
+      onConfirm: opts.onConfirm,
+    });
+  };
+
+  const openJsonModal = (title: string, payload: unknown) => {
+    setJsonModal({
+      open: true,
+      title,
+      content: typeof payload === "string" ? payload : JSON.stringify(payload, null, 2)
+    });
+  };
+
+  const closeJsonModal = () => {
+    setJsonModal({ open: false, title: "", content: "" });
+  };
+
+  const openPasswordModal = (userToEdit: User) => {
+    if (!userToEdit?.username) return;
+    setPasswordModal({
+      open: true,
+      saving: false,
+      username: userToEdit.username,
+      display: userToEdit.username,
+      password: "",
+      error: "",
+    });
+  };
+
+  const closePasswordModal = () => {
+    setPasswordModal({
+      open: false,
+      saving: false,
+      username: "",
+      display: "",
+      password: "",
+      error: "",
+    });
+  };
+
+  const loadUsers = async () => {
+    setState(prev => ({ ...prev, loading: true, error: "" }));
+    try {
+      const data = await request<DashboardData>("/admin/dashboard-data", { method: "GET" });
+      
+      setState(prev => ({
+        ...prev,
+        users: Array.isArray(data?.users) ? data.users : [],
+        currentUser: data?.current_user || null,
+        loading: false
+      }));
+
+      // Update auth user if current user matches
+      if (user && data?.current_user?.username === user.username) {
+        updateUser({ ...user, api_key: data.current_user.api_key });
+      }
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      console.error(err);
+      setState(prev => ({
+        ...prev,
+        error: error?.message || t("adminUsers.error.fetch", "Gagal memuat data pengguna."),
+        loading: false
+      }));
+    }
+  };
+
+  const withReload = async (action: () => Promise<void>) => {
+    try {
+      await action();
+      await loadUsers();
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      console.error(err);
+      toast.error(error?.message || t("adminUsers.error.generic", "Terjadi kesalahan."));
+    }
+  };
+
+  const promoteUser = async (userToPromote: User) => {
+    if (!state.currentUser?.is_owner) {
+      return toast.error(t("adminUsers.toast.ownerOnly", "Hanya owner yang bisa ubah peran admin."));
+    }
+    if (!userToPromote?.username) return;
+    
+    openConfirm({
+      body: t("adminUsers.confirm.promote", 'Promosikan "{user}" menjadi admin?', { user: userToPromote.username }),
+      confirmLabel: t("adminUsers.actions.promote", "Naikkan"),
+      onConfirm: async () => {
+        await withReload(async () => {
+          const payload = {
+            user_id: userToPromote?.id != null ? String(userToPromote.id) : undefined,
+            username: userToPromote.username,
+            is_admin: true,
+          };
+          await request("/auth/promote", { method: "POST", body: payload });
+          toast.success(t("adminUsers.toast.promoted", "{user} kini admin.", { user: userToPromote.username }));
+        });
+      },
+    });
+  };
+
+  const demoteUser = async (userToDemote: User) => {
+    if (!state.currentUser?.is_owner) {
+      return toast.error(t("adminUsers.toast.ownerOnly", "Hanya owner yang bisa ubah peran admin."));
+    }
+    if (!userToDemote?.username) return;
+    
+    if (state.currentUser?.promoted_by && state.currentUser.promoted_by === userToDemote.username) {
+      toast.error(t("adminUsers.toast.cannotDemotePromoter", "Tidak boleh mendemote admin yang mempromosikan kamu."));
+      return;
+    }
+    
+    openConfirm({
+      body: t("adminUsers.confirm.demote", 'Cabut peran admin dari "{user}"?', { user: userToDemote.username }),
+      confirmLabel: t("adminUsers.actions.demote", "Turunkan"),
+      variant: "destructive",
+      onConfirm: async () => {
+        await withReload(async () => {
+          const payload = {
+            user_id: userToDemote?.id != null ? String(userToDemote.id) : undefined,
+            username: userToDemote.username,
+            is_admin: false,
+          };
+          await request("/auth/promote", { method: "POST", body: payload });
+          toast.success(t("adminUsers.toast.demoted", "{user} diturunkan.", { user: userToDemote.username }));
+        });
+      },
+    });
+  };
+
+  const deleteUser = async (userToDelete: User) => {
+    if (!userToDelete?.username) return;
+    
+    if (state.currentUser?.promoted_by && state.currentUser.promoted_by === userToDelete.username) {
+      toast.error(t("adminUsers.toast.cannotDeletePromoter", "Tidak boleh menghapus orang yang mempromosikan kamu."));
+      return;
+    }
+    
+    openConfirm({
+      body: t("adminUsers.confirm.delete", 'Hapus user "{user}"?', { user: userToDelete.username }),
+      confirmLabel: t("adminUsers.actions.delete", "Hapus"),
+      variant: "destructive",
+      onConfirm: async () => {
+        await withReload(async () => {
+          await request(`/admin/users/${encodeURIComponent(userToDelete.id)}`, { method: "DELETE" });
+          toast.success(t("adminUsers.toast.deleted", "{user} dihapus.", { user: userToDelete.username }));
+        });
+      },
+    });
+  };
+
+  const rotateApiKey = async (userToRotate: User) => {
+    if (!userToRotate?.username) return;
+    
+    const self = Boolean(userToRotate.is_current);
+    const message = self
+      ? t("adminUsers.confirm.rotateSelf", "Generate API key baru untuk akun kamu? Kamu harus memperbarui Authorization header setelah ini.")
+      : t("adminUsers.confirm.rotateOther", 'Generate API key baru untuk "{user}"? Pengguna tersebut harus memakai key baru setelah ini.', { user: userToRotate.username });
+    
+    openConfirm({
+      body: message,
+      confirmLabel: t("adminUsers.actions.rotateKey", "Putar API Key"),
+      onConfirm: async () => {
+        setRotatingUser(userToRotate.username);
+        try {
+          const data = await request<{ user: User }>(`/admin/users/${encodeURIComponent(userToRotate.id)}/api-key`, {
+            method: "POST",
+            body: {},
+          });
+          toast.success(t("adminUsers.toast.rotated", "API key diperbarui."));
+          await loadUsers();
+          if (self && user) {
+            updateUser({ ...user, api_key: data?.user?.api_key || "" });
+          }
+        } catch (err: unknown) {
+          const error = err as { message?: string };
+          console.error(err);
+          toast.error(error?.message || t("adminUsers.error.generic", "Terjadi kesalahan."));
+        } finally {
+          setRotatingUser("");
+        }
+      },
+    });
+  };
+
+  const submitPasswordChange = async () => {
+    if (passwordModal.saving) return;
+    
+    const username = passwordModal.username.trim();
+    const password = (passwordModal.password || "").trim();
+    
+    if (!username) {
+      toast.error(t("adminUsers.error.generic", "Terjadi kesalahan."));
+      return;
+    }
+    
+    if (password.length < 6) {
+      const message = t("adminUsers.toast.passwordTooShort", "Password minimal 6 karakter.");
+      toast.warn(message);
+      setPasswordModal(prev => ({ ...prev, error: message }));
+      return;
+    }
+
+    setPasswordModal(prev => ({ ...prev, saving: true, error: "" }));
+    try {
+      const target = state.users.find((u) => u.username === username);
+      await request("/auth/set-password", {
+        method: "POST",
+        body: { user_id: target?.id, password },
+      });
+      
+      toast.success(t("adminUsers.toast.passwordSet", "Password diperbarui."));
+      closePasswordModal();
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      console.error(err);
+      const message = error?.message || t("adminUsers.error.generic", "Terjadi kesalahan.");
+      setPasswordModal(prev => ({ ...prev, error: message }));
+      toast.error(message);
+    } finally {
+      setPasswordModal(prev => ({ ...prev, saving: false }));
+    }
+  };
+
+  const sortedUsers = (() => {
+    const cur = state.currentUser?.username || null;
+    return (state.users || []).slice().sort((a, b) => {
+      const aYou = (a?.is_current ? 1 : 0) || (cur && a?.username === cur ? 1 : 0);
+      const bYou = (b?.is_current ? 1 : 0) || (cur && b?.username === cur ? 1 : 0);
+      if (aYou !== bYou) return bYou - aYou;
+      
+      // Owner on top, then admin, then user
+      const oa = a?.is_owner ? 2 : a?.is_admin ? 1 : 0;
+      const ob = b?.is_owner ? 2 : b?.is_admin ? 1 : 0;
+      if (oa !== ob) return ob - oa;
+      
+      return String(a?.username || "").localeCompare(String(b?.username || ""));
+    });
+  })();
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      {/* Error */}
+      {state.error && (
+        <Alert variant="default">
+          <AlertTitle>{t("adminUsers.error.title", "Terjadi kesalahan")}</AlertTitle>
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Users Table */}
+      {!state.error && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("adminUsers.table.title", "Daftar Pengguna")}</CardTitle>
+          </CardHeader>
+          <Separator />
+          <CardContent className="p-6">
+            {state.loading ? (
+              <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                {t("adminUsers.state.loading", "Memuat data pengguna…")}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[36%]">{t("adminUsers.table.columns.username", "Username")}</TableHead>
+                      <TableHead className="w-[24%]">ID</TableHead>
+                      <TableHead className="text-center">{t("adminUsers.table.columns.role", "Peran")}</TableHead>
+                      <TableHead className="text-right w-[40%]">{t("adminUsers.table.columns.actions", "Aksi")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {!sortedUsers.length && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          {t("adminUsers.table.empty", "Belum ada user")}
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {sortedUsers.map((userItem) => (
+                      <TableRow key={userItem.username}>
+                        <TableCell className="font-semibold">
+                          {userItem.username}
+                          {userItem.is_current && (
+                            <Badge variant="default" className="ml-2 text-[11px] uppercase tracking-wide">
+                              {t("adminUsers.badges.you", "Kamu")}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">{userItem.id}</TableCell>
+
+                        <TableCell className="text-center">
+                          {userItem.is_owner ? (
+                            <Badge variant="destructive">{t("adminUsers.roles.owner", "Owner")}</Badge>
+                          ) : (
+                            <Badge variant={userItem.is_admin ? "default" : "outline"}>
+                              {userItem.is_admin ? t("adminUsers.roles.admin", "Admin") : t("adminUsers.roles.user", "User")}
+                            </Badge>
+                          )}
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={rotatingUser === userItem.username}
+                              onClick={() => rotateApiKey(userItem)}
+                            >
+                              <Icon name="Key" className="h-4 w-4" />
+                              {rotatingUser === userItem.username
+                                ? t("adminUsers.actions.processing", "Memproses…")
+                                : t("adminUsers.actions.rotateKey", "Putar API Key")}
+                            </Button>
+                            
+                            <Button variant="outline" size="sm" onClick={() => openPasswordModal(userItem)}>
+                              <Icon name="Lock" className="h-4 w-4" />
+                              {t("adminUsers.actions.setPassword", "Setel Password")}
+                            </Button>
+
+                            {!userItem.is_current && (
+                              <>
+                                {userItem.is_admin && !userItem.is_owner && state.currentUser?.is_owner && (
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => demoteUser(userItem)}
+                                  >
+                                    <Icon name="Crown" className="h-4 w-4" />
+                                    {t("adminUsers.actions.demote", "Turunkan")}
+                                  </Button>
+                                )}
+                                
+                                {!userItem.is_owner && state.currentUser?.is_owner && !userItem.is_admin && (
+                                  <Button size="sm" onClick={() => promoteUser(userItem)}>
+                                    <Icon name="Crown" className="h-4 w-4" />
+                                    {t("adminUsers.actions.promote", "Naikkan")}
+                                  </Button>
+                                )}
+                                
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  disabled={userItem.is_owner || (userItem.is_admin && !state.currentUser?.is_owner)}
+                                  onClick={() => deleteUser(userItem)}
+                                >
+                                  <Icon name="Trash" className="h-4 w-4" />
+                                  {t("adminUsers.actions.delete", "Hapus")}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Password Modal */}
+      <Dialog open={passwordModal.open} onOpenChange={(open) => !open && closePasswordModal()}>
+        <DialogContent className="max-w-md" hideOverlay onEscapeKeyDown={() => closePasswordModal()}>
+          <DialogHeader>
+            <DialogTitle>{t("adminUsers.passwordModal.title", "Setel Password")}</DialogTitle>
+            <DialogDescription>
+              {t("adminUsers.passwordModal.description", "Masukkan password baru untuk {user}.", {
+                user: passwordModal.display || "-",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                {t("adminUsers.passwordModal.label", "Password Baru")}
+              </Label>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                disabled={passwordModal.saving}
+                value={passwordModal.password}
+                onChange={(e) => setPasswordModal(prev => ({ ...prev, password: e.target.value }))}
+                placeholder={t("adminUsers.passwordModal.placeholder", "Minimal 6 karakter")}
+              />
+            </div>
+            {passwordModal.error && (
+              <p className="text-sm text-destructive">
+                {passwordModal.error}
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={passwordModal.saving} onClick={closePasswordModal}>
+              {t("common.cancel", "Batal")}
+            </Button>
+            <Button disabled={passwordModal.saving} onClick={submitPasswordChange}>
+              {passwordModal.saving
+                ? t("adminUsers.actions.processing", "Memproses…")
+                : t("adminUsers.passwordModal.save", "Simpan Password")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Modal */}
+      <Dialog open={confirmModal.open} onOpenChange={(open) => setConfirmModal(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-md" hideOverlay onEscapeKeyDown={() => setConfirmModal(prev => ({ ...prev, open: false }))}>
+          <DialogHeader>
+            <DialogTitle>{confirmModal.title || t("adminUsers.confirm.title", "Konfirmasi")}</DialogTitle>
+            <DialogDescription>{confirmModal.body}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={confirmModal.processing} onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}>
+              {t("common.cancel", "Batal")}
+            </Button>
+            <Button
+              variant={confirmModal.variant}
+              disabled={confirmModal.processing}
+              onClick={async () => {
+                if (!confirmModal.onConfirm) { setConfirmModal(prev => ({ ...prev, open: false })); return; }
+                setConfirmModal(prev => ({ ...prev, processing: true }));
+                try {
+                  await confirmModal.onConfirm();
+                } finally {
+                  setConfirmModal(prev => ({ ...prev, processing: false, open: false }));
+                }
+              }}
+            >
+              {confirmModal.confirmLabel || t("common.ok", "OK")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* JSON Modal */}
+      <Dialog open={jsonModal.open} onOpenChange={(open) => setJsonModal(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-3xl" hideOverlay onEscapeKeyDown={() => setJsonModal(prev => ({ ...prev, open: false }))}>
+          <DialogHeader>
+            <DialogTitle>{jsonModal.title}</DialogTitle>
+            <DialogDescription>
+              {t("adminUsers.json.hint", "Dump data mentah untuk debugging")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto rounded-md bg-muted p-4">
+            <pre className="text-xs leading-relaxed">{jsonModal.content}</pre>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeJsonModal}>
+              {t("common.close", "Tutup")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
