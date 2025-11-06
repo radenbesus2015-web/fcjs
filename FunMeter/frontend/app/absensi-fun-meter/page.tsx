@@ -3,13 +3,19 @@
 
 "use client";
 
-// Rotating ad images
-const adImages = [
-  "/images/upskilling.png",
-  "/images/nobox.jpg",
-  "/images/karyasmk.jpg",
-  "/images/expo.jpg",
-  "/images/eschool.png",
+// Rotating ad media (images and videos)
+interface AdMedia {
+  src: string;
+  type: 'image' | 'video';
+}
+
+const adMediaList: AdMedia[] = [
+  { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+  { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+  { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+  { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+  { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+  { src: "/assets/advertisements/images/eschool.png", type: 'image' },
 ];
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
@@ -231,11 +237,40 @@ export default function AttendanceFunMeterPage() {
   
   const getLetterboxTransform = () => {
     const overlay = overlayRef.current;
-    const host = overlay?.parentElement || videoRef.current;
-    if (!host) return { sx: 1, sy: 1, ox: 0, oy: 0 };
+    const video = videoRef.current;
+    const host = overlay?.parentElement || video;
+    if (!host || !video) return { sx: 1, sy: 1, ox: 0, oy: 0 };
+    
     const rect = host.getBoundingClientRect();
     const dispW = rect.width, dispH = rect.height;
-    return { sx: dispW / Number(funSendWidth), sy: dispH / sendHeightRef.current, ox: 0, oy: 0 };
+    
+    // Get actual video dimensions
+    const videoW = video.videoWidth || Number(funSendWidth);
+    const videoH = video.videoHeight || sendHeightRef.current;
+    
+    if (!videoW || !videoH) return { sx: dispW / Number(funSendWidth), sy: dispH / sendHeightRef.current, ox: 0, oy: 0 };
+    
+    // Calculate aspect ratios
+    const videoAspect = videoW / videoH;
+    const displayAspect = dispW / dispH;
+    
+    // For object-fit: cover - video fills container, uniform scaling
+    // Video is scaled to cover the entire container
+    let sx, sy, ox = 0, oy = 0;
+    
+    if (displayAspect > videoAspect) {
+      // Display is wider - video fills width, crops top/bottom
+      sx = dispW / videoW;
+      sy = sx; // uniform scaling
+      oy = (dispH - videoH * sy) / 2;
+    } else {
+      // Display is taller - video fills height, crops left/right
+      sy = dispH / videoH;
+      sx = sy; // uniform scaling
+      ox = (dispW - videoW * sx) / 2;
+    }
+    
+    return { sx, sy, ox, oy };
   };
   
   // Drawing functions
@@ -393,139 +428,11 @@ export default function AttendanceFunMeterPage() {
 
   // Camera functions (direct implementation like Vue original)
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [headerEdgeColors, setHeaderEdgeColors] = useState({ left: '#1e3a8a', right: '#1e3a8a' });
-  const [footerEdgeColors, setFooterEdgeColors] = useState({ left: '#1e3a8a', right: '#1e3a8a' });
-  const [headerStrips, setHeaderStrips] = useState<{ left: string; right: string }>({ left: '', right: '' });
-  const [footerStrips, setFooterStrips] = useState<{ left: string; right: string }>({ left: '', right: '' });
   
-  // Marquee refs for ads
-  const marqueeTrackRef = useRef<HTMLDivElement>(null);
-  const marqueeSegRef = useRef<HTMLDivElement>(null);
-  const [marqueeSegW, setMarqueeSegW] = useState(0);
-  const measuredRef = useRef(false);
-
-  // Extract edge colors + 1px strips from header image
-  const extractHeaderEdgeColors = useCallback(() => {
-    const img = new (window as any).Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      try {
-        // Get left edge pixel (average of left column)
-        const leftPixels = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const pixel = ctx.getImageData(0, y, 1, 1).data;
-          leftPixels.push(`rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`);
-        }
-        
-        // Get right edge pixel (average of right column)
-        const rightPixels = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const pixel = ctx.getImageData(img.width - 1, y, 1, 1).data;
-          rightPixels.push(`rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`);
-        }
-        
-        // Use most common color or first pixel
-        const leftColor = leftPixels[Math.floor(leftPixels.length / 2)] || '#1e3a8a';
-        const rightColor = rightPixels[Math.floor(rightPixels.length / 2)] || '#1e3a8a';
-        
-        setHeaderEdgeColors({ left: leftColor, right: rightColor });
-
-        // Build 1px vertical strips from edges
-        const stripL = document.createElement('canvas');
-        stripL.width = 1; stripL.height = img.height;
-        const stripLCtx = stripL.getContext('2d');
-        if (stripLCtx) {
-          stripLCtx.drawImage(img, 0, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const leftStripUrl = stripL.toDataURL('image/png');
-
-        const stripR = document.createElement('canvas');
-        stripR.width = 1; stripR.height = img.height;
-        const stripRCtx = stripR.getContext('2d');
-        if (stripRCtx) {
-          stripRCtx.drawImage(img, img.width - 1, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const rightStripUrl = stripR.toDataURL('image/png');
-
-        setHeaderStrips({ left: leftStripUrl, right: rightStripUrl });
-      } catch (error) {
-        console.log('Could not extract edge colors, using defaults');
-      }
-    };
-    img.src = '/images/header.png';
-  }, []);
-
-  // Extract edge colors + 1px strips from footer image
-  const extractFooterEdgeColors = useCallback(() => {
-    const img = new (window as any).Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      try {
-        // Get left edge pixel (average of left column)
-        const leftPixels = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const pixel = ctx.getImageData(0, y, 1, 1).data;
-          leftPixels.push(`rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`);
-        }
-        
-        // Get right edge pixel (average of right column)
-        const rightPixels = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const pixel = ctx.getImageData(img.width - 1, y, 1, 1).data;
-          rightPixels.push(`rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`);
-        }
-        
-        // Use most common color or first pixel
-        const leftColor = leftPixels[Math.floor(leftPixels.length / 2)] || '#1e3a8a';
-        const rightColor = rightPixels[Math.floor(rightPixels.length / 2)] || '#1e3a8a';
-        
-        setFooterEdgeColors({ left: leftColor, right: rightColor });
-
-        // Build 1px vertical strips from edges
-        const stripL = document.createElement('canvas');
-        stripL.width = 1; stripL.height = img.height;
-        const stripLCtx = stripL.getContext('2d');
-        if (stripLCtx) {
-          stripLCtx.drawImage(img, 0, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const leftStripUrl = stripL.toDataURL('image/png');
-
-        const stripR = document.createElement('canvas');
-        stripR.width = 1; stripR.height = img.height;
-        const stripRCtx = stripR.getContext('2d');
-        if (stripRCtx) {
-          stripRCtx.drawImage(img, img.width - 1, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const rightStripUrl = stripR.toDataURL('image/png');
-
-        setFooterStrips({ left: leftStripUrl, right: rightStripUrl });
-      } catch (error) {
-        console.log('Could not extract footer edge colors, using defaults');
-      }
-    };
-    img.src = '/images/footer.png';
-  }, []);
-
-  useEffect(() => {
-    extractHeaderEdgeColors();
-    extractFooterEdgeColors();
-  }, [extractHeaderEdgeColors, extractFooterEdgeColors]);
+  // Simple ad slideshow state
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const adVideoRef = useRef<HTMLVideoElement>(null);
+  const adTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
   const startCamera = async () => {
@@ -823,95 +730,90 @@ export default function AttendanceFunMeterPage() {
     };
     return colors[emotion] || "text-gray-400";
   };
-  // Measure marquee segment width for seamless loop
+  
+  // Ad rotation logic: 5 detik untuk foto, auto-advance untuk video setelah selesai
+  const goToNextAd = useCallback(() => {
+    setCurrentAdIndex((prevIndex) => (prevIndex + 1) % adMediaList.length);
+  }, []);
+
   useEffect(() => {
-    const measure = () => {
-      const el = marqueeSegRef.current;
-      if (el) {
-        const w = el.scrollWidth || el.offsetWidth || 0;
-        if (w > 0) {
-          setMarqueeSegW(w);
-          measuredRef.current = true;
-          return true;
-        }
-      }
-      return false;
-    };
+    const currentAd = adMediaList[currentAdIndex];
     
-    // Try multiple times to ensure measurement happens
-    const tryMeasure = () => {
-      if (!measure()) {
-        // Retry with requestAnimationFrame
-        requestAnimationFrame(() => {
-          if (!measure()) {
-            // Retry with setTimeout
-            setTimeout(() => {
-              if (!measure()) {
-                // Final retry after images load
-                setTimeout(() => measure(), 200);
-              }
-            }, 100);
-          }
-        });
-      }
-    };
+    // Clear any existing timer
+    if (adTimerRef.current) {
+      clearTimeout(adTimerRef.current);
+      adTimerRef.current = null;
+    }
     
-    // Immediate measure
-    tryMeasure();
-    
-    // Also try after a short delay
-    const tm1 = setTimeout(tryMeasure, 50);
-    const tm2 = setTimeout(tryMeasure, 150);
-    const tm3 = setTimeout(tryMeasure, 300);
-    
-    // Force start animation after max delay if still not measured
-    const forceStart = setTimeout(() => {
-      if (!measuredRef.current && marqueeSegRef.current) {
-        // Use a default width estimate based on number of images
-        const estimatedWidth = adImages.length * 300; // Rough estimate
-        setMarqueeSegW(estimatedWidth);
-        measuredRef.current = true;
-      }
-    }, 500);
-    
-    // Handle image load events
-    const handleImageLoad = () => {
-      tryMeasure();
-    };
-    
-    // Preload images and measure when loaded
-    adImages.forEach((src) => {
-      const img = new window.Image();
-      img.onload = handleImageLoad;
-      img.onerror = handleImageLoad;
-      img.src = src;
-    });
-    
-    window.addEventListener("resize", tryMeasure);
+    // If current ad is an image, set 5 second timer
+    if (currentAd.type === 'image') {
+      adTimerRef.current = setTimeout(() => {
+        goToNextAd();
+      }, 5000);
+    }
+    // If video, force play immediately without delay
+    else if (currentAd.type === 'video' && adVideoRef.current) {
+      const videoElement = adVideoRef.current;
+      
+      // Play immediately for instant transition
+      videoElement.play().catch((error) => {
+        console.error('[AD_VIDEO] Autoplay failed:', error);
+        // Quick retry for faster transition
+        setTimeout(() => {
+          videoElement.play().catch(() => {
+            console.warn('[AD_VIDEO] Second play attempt failed, skipping to next ad');
+            goToNextAd();
+          });
+        }, 500);
+      });
+    }
     
     return () => {
-      clearTimeout(tm1);
-      clearTimeout(tm2);
-      clearTimeout(tm3);
-      clearTimeout(forceStart);
-      window.removeEventListener("resize", tryMeasure);
+      if (adTimerRef.current) {
+        clearTimeout(adTimerRef.current);
+      }
     };
-  }, []);
+  }, [currentAdIndex, goToNextAd]);
+
+  // Preload next ad for seamless transition
+  useEffect(() => {
+    const nextIndex = (currentAdIndex + 1) % adMediaList.length;
+    const nextAd = adMediaList[nextIndex];
+    
+    if (nextAd.type === 'video') {
+      // Preload next video
+      const preloadVideo = document.createElement('video');
+      preloadVideo.src = nextAd.src;
+      preloadVideo.preload = 'auto';
+      preloadVideo.load();
+      
+      return () => {
+        preloadVideo.src = '';
+      };
+    } else if (nextAd.type === 'image') {
+      // Preload next image
+      const preloadImage = new window.Image();
+      preloadImage.src = nextAd.src;
+    }
+  }, [currentAdIndex]);
 
   return (
     <>
-      <style jsx>{`
-        /* Layout grid: 3 bagian - header, video, footer dengan iklan overlay */
+      <style dangerouslySetInnerHTML={{__html: `
+        /* Layout grid: 3 bagian - header, video+iklan overlay, footer */
         .page-root {
-          --top: 12svh;
-          --footer: 20svh;
+          /* Aspect ratio based layout - menyesuaikan exact dengan image dimensions */
+          /* Header dan Footer menggunakan aspect ratio inline style */
+          /* Video: menggunakan sisa space yang ada dengan iklan overlay */
+          
           color: white;
           width: 100vw;
           height: 100vh;
           overflow: hidden;
           display: grid;
-          grid-template-rows: var(--top) 1fr;
+          grid-template-rows: auto 1fr auto;
           position: relative;
+          background: #000;
         }
 
         /* Anti rounded di overlay + object-fill video */
@@ -921,187 +823,142 @@ export default function AttendanceFunMeterPage() {
         }
         
         #video {
-          /* Responsive video: fill container, stretch jika perlu, no black bars */
           object-fit: cover;
-          width: 100%;
-          height: 100%;
-          min-width: 100%;
-          min-height: 100%;
-          background: #000;
-          /* Fallback: jika aspect ratio sangat berbeda, gunakan fill */
           object-position: center center;
+          background: #000;
         }
         
-        /* Smart fallback untuk kamera dengan aspect ratio ekstrem */
-        #video:not([style*="object-fit"]) {
-          object-fit: fill;
-        }
-        
-        /* Debug styling */
         #camera-host {
           background: #000;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        /* Ensure video container always fills space */
-        #camera {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
         }
 
-        /* Footer dengan iklan overlay di bagian bawah video */
-        #footer-overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: var(--footer);
-          z-index: 30;
-          display: flex;
-          flex-direction: column;
-        }
-
+        /* Section styles - masing-masing independent */
+        #banner_top,
+        #camera,
+        #ads,
         #banner_bottom {
-          height: calc(var(--footer) * 0.4);
-          flex-shrink: 0;
-        }
-
-        #ads {
-          height: calc(var(--footer) * 0.6);
-          flex-shrink: 0;
-        }
-
-        /* Video section harus full height */
-        #camera {
-          position: relative;
           width: 100%;
-          height: 100%;
+          overflow: hidden;
+          position: relative;
         }
 
-        /* Pixel-perfect edge rendering for all sections */
-        #banner_top .flex > div,
-        #ads .flex > div,
-        #banner_bottom .flex > div {
-          height: 100%;
-          image-rendering: pixelated;
-          image-rendering: -moz-crisp-edges;
-          image-rendering: crisp-edges;
-          image-rendering: -webkit-optimize-contrast;
-        }
-
-        /* Marquee styles for ads */
-        .marquee-track {
-          display: flex;
-          flex-wrap: nowrap;
-          height: 100%;
-          animation: marquee-right var(--marqueeDur, 30s) linear infinite;
-          animation-play-state: var(--marqueePlay, paused);
-          will-change: transform;
-        }
-        .marquee-segment {
-          display: flex;
-          flex-wrap: nowrap;
-          align-items: center;
-          height: 100%;
-          flex: 0 0 auto;
-        }
-        .marquee-segment img {
-          height: 100% !important;
-          width: auto !important;
-          flex: 0 0 auto;
-          display: block;
-          object-fit: contain;
-        }
-        @keyframes marquee-right {
-          0% { transform: translateX(calc(-1 * var(--segW))); }
-          100% { transform: translateX(0); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .marquee-track { animation: none; }
-        }
-
-        /* Ensure no gaps between background sections */
-        #banner_top .flex,
-        #ads .flex,
-        #banner_bottom .flex {
-          margin: 0;
-          padding: 0;
-          gap: 0;
-        }
-
-        /* Force full coverage */
-        #banner_top .flex-1,
-        #ads .flex-1,
-        #banner_bottom .flex-1 {
-          flex: 1;
-          min-width: 50%;
-        }
-
-        /* Fallback background colors */
         #banner_top {
-          background-color: #1e40af;
-        }
-        
-        #ads {
-          background-color: #f3f4f6;
-        }
-        
-        #banner_bottom {
-          background-color: #1e40af;
+          z-index: 100;
         }
 
-        /* Responsive breakpoints */
-        @media (max-width: 768px) {
-          .page-root {
-            --top: 10svh;
-            --footer: 22svh;
+        /* Portrait mode - adjust header untuk menampilkan tombol mood */
+        @media (orientation: portrait) {
+          #banner_top {
+            aspect-ratio: 16 / 5 !important;
+            min-height: 120px;
+            max-height: 200px;
           }
         }
 
+        /* Narrow screens - ensure header has enough height */
+        @media (max-width: 640px) {
+          #banner_top {
+            aspect-ratio: 12 / 5 !important;
+            min-height: 140px;
+            max-height: 220px;
+          }
+        }
+
+        /* Very narrow screens - more height */
         @media (max-width: 480px) {
-          .page-root {
-            --top: 8svh;
-            --footer: 24svh;
+          #banner_top {
+            aspect-ratio: 10 / 5 !important;
+            min-height: 160px;
+            max-height: 240px;
           }
         }
 
-        /* Landscape orientation adjustments */
-        @media (orientation: landscape) and (max-height: 600px) {
-          .page-root {
-            --top: 8svh;
-            --footer: 18svh;
+        /* Extra narrow screens - maximum height */
+        @media (max-width: 360px) {
+          #banner_top {
+            aspect-ratio: 8 / 5 !important;
+            min-height: 180px;
+            max-height: 260px;
           }
         }
 
-        /* Large display optimizations (TV/Projector) */
+        /* Header image styling - always contain untuk menampilkan semua konten */
+        #banner_top img {
+          object-fit: contain !important;
+          object-position: center !important;
+        }
+        
+        #camera {
+          z-index: 10;
+        }
+
+        #ads {
+          height: var(--ads-height);
+        }
+
+        #banner_bottom {
+        }
+
+
+        /* Simple ad display - no animation */
+        .ad-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          width: 100%;
+        }
+        .ad-container img {
+          max-height: 100%;
+          max-width: 100%;
+          object-fit: contain;
+          display: block;
+        }
+
+
+        /* Background colors for sections */
+        #ads {
+          background-color: transparent;
+        }
+        
+        /* Advertisement overlay responsive sizing */
+        .ad-overlay-container {
+          max-width: 280px;
+        }
+        
+        /* Portrait mode - smaller ads */
+        @media (orientation: portrait) {
+          .ad-overlay-container {
+            max-width: 240px;
+          }
+        }
+        
+        /* Landscape mode - medium ads */
+        @media (orientation: landscape) {
+          .ad-overlay-container {
+            max-width: 350px;
+          }
+        }
+        
+        /* Large landscape screens */
+        @media (orientation: landscape) and (min-width: 1024px) {
+          .ad-overlay-container {
+            max-width: 450px;
+          }
+        }
+        
+        /* Extra large screens */
         @media (min-width: 1920px) {
-          .page-root {
-            --top: 10svh;
-            --footer: 18svh;
+          .ad-overlay-container {
+            max-width: 600px;
           }
         }
 
-        /* Ultra-wide display support */
-        @media (min-aspect-ratio: 21/9) {
-          .page-root {
-            --top: 8svh;
-            --footer: 15svh;
-          }
-        }
-
-        /* 4K and higher resolution displays */
-        @media (min-width: 3840px) {
-          .page-root {
-            --top: 8svh;
-            --footer: 14svh;
-          }
-        }
+        /* Responsive - aspect ratio calculation otomatis untuk semua device */
+        /* Tidak perlu media queries karena calculation sudah proporsional */
 
         /* Toast responsive styling */
-        :global(.toast-container) {
+        .toast-container {
           position: fixed !important;
           top: 20px !important;
           right: 20px !important;
@@ -1110,7 +967,7 @@ export default function AttendanceFunMeterPage() {
           width: auto !important;
         }
 
-        :global(.toast) {
+        .toast {
           max-width: 400px !important;
           min-width: 280px !important;
           font-size: 14px !important;
@@ -1120,16 +977,33 @@ export default function AttendanceFunMeterPage() {
           backdrop-filter: blur(8px) !important;
         }
 
+        /* Portrait mode - smaller toast */
+        @media (orientation: portrait) {
+          .toast-container {
+            top: 8px !important;
+            right: 8px !important;
+            left: 8px !important;
+            max-width: calc(100vw - 16px) !important;
+          }
+          
+          .toast {
+            max-width: 100% !important;
+            min-width: auto !important;
+            font-size: 11px !important;
+            padding: 8px 10px !important;
+          }
+        }
+
         /* Responsive toast for different screen sizes */
         @media (max-width: 768px) {
-          :global(.toast-container) {
+          .toast-container {
             top: 10px !important;
             right: 10px !important;
             left: 10px !important;
             max-width: calc(100vw - 20px) !important;
           }
           
-          :global(.toast) {
+          .toast {
             max-width: 100% !important;
             min-width: auto !important;
             font-size: 13px !important;
@@ -1138,7 +1012,7 @@ export default function AttendanceFunMeterPage() {
         }
 
         @media (max-width: 480px) {
-          :global(.toast) {
+          .toast {
             font-size: 12px !important;
             padding: 8px 12px !important;
           }
@@ -1146,13 +1020,13 @@ export default function AttendanceFunMeterPage() {
 
         /* Large display toast adjustments */
         @media (min-width: 1920px) {
-          :global(.toast-container) {
+          .toast-container {
             top: 30px !important;
             right: 30px !important;
             max-width: 450px !important;
           }
           
-          :global(.toast) {
+          .toast {
             font-size: 16px !important;
             padding: 14px 18px !important;
             max-width: 450px !important;
@@ -1162,147 +1036,93 @@ export default function AttendanceFunMeterPage() {
 
         /* 4K display toast */
         @media (min-width: 3840px) {
-          :global(.toast-container) {
+          .toast-container {
             top: 40px !important;
             right: 40px !important;
             max-width: 500px !important;
           }
           
-          :global(.toast) {
+          .toast {
             font-size: 18px !important;
             padding: 16px 20px !important;
             max-width: 500px !important;
             min-width: 350px !important;
           }
         }
-      `}</style>
+      `}} />
       <div className="page-root">
-      {/* Header banner */}
-      <section id="banner_top" className="relative w-screen h-[var(--top)] overflow-hidden pt-[env(safe-area-inset-top)]">
-        {/* Background dengan pixel edge yang di-repeat */}
-        <div className="absolute inset-0 flex">
-          {/* Left edge - repeat leftmost pixel strip toward the left */}
-          <div className="flex-1" 
-               style={{
-                 backgroundImage: `url(${headerStrips.left || '/images/header.png'})`,
-                 backgroundPosition: 'right center',
-                 backgroundSize: '1px 100%',
-                 backgroundRepeat: 'repeat-x',
-                 backgroundColor: headerEdgeColors.left
-               }}>
-          </div>
-          
-          {/* Right edge - repeat leftmost pixel strip (same as left) */}
-          <div className="flex-1"
-               style={{
-                 backgroundImage: `url(${headerStrips.left || '/images/header.png'})`,
-                 backgroundPosition: 'right center',
-                 backgroundSize: '1px 100%',
-                 backgroundRepeat: 'repeat-x',
-                 backgroundColor: headerEdgeColors.left
-               }}>
-          </div>
-        </div>
-        
-        {/* Center image overlay - tidak stretch */}
-        <div className="absolute inset-0 flex items-center justify-center">
+      {/* Header banner - Section 1 */}
+      <section id="banner_top" className="relative w-screen overflow-hidden bg-[#006CBB]" style={{ aspectRatio: '40/4' }}>
+        <div className="relative w-full h-full">
           <Image 
-            src="/images/header.png"
+            src="/assets/header/header.png"
             alt="Header"
-            width={1920}
-            height={400}
+            fill
             priority
-            className="max-w-full max-h-full object-contain select-none pointer-events-none" />
+            className="object-contain select-none pointer-events-none"
+            sizes="100vw" />
         </div>
       </section>
       
-      {/* Video Section (center) - full height */}
-      <section id="camera" className="relative w-screen h-full overflow-hidden">
-        <div ref={hostRef} id="camera-host" className="relative w-screen h-full flex items-center justify-center">
+      {/* Video Section with Advertisement Overlay - Section 2 */}
+      <section id="camera" className="relative w-screen overflow-hidden">
+        <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center">
           <video 
             ref={videoRef} 
             id="video" 
             autoPlay 
             playsInline 
             muted 
-            className="block h-full w-full" 
-            style={{
-              objectFit: 'cover',
-              width: '100%',
-              height: '100%',
-              minWidth: '100%',
-              minHeight: '100%',
-            }}
+            className="block w-full h-full object-cover"
           />
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
-        </div>
-        
-        {/* Footer dengan iklan overlay di bagian bawah video */}
-        <div id="footer-overlay">
-          {/* Advertisement - continuous left-to-right marquee */}
-          <section id="ads" className="relative w-screen overflow-hidden bg-gray-100">
-            <div className="absolute inset-0">
-              <div
-                className="marquee-track"
-                ref={marqueeTrackRef}
-                style={{ 
-                  ["--segW" as unknown as string]: `${marqueeSegW}px`,
-                  ["--marqueePlay" as unknown as string]: marqueeSegW > 0 ? 'running' : 'paused'
-                } as React.CSSProperties}
-                aria-label="Iklan"
-              >
-                <div className="marquee-segment" ref={marqueeSegRef}>
-                  {adImages.map((src) => (
-                    <img key={`seg1-${src}`} src={src} alt="Iklan" draggable={false} loading="eager" decoding="async" className="h-full w-auto select-none pointer-events-none block" style={{ flex: '0 0 auto' }} />
-                  ))}
-                </div>
-                <div className="marquee-segment">
-                  {adImages.map((src) => (
-                    <img key={`seg2-${src}`} src={src} alt="Iklan" draggable={false} loading="eager" decoding="async" className="h-full w-auto select-none pointer-events-none block" style={{ flex: '0 0 auto' }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Footer image */}
-          <section id="banner_bottom" className="relative w-screen overflow-hidden pb-[env(safe-area-inset-bottom)]">
-        {/* Background dengan pixel edge yang di-repeat */}
-        <div className="absolute inset-0 flex">
-          {/* Left edge - repeat leftmost pixel strip toward the left */}
-          <div className="flex-1" 
-               style={{
-                 backgroundImage: `url(${footerStrips.left || '/images/footer.png'})`,
-                 backgroundPosition: 'right center',
-                 backgroundSize: '1px 100%',
-                 backgroundRepeat: 'repeat-x',
-                 backgroundColor: footerEdgeColors.left
-               }}>
-          </div>
           
-          {/* Right edge - repeat rightmost pixel strip toward the right */}
-          <div className="flex-1"
-               style={{
-                 backgroundImage: `url(${footerStrips.right || '/images/footer.png'})`,
-                 backgroundPosition: 'left center',
-                 backgroundSize: '1px 100%',
-                 backgroundRepeat: 'repeat-x',
-                 backgroundColor: footerEdgeColors.right
-               }}>
+          {/* Advertisement Overlay - At Bottom of Video */}
+          <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none" style={{ aspectRatio: '4 hh/3' }}>
+            <div className="ad-overlay-container relative mb-0">
+              {adMediaList[currentAdIndex].type === 'image' ? (
+                <img 
+                  src={adMediaList[currentAdIndex].src} 
+                  alt="Iklan" 
+                  draggable={false} 
+                  loading="eager" 
+                  decoding="async" 
+                  className="select-none pointer-events-none w-full h-auto object-contain block" 
+                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                />
+              ) : (
+                <video
+                  key={adMediaList[currentAdIndex].src}
+                  ref={adVideoRef}
+                  src={adMediaList[currentAdIndex].src}
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="auto"
+                  onEnded={goToNextAd}
+                  onLoadedData={() => console.log('[AD_VIDEO] Video loaded:', adMediaList[currentAdIndex].src)}
+                  onCanPlay={() => console.log('[AD_VIDEO] Video can play')}
+                  onPlay={() => console.log('[AD_VIDEO] Video started playing')}
+                  onError={(e) => console.error('[AD_VIDEO] Video error:', e)}
+                  className="select-none w-full h-auto object-contain block"
+                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                />
+              )}
+            </div>
           </div>
-        </div>
-        
-        {/* Center footer image overlay - tidak stretch */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Image 
-            src="/images/footer.png" 
-            alt="Footer" 
-            width={1920} 
-            height={220} 
-            priority 
-            className="max-w-full max-h-full object-contain select-none pointer-events-none" />
         </div>
       </section>
+      
+      {/* Footer Section - Section 4 */}
+      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]" style={{ aspectRatio: '40 / 2' }}>
+        <div className="relative w-full h-full">
+          <Image 
+            src="/assets/footer/footer.png" 
+            alt="Footer" 
+            fill
+            priority 
+            className="object-contain select-none pointer-events-none"
+            sizes="100vw" />
         </div>
       </section>
       </div>
