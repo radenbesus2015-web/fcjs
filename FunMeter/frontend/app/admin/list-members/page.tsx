@@ -568,7 +568,6 @@ export default function AdminListMembersPage() {
         </div>
       </div>
 
-
       {/* Search and Filters */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 max-w-md">
