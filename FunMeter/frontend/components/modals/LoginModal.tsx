@@ -117,7 +117,7 @@ export function LoginModal() {
 
   return (
     <AlertDialog open={showModal} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-0 border bg-background p-0 shadow-lg duration-200 focus:outline-none overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4 max-h-[90vh] overflow-y-auto">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-0 border bg-background p-0 shadow-lg duration-200 focus:outline-none overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4 max-h-[90vh] overflow-y-auto rounded-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Left welcome panel */}
           <div className="relative p-6 md:p-8 bg-background min-h-[360px] md:min-h-[420px] flex flex-col">
@@ -201,7 +201,7 @@ export function LoginModal() {
 
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
               {error ? (
-                <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-600">
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-600">
                   {error}
                 </div>
               ) : null}
@@ -215,7 +215,7 @@ export function LoginModal() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   ref={usernameRef}
-                  className={`w-full px-3 py-2 border rounded-md ${fieldErrors.username ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  className={`w-full px-3 py-2 border rounded-xl transition-all ${fieldErrors.username ? "border-red-500 focus-visible:ring-red-500" : "focus:ring-2 focus:ring-primary/20"}`}
                   placeholder={t("auth.placeholders.username", "Masukkan nama pengguna atau email")}
                   required
                   autoComplete="username"
@@ -233,7 +233,7 @@ export function LoginModal() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md ${fieldErrors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  className={`w-full px-3 py-2 border rounded-xl transition-all ${fieldErrors.password ? "border-red-500 focus-visible:ring-red-500" : "focus:ring-2 focus:ring-primary/20"}`}
                   placeholder={t("auth.placeholders.password", "Masukkan kata sandi")}
                   required
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -252,7 +252,7 @@ export function LoginModal() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md ${fieldErrors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    className={`w-full px-3 py-2 border rounded-xl transition-all ${fieldErrors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : "focus:ring-2 focus:ring-primary/20"}`}
                     placeholder={t("auth.placeholders.confirmPassword", "Ulangi kata sandi")}
                     required
                     autoComplete="new-password"
