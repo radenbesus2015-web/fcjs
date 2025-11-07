@@ -515,7 +515,48 @@ export default function AttendanceFunMeterPage() {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const adVideoRef = useRef<HTMLVideoElement>(null);
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [repeatCount, setRepeatCount] = useState(3); // Jumlah repeat iklan ke kanan dan kiri (total = 1 center + 3 kiri + 3 kanan = 7)
 
+  // Preload semua iklan saat component mount untuk render cepat
+  useEffect(() => {
+    adMediaList.forEach((ad) => {
+      if (ad.type === 'image') {
+        // Preload gambar
+        const img = new window.Image();
+        img.src = ad.src;
+        img.decode(); // Decode immediately
+      } else if (ad.type === 'video') {
+        // Preload video
+        const video = document.createElement('video');
+        video.src = ad.src;
+        video.preload = 'auto';
+        video.muted = true;
+        video.playsInline = true;
+        video.load();
+      }
+    });
+  }, [adMediaList]);
+  
+  // Preload next ad untuk transisi smooth
+  useEffect(() => {
+    const nextIndex = (currentAdIndex + 1) % adMediaList.length;
+    const nextAd = adMediaList[nextIndex];
+    
+    if (nextAd) {
+      if (nextAd.type === 'image') {
+        const img = new window.Image();
+        img.src = nextAd.src;
+        img.decode();
+      } else if (nextAd.type === 'video') {
+        const video = document.createElement('video');
+        video.src = nextAd.src;
+        video.preload = 'auto';
+        video.muted = true;
+        video.playsInline = true;
+        video.load();
+      }
+    }
+  }, [currentAdIndex, adMediaList]);
 
   const startCamera = async () => {
     const video = videoRef.current;
@@ -827,26 +868,23 @@ export default function AttendanceFunMeterPage() {
       adTimerRef.current = null;
     }
     
-    // If current ad is an image, set 5 second timer
+    if (!currentAd) return;
+    
     if (currentAd.type === 'image') {
+      // Untuk gambar, langsung set timer tanpa delay
       adTimerRef.current = setTimeout(() => {
         goToNextAd();
       }, 5000);
-    }
-    // If video, force play immediately without delay
-    else if (currentAd.type === 'video' && adVideoRef.current) {
-      const videoElement = adVideoRef.current;
-      
-      // Play immediately for instant transition
-      videoElement.play().catch((error) => {
-        console.error('[AD_VIDEO] Autoplay failed:', error);
-        // Quick retry for faster transition
-        setTimeout(() => {
-          videoElement.play().catch(() => {
-            console.warn('[AD_VIDEO] Second play attempt failed, skipping to next ad');
-            goToNextAd();
-          });
-        }, 500);
+    } else if (currentAd.type === 'video') {
+      // Untuk video, play semua instance sekaligus
+      const videoElements = document.querySelectorAll(`video[src="${currentAd.src}"]`);
+      videoElements.forEach((video) => {
+        const videoEl = video as HTMLVideoElement;
+        videoEl.currentTime = 0; // Reset ke awal
+        videoEl.play().catch(() => {
+          // Retry sekali jika gagal
+          setTimeout(() => videoEl.play().catch(() => {}), 100);
+        });
       });
     }
     
@@ -855,7 +893,7 @@ export default function AttendanceFunMeterPage() {
         clearTimeout(adTimerRef.current);
       }
     };
-  }, [currentAdIndex, goToNextAd]);
+  }, [currentAdIndex, adMediaList, goToNextAd]);
 
   // Preload next ad for seamless transition
   useEffect(() => {
@@ -1025,36 +1063,41 @@ export default function AttendanceFunMeterPage() {
           background-color: transparent;
         }
         
-        /* Advertisement overlay responsive sizing */
+        /* Advertisement overlay responsive sizing - fixed width untuk repeat */
         .ad-overlay-container {
-          max-width: 280px;
+          width: 280px;
+          min-width: 280px;
         }
         
         /* Portrait mode - smaller ads */
         @media (orientation: portrait) {
           .ad-overlay-container {
-            max-width: 240px;
+            width: 240px;
+            min-width: 240px;
           }
         }
         
         /* Landscape mode - medium ads */
         @media (orientation: landscape) {
           .ad-overlay-container {
-            max-width: 350px;
+            width: 350px;
+            min-width: 350px;
           }
         }
         
         /* Large landscape screens */
         @media (orientation: landscape) and (min-width: 1024px) {
           .ad-overlay-container {
-            max-width: 450px;
+            width: 450px;
+            min-width: 450px;
           }
         }
         
         /* Extra large screens */
         @media (min-width: 1920px) {
           .ad-overlay-container {
-            max-width: 600px;
+            width: 600px;
+            min-width: 600px;
           }
         }
 
@@ -1181,37 +1224,116 @@ export default function AttendanceFunMeterPage() {
           />
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
           
-          {/* Advertisement Overlay - At Bottom of Video */}
-          <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none" style={{ aspectRatio: '4 hh/3' }}>
-            <div className="ad-overlay-container relative mb-0">
-              {adMediaList[currentAdIndex].type === 'image' ? (
-                <img 
-                  src={adMediaList[currentAdIndex].src} 
-                  alt="Iklan" 
-                  draggable={false} 
-                  loading="eager" 
-                  decoding="async" 
-                  className="select-none pointer-events-none w-full h-auto object-contain block" 
-                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
-                />
-              ) : (
-                <video
-                  key={adMediaList[currentAdIndex].src}
-                  ref={adVideoRef}
-                  src={adMediaList[currentAdIndex].src}
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="auto"
-                  onEnded={goToNextAd}
-                  onLoadedData={() => console.log('[AD_VIDEO] Video loaded:', adMediaList[currentAdIndex].src)}
-                  onCanPlay={() => console.log('[AD_VIDEO] Video can play')}
-                  onPlay={() => console.log('[AD_VIDEO] Video started playing')}
-                  onError={(e) => console.error('[AD_VIDEO] Video error:', e)}
-                  className="select-none w-full h-auto object-contain block"
-                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
-                />
-              )}
+          {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
+          <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none overflow-hidden">
+            <div className="flex items-end gap-0">
+              {/* Repeat ke kiri */}
+              {Array.from({ length: repeatCount }).reverse().map((_, index) => (
+                <div key={`left-${index}`} className="ad-overlay-container flex-shrink-0">
+                  {adMediaList[currentAdIndex].type === 'image' ? (
+                    <Image 
+                      src={adMediaList[currentAdIndex].src} 
+                      alt={`Iklan Kiri ${index + 1}`}
+                      width={600}
+                      height={400}
+                      priority
+                      quality={100}
+                      unoptimized
+                      draggable={false} 
+                      className="select-none pointer-events-none w-full h-auto object-contain block" 
+                      style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                    />
+                  ) : (
+                    <video
+                      src={adMediaList[currentAdIndex].src}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      crossOrigin="anonymous"
+                      className="select-none w-full h-auto object-contain block"
+                      style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                      onLoadedData={(e) => {
+                        const video = e.currentTarget;
+                        video.play().catch(() => {});
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+              
+              {/* Center - iklan utama yang stay still */}
+              <div className="ad-overlay-container flex-shrink-0">
+                {adMediaList[currentAdIndex].type === 'image' ? (
+                  <Image 
+                    src={adMediaList[currentAdIndex].src} 
+                    alt="Iklan Center"
+                    width={600}
+                    height={400}
+                    priority
+                    quality={100}
+                    unoptimized
+                    draggable={false} 
+                    className="select-none pointer-events-none w-full h-auto object-contain block" 
+                    style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                  />
+                ) : (
+                  <video
+                    ref={adVideoRef}
+                    src={adMediaList[currentAdIndex].src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    crossOrigin="anonymous"
+                    className="select-none w-full h-auto object-contain block"
+                    style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                    onLoadedData={(e) => {
+                      const video = e.currentTarget;
+                      video.play().catch(() => {});
+                    }}
+                    onEnded={goToNextAd}
+                  />
+                )}
+              </div>
+              
+              {/* Repeat ke kanan */}
+              {Array.from({ length: repeatCount }).map((_, index) => (
+                <div key={`right-${index}`} className="ad-overlay-container flex-shrink-0">
+                  {adMediaList[currentAdIndex].type === 'image' ? (
+                    <Image 
+                      src={adMediaList[currentAdIndex].src} 
+                      alt={`Iklan Kanan ${index + 1}`}
+                      width={600}
+                      height={400}
+                      priority
+                      quality={100}
+                      unoptimized
+                      draggable={false} 
+                      className="select-none pointer-events-none w-full h-auto object-contain block" 
+                      style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                    />
+                  ) : (
+                    <video
+                      src={adMediaList[currentAdIndex].src}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      crossOrigin="anonymous"
+                      className="select-none w-full h-auto object-contain block"
+                      style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                      onLoadedData={(e) => {
+                        const video = e.currentTarget;
+                        video.play().catch(() => {});
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
