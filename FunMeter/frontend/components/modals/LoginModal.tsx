@@ -117,7 +117,7 @@ export function LoginModal() {
 
   return (
     <AlertDialog open={showModal} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-0 border bg-background p-0 shadow-lg duration-200 focus:outline-none overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-0 border bg-background p-0 shadow-lg duration-200 focus:outline-none overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4 max-h-[90vh] overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Left welcome panel */}
           <div className="relative p-6 md:p-8 bg-background min-h-[360px] md:min-h-[420px] flex flex-col">

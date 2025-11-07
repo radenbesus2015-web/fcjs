@@ -56,7 +56,7 @@ export function SettingsModal() {
 
   return (
     <AlertDialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-4 sm:p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden">
         <AlertDialogHeader>
           <div className="flex items-center justify-between gap-4 border-b pb-4">
             <div>

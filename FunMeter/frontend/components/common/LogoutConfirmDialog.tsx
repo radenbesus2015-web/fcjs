@@ -61,7 +61,7 @@ export function LogoutConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className="w-[calc(100%-2rem)] max-w-md mx-4 sm:mx-0">
         {/* Close button (X) di pojok kanan atas */}
         <button
           onClick={handleCancel}
