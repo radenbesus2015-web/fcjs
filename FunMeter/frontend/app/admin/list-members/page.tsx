@@ -545,44 +545,7 @@ export default function AdminListMembersPage() {
     if (!s) return "-";
     const d = new Date(String(s).replace(" ", "T"));
     if (Number.isNaN(d.getTime())) return String(s);
-    
-    // Format: DD/MMM/YYYY HH:MM:SS (contoh: 11/NOV/2025 16:05:23)
-    const day = String(d.getDate()).padStart(2, '0');
-    const monthNames = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
-    const month = monthNames[d.getMonth()];
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const seconds = String(d.getSeconds()).padStart(2, '0');
-    
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-  };
-
-  const rowDate = (row: FaceItem): string => {
-    const s = row.ts || row.time || row.timestamp || row.created_at || row.date || "";
-    if (!s) return "-";
-    const d = new Date(String(s).replace(" ", "T"));
-    if (Number.isNaN(d.getTime())) return String(s);
-    
-    const day = String(d.getDate()).padStart(2, '0');
-    const monthNames = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
-    const month = monthNames[d.getMonth()];
-    const year = d.getFullYear();
-    
-    return `${day}/${month}/${year}`;
-  };
-
-  const rowTime = (row: FaceItem): string => {
-    const s = row.ts || row.time || row.timestamp || row.created_at || row.date || "";
-    if (!s) return "";
-    const d = new Date(String(s).replace(" ", "T"));
-    if (Number.isNaN(d.getTime())) return "";
-    
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    const seconds = String(d.getSeconds()).padStart(2, '0');
-    
-    return `${hours}:${minutes}:${seconds}`;
+    return d.toLocaleString("id-ID");
   };
 
   return (
@@ -590,24 +553,24 @@ export default function AdminListMembersPage() {
       {/* DIV 1: CRUD Operations - Header, Search, Filters, Actions */}
       <div className="space-y-4 p-6 border rounded-lg bg-white">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold">{t("adminListMembers.title", "Kelola Anggota")}</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-2xl font-bold">{t("adminListMembers.title", "Kelola Anggota")}</h2>
+            <p className="text-muted-foreground">
               {t("adminListMembers.subtitle", "Kelola database wajah anggota ({total} anggota)", { total: totalMembers })}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => fetchMembers(currentPage, searchQuery)} variant="outline" size="sm" className="gap-2">
-              <Icon name="RefreshCw" className="h-4 w-4" />
-              <span className="hidden sm:inline">{t("adminListMembers.actions.refresh", "Refresh")}</span>
+            <Button onClick={() => fetchMembers(currentPage, searchQuery)} variant="outline" size="sm">
+              <Icon name="RefreshCw" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.refresh", "Refresh")}
             </Button>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex-1 w-full sm:max-w-md">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 max-w-md">
             <div className="relative">
               <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -619,17 +582,11 @@ export default function AdminListMembersPage() {
               />
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             {/* View switch */}
-            <div className="hidden lg:flex items-center gap-1 mr-2">
-              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")} className="gap-2">
-                <Icon name="Grid3x3" className="h-4 w-4" />
-                <span className="hidden xl:inline">Grid</span>
-              </Button>
-              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")} className="gap-2">
-                <Icon name="List" className="h-4 w-4" />
-                <span className="hidden xl:inline">List</span>
-              </Button>
+            <div className="hidden md:flex items-center gap-1 mr-2">
+              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>Grid</Button>
+              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>List</Button>
             </div>
             <select
               className="h-9 rounded-md border px-2 text-sm bg-background"
@@ -659,17 +616,17 @@ export default function AdminListMembersPage() {
               <option value="asc">{t("adminListMembers.order.oldest", "Oldest")}</option>
             </select>
           <div className="flex items-center gap-2">
-            <Button onClick={openBulkUploadModal} variant="outline" size="sm" className="gap-2">
-              <Icon name="Upload" className="h-4 w-4" />
-              <span className="hidden md:inline">{t("adminListMembers.actions.bulkUpload", "Bulk Upload")}</span>
+            <Button onClick={openBulkUploadModal} variant="outline" size="sm">
+              <Icon name="Upload" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.bulkUpload", "Bulk Upload")}
             </Button>
-            <Button onClick={exportSelectedMembers} variant="outline" size="sm" disabled={selectedMembers.length===0} className="gap-2">
-              <Icon name="FileArchive" className="h-4 w-4" />
-              <span className="hidden md:inline">{t("adminListMembers.actions.export", "Ekspor")}</span>
+            <Button onClick={exportSelectedMembers} variant="outline" size="sm" disabled={selectedMembers.length===0}>
+              <Icon name="FileArchive" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.export", "Ekspor")}
             </Button>
-            <Button onClick={deleteSelectedMembers} variant="destructive" size="sm" disabled={selectedMembers.length===0} className="gap-2">
-              <Icon name="Trash2" className="h-4 w-4" />
-              <span className="hidden md:inline">{t("adminListMembers.actions.deleteSelected", "Delete")}</span>
+            <Button onClick={deleteSelectedMembers} variant="destructive" size="sm" disabled={selectedMembers.length===0}>
+              <Icon name="Trash2" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.deleteSelected", "Delete")}
             </Button>
           </div>
           </div>
@@ -736,44 +693,30 @@ export default function AdminListMembersPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         {photoUrl(row) ? (
-                          <img 
-                            src={photoUrl(row)} 
-                            alt={row.label} 
-                            className="h-16 w-16 rounded-md object-cover border" 
-                            loading="lazy"
-                            decoding="async"
-                            style={{ imageRendering: 'auto' }}
-                          />
+                          <img src={photoUrl(row)} alt={row.label} className="h-16 w-16 rounded-md object-cover border" />
                         ) : (
                           <div className="h-16 w-16 rounded-md bg-muted" />
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-sm">
-                      <div className="space-y-0.5">
-                        <div className="font-medium">{rowDate(row)}</div>
-                        <div className="text-xs text-muted-foreground">{rowTime(row)}</div>
-                      </div>
-                    </td>
+                    <td className="p-4 text-sm whitespace-nowrap">{rowTs(row)}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => startEditLabel(row)}
-                          className="gap-2"
                         >
-                          <Icon name="Pencil" className="h-4 w-4" />
-                          <span className="hidden lg:inline">{t("adminListMembers.actions.edit", "Edit")}</span>
+                          <Icon name="Pencil" className="h-4 w-4 mr-2" />
+                          {t("adminListMembers.actions.edit", "Edit")}
                         </Button>
                       <Button 
                         variant="destructive" 
                         size="sm"
                         onClick={() => deleteMember(String(row.id), row.label)}
-                        className="gap-2"
                       >
-                        <Icon name="Trash2" className="h-4 w-4" />
-                        <span className="hidden lg:inline">{t("adminListMembers.actions.delete", "Delete")}</span>
+                        <Icon name="Trash2" className="h-4 w-4 mr-2" />
+                        {t("adminListMembers.actions.delete", "Delete")}
                       </Button>
                       </div>
                     </td>
@@ -793,8 +736,8 @@ export default function AdminListMembersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t">
-            <div className="text-sm text-muted-foreground text-center sm:text-left">
+          <div className="flex items-center justify-between p-4 border-t">
+            <div className="text-sm text-muted-foreground">
               {t("adminListMembers.pagination.info", "Menampilkan {start}-{end} dari {total} anggota", {
                 start: perPage === "all" ? 1 : (currentPage - 1) * perPage + 1,
                 end: perPage === "all" ? totalMembers : Math.min(currentPage * perPage, totalMembers),
@@ -808,13 +751,11 @@ export default function AdminListMembersPage() {
                 size="sm"
                 onClick={() => fetchMembers(currentPage - 1, searchQuery)}
                 disabled={currentPage <= 1}
-                className="gap-2"
               >
-                <Icon name="ChevronLeft" className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("adminListMembers.pagination.previous", "Sebelumnya")}</span>
+                {t("adminListMembers.pagination.previous", "Sebelumnya")}
               </Button>
               
-              <span className="text-sm whitespace-nowrap">
+              <span className="text-sm">
                 {t("adminListMembers.pagination.current", "Halaman {page} dari {total}", {
                   page: currentPage,
                   total: totalPages,
@@ -826,10 +767,8 @@ export default function AdminListMembersPage() {
                 size="sm"
                 onClick={() => fetchMembers(currentPage + 1, searchQuery)}
                 disabled={currentPage >= totalPages}
-                className="gap-2"
               >
-                <span className="hidden sm:inline">{t("adminListMembers.pagination.next", "Selanjutnya")}</span>
-                <Icon name="ChevronRight" className="h-4 w-4" />
+                {t("adminListMembers.pagination.next", "Selanjutnya")}
               </Button>
             </div>
           </div>
@@ -854,21 +793,13 @@ export default function AdminListMembersPage() {
                   />
                   <div className="min-w-0">
                     <div className="font-medium truncate">{row.label}</div>
-                    <div className="text-xs text-muted-foreground truncate">ID: {String(row.id)}</div>
-                    <div className="text-xs text-muted-foreground truncate">{rowDate(row)} • {rowTime(row)}</div>
+                    <div className="text-xs text-muted-foreground truncate">ID: {String(row.id)} • {rowTs(row)}</div>
                   </div>
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     {photoUrl(row) ? (
-                      <img 
-                        src={photoUrl(row)} 
-                        alt={row.label} 
-                        className="h-16 w-16 rounded-md object-cover border" 
-                        loading="lazy"
-                        decoding="async"
-                        style={{ imageRendering: 'auto' }}
-                      />
+                      <img src={photoUrl(row)} alt={row.label} className="h-16 w-16 rounded-md object-cover border" />
                     ) : (
                       <div className="h-16 w-16 rounded-md bg-muted" />
                     )}
@@ -908,8 +839,8 @@ export default function AdminListMembersPage() {
 
       {/* Pagination for Grid View */}
       {viewMode === "grid" && (perPage === "all" || totalPages > 1) && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t bg-muted/30">
-          <div className="text-sm text-muted-foreground text-center sm:text-left">
+        <div className="flex items-center justify-between p-4 border-t bg-muted/30">
+          <div className="text-sm text-muted-foreground">
               {perPage === "all" ? (
                 t("adminListMembers.pagination.infoAll", "Menampilkan semua {total} anggota", { total: totalMembers })
               ) : (
@@ -928,13 +859,11 @@ export default function AdminListMembersPage() {
                 size="sm"
                 onClick={() => fetchMembers(currentPage - 1, searchQuery)}
                 disabled={currentPage <= 1}
-                className="gap-2"
               >
-                <Icon name="ChevronLeft" className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("adminListMembers.pagination.previous", "Sebelumnya")}</span>
+                {t("adminListMembers.pagination.previous", "Sebelumnya")}
               </Button>
               
-              <span className="text-sm text-muted-foreground whitespace-nowrap">
+              <span className="text-sm text-muted-foreground">
                 {t("adminListMembers.pagination.current", "Halaman {page} dari {total}", {
                   page: currentPage,
                   total: totalPages,
@@ -946,10 +875,8 @@ export default function AdminListMembersPage() {
                 size="sm"
                 onClick={() => fetchMembers(currentPage + 1, searchQuery)}
                 disabled={currentPage >= totalPages}
-                className="gap-2"
               >
-                <span className="hidden sm:inline">{t("adminListMembers.pagination.next", "Selanjutnya")}</span>
-                <Icon name="ChevronRight" className="h-4 w-4" />
+                {t("adminListMembers.pagination.next", "Selanjutnya")}
               </Button>
             </div>
           )}
@@ -961,9 +888,9 @@ export default function AdminListMembersPage() {
       {/* Edit Modal */}
       {editingId && editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30">
+            <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
                 <h2 className="text-xl font-semibold">{t("adminListMembers.edit.modalTitle", "Edit")}</h2>
                 <p className="text-sm text-muted-foreground">
@@ -996,7 +923,7 @@ export default function AdminListMembersPage() {
                       if (!savingEdit) saveEditLabel();
                     }
                   }}
-                  className="w-full px-3 py-2 border rounded-xl bg-background border-border focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full px-3 py-2 border rounded-lg bg-background border-border"
                   autoFocus
                   disabled={savingEdit}
                 />
@@ -1011,16 +938,9 @@ export default function AdminListMembersPage() {
               {/* Current Photo Preview */}
                 <div className="flex items-center gap-4 mb-4">
                   {photoUrl(editingItem) ? (
-                    <img 
-                      src={photoUrl(editingItem)} 
-                      alt={editingItem.label} 
-                      className="h-32 w-32 rounded-xl object-cover border" 
-                      loading="lazy"
-                      decoding="async"
-                      style={{ imageRendering: 'auto' }}
-                    />
+                    <img src={photoUrl(editingItem)} alt={editingItem.label} className="h-32 w-32 rounded-md object-cover border" />
                 ) : (
-                  <div className="h-32 w-32 rounded-xl bg-muted flex items-center justify-center">
+                  <div className="h-32 w-32 rounded-md bg-muted flex items-center justify-center">
                     <Icon name="User" className="h-12 w-12 text-muted-foreground" />
                   </div>
                 )}
@@ -1032,7 +952,7 @@ export default function AdminListMembersPage() {
 
               {/* File Drop Zone */}
               <div 
-                className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-all hover:bg-muted/20"
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition"
                   onClick={() => editFileInputRef.current?.click()}
               >
                 <input
@@ -1083,7 +1003,7 @@ export default function AdminListMembersPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-muted/30">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
               <Button
                 variant="outline"
                 onClick={cancelEditLabel}
@@ -1113,9 +1033,9 @@ export default function AdminListMembersPage() {
       {/* Bulk Upload Modal */}
       {bulkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col border overflow-hidden">
+          <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col border">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b bg-muted/30">
+            <div className="flex items-center justify-between p-6 border-b">
               <div>
                 <h2 className="text-xl font-semibold">{t("adminListMembers.bulk.title", "Bulk Upload")}</h2>
                 <p className="text-sm text-muted-foreground">
@@ -1134,7 +1054,7 @@ export default function AdminListMembersPage() {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {/* File Input */}
-              <div className="border-2 border-dashed rounded-xl p-8 text-center border-border hover:border-primary transition-all hover:bg-muted/20">
+              <div className="border-2 border-dashed rounded-lg p-8 text-center border-border hover:border-primary transition">
                 <input
                   ref={bulkFileInputRef}
                   type="file"
@@ -1180,7 +1100,7 @@ export default function AdminListMembersPage() {
                     <span>{t("adminListMembers.bulk.uploading", "Mengunggah...")}</span>
                     <span>{bulkProgress.done} / {bulkProgress.total}</span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className="bg-primary h-2 rounded-full transition-all"
                       style={{ width: `${(bulkProgress.done / bulkProgress.total) * 100}%` }}
@@ -1199,7 +1119,7 @@ export default function AdminListMembersPage() {
                     {bulkItems.map((item) => (
                       <div 
                         key={item.id} 
-                        className={`flex items-center gap-4 p-3 border rounded-xl ${
+                        className={`flex items-center gap-4 p-3 border rounded-lg ${
                           item.status === "ok" ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" :
                           item.status === "err" ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800" :
                           item.status === "duplicate" ? "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800" :
@@ -1211,10 +1131,7 @@ export default function AdminListMembersPage() {
                         <img 
                           src={item.previewUrl} 
                           alt={item.name}
-                          className="w-16 h-16 object-cover rounded-xl border"
-                          loading="lazy"
-                          decoding="async"
-                          style={{ imageRendering: 'auto' }}
+                          className="w-16 h-16 object-cover rounded border"
                         />
 
                         {/* Label Input */}
@@ -1224,7 +1141,7 @@ export default function AdminListMembersPage() {
                             value={item.label}
                             onChange={(e) => updateBulkItemLabel(item.id, e.target.value)}
                             disabled={bulkRunning || item.status === "ok"}
-                            className="w-full px-2 py-1 text-sm border rounded-lg bg-background border-border focus:ring-2 focus:ring-primary/20 transition-all"
+                            className="w-full px-2 py-1 text-sm border rounded bg-background border-border"
                             placeholder="Label"
                           />
                           <p className={`text-xs ${
@@ -1269,7 +1186,7 @@ export default function AdminListMembersPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-border bg-muted/30">
+            <div className="flex items-center justify-between p-6 border-t border-border">
               <div className="text-sm text-muted-foreground">
                 {bulkItems.length > 0 && (
                   <span>

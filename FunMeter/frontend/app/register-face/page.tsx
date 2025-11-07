@@ -36,6 +36,15 @@ export default function RegisterFacePage() {
   const [previewToken, setPreviewToken] = useState<string>("");
   const [previewFaces, setPreviewFaces] = useState<Array<{ bbox: [number, number, number, number] }>>([]);
 
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!isRegistering) {
+        void startRegistration();
+      }
+    }
+  };
+
   interface PreviewResponse {
     preview?: string;
     faces?: Array<{ bbox: [number, number, number, number] }>;
@@ -488,14 +497,7 @@ export default function RegisterFacePage() {
                 ref={nameInputRef}
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (!isRegistering) {
-                      void startRegistration();
-                    }
-                  }
-                }}
+                onKeyDown={handleNameKeyDown}
                 className="w-full px-3 py-2 border rounded-md"
                 placeholder={t("registerFace.fields.labelPlaceholder", "Nama lengkap")}
               />
