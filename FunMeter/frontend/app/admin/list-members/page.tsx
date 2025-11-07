@@ -550,87 +550,100 @@ export default function AdminListMembersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-muted-foreground">
-            {t("adminListMembers.subtitle", "Kelola database wajah anggota ({total} anggota)", { total: totalMembers })}
-          </p>
+      {/* DIV 1: CRUD Operations - Header, Search, Filters, Actions */}
+      <div className="space-y-4 p-6 border rounded-lg bg-white">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">{t("adminListMembers.title", "Kelola Anggota")}</h2>
+            <p className="text-muted-foreground">
+              {t("adminListMembers.subtitle", "Kelola database wajah anggota ({total} anggota)", { total: totalMembers })}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => fetchMembers(currentPage, searchQuery)} variant="outline" size="sm">
+              <Icon name="RefreshCw" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.refresh", "Refresh")}
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => fetchMembers(currentPage, searchQuery)} variant="outline" size="sm">
-            <Icon name="RefreshCw" className="h-4 w-4 mr-2" />
-            {t("adminListMembers.actions.refresh", "Refresh")}
-          </Button>
-          {/* <Button variant="default" size="sm">
-            <Icon name="UserPlus" className="h-4 w-4 mr-2" />
-            {t("adminListMembers.actions.addMember", "Tambah Anggota")}
-          </Button> */}
+
+        {/* Search and Filters */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder={t("adminListMembers.search.placeholder", "Search labels…")}
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-md bg-background"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* View switch */}
+            <div className="hidden md:flex items-center gap-1 mr-2">
+              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>Grid</Button>
+              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>List</Button>
+            </div>
+            <select
+              className="h-9 rounded-md border px-2 text-sm bg-background"
+              value={perPage}
+              onChange={(e) => { 
+                const value = e.target.value;
+                const newPerPage = value === "all" ? "all" : Number(value);
+                setPerPage(newPerPage); 
+                fetchMembers(1, searchQuery, undefined, newPerPage);
+              }}
+            >
+              <option value={12}>12</option>
+              <option value={22}>22</option>
+              <option value={52}>52</option>
+              <option value="all">{t("adminListMembers.perPage.all", "Semua")}</option>
+            </select>
+            <select
+              className="h-9 rounded-md border px-2 text-sm bg-background"
+              value={order}
+              onChange={(e) => { 
+                const newOrder = e.target.value as "asc" | "desc";
+                setOrder(newOrder); 
+                fetchMembers(1, searchQuery, newOrder);
+              }}
+            >
+              <option value="desc">{t("adminListMembers.order.newest", "Newest")}</option>
+              <option value="asc">{t("adminListMembers.order.oldest", "Oldest")}</option>
+            </select>
+          <div className="flex items-center gap-2">
+            <Button onClick={openBulkUploadModal} variant="outline" size="sm">
+              <Icon name="Upload" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.bulkUpload", "Bulk Upload")}
+            </Button>
+            <Button onClick={exportSelectedMembers} variant="outline" size="sm" disabled={selectedMembers.length===0}>
+              <Icon name="FileArchive" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.export", "Ekspor")}
+            </Button>
+            <Button onClick={deleteSelectedMembers} variant="destructive" size="sm" disabled={selectedMembers.length===0}>
+              <Icon name="Trash2" className="h-4 w-4 mr-2" />
+              {t("adminListMembers.actions.deleteSelected", "Delete")}
+            </Button>
+          </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between gap-4 pt-2">
+          <div className="text-sm text-muted-foreground">
+            {selectedMembers.length > 0 && (
+              <span>{t("adminListMembers.selected", "{count} item dipilih", { count: selectedMembers.length })}</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder={t("adminListMembers.search.placeholder", "Search labels…")}
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-md"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* View switch */}
-          <div className="hidden md:flex items-center gap-1 mr-2">
-            <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>Grid</Button>
-            <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>List</Button>
-          </div>
-          <select
-            className="h-9 rounded-md border px-2 text-sm"
-            value={perPage}
-            onChange={(e) => { 
-              const value = e.target.value;
-              const newPerPage = value === "all" ? "all" : Number(value);
-              setPerPage(newPerPage); 
-              fetchMembers(1, searchQuery, undefined, newPerPage);  // Pass new perPage value directly
-            }}
-          >
-            <option value={12}>12</option>
-            <option value={22}>22</option>
-            <option value={52}>52</option>
-            <option value="all">{t("adminListMembers.perPage.all", "Semua")}</option>
-          </select>
-          <select
-            className="h-9 rounded-md border px-2 text-sm"
-            value={order}
-            onChange={(e) => { 
-              const newOrder = e.target.value as "asc" | "desc";
-              setOrder(newOrder); 
-              fetchMembers(1, searchQuery, newOrder);  // Pass new order value directly
-            }}
-          >
-            <option value="desc">{t("adminListMembers.order.newest", "Newest")}</option>
-            <option value="asc">{t("adminListMembers.order.oldest", "Oldest")}</option>
-          </select>
-          <Button onClick={openBulkUploadModal} variant="outline" size="sm">
-            <Icon name="Upload" className="h-4 w-4 mr-2" />
-            {t("adminListMembers.actions.bulkUpload", "Bulk Upload")}
-          </Button>
-          <Button onClick={deleteSelectedMembers} variant="destructive" size="sm" disabled={selectedMembers.length===0}>
-            <Icon name="Trash2" className="h-4 w-4 mr-2" />
-            {t("adminListMembers.actions.deleteSelected", "Delete")}
-          </Button>
-          <Button onClick={exportSelectedMembers} variant="outline" size="sm" disabled={selectedMembers.length===0}>
-            <Icon name="FileArchive" className="h-4 w-4 mr-2" />
-            {t("adminListMembers.actions.export", "Ekspor")}
-          </Button>
-        </div>
-      </div>
-
-      {/* Members Table / Grid */}
+      {/* DIV 2: Data Display - Members Table / Grid */}
+      <div className="border rounded-lg bg-card">
       {viewMode === "table" ? (
       <div className="border rounded-lg max-h-[70vh] overflow-auto">
         <div className="min-w-full">
@@ -869,6 +882,8 @@ export default function AdminListMembersPage() {
           )}
         </div>
       )}
+      </div>
+      {/* End of DIV 2: Data Display */}
 
       {/* Edit Modal */}
       {editingId && editingItem && (
