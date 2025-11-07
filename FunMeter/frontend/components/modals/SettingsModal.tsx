@@ -56,9 +56,9 @@ export function SettingsModal() {
 
   return (
     <AlertDialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-4 sm:p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-4 sm:p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden rounded-2xl">
         <AlertDialogHeader>
-          <div className="flex items-center justify-between gap-4 border-b pb-4">
+          <div className="flex items-center justify-between gap-4 border-b pb-4 bg-muted/30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">
                 {ft("breadcrumb", "Preferensi")}
@@ -90,7 +90,7 @@ export function SettingsModal() {
               <select
                 value={form.language}
                 onChange={(e) => setForm({ ...form, language: e.target.value })}
-                className="flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm"
+                className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
               >
                 {languageOptions.map((option) => (
                   <option key={option.code} value={option.code}>
@@ -111,7 +111,7 @@ export function SettingsModal() {
             </h3>
             <div className="grid gap-3 grid-cols-2">
               <label
-                className={`inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium cursor-pointer ${
+                className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium cursor-pointer transition-all ${
                   form.theme === "light" ? "bg-accent text-accent-foreground" : ""
                 }`}
               >
@@ -126,7 +126,7 @@ export function SettingsModal() {
                 <span>{ft("theme.light", "Terang")}</span>
               </label>
               <label
-                className={`inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium cursor-pointer ${
+                className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium cursor-pointer transition-all ${
                   form.theme === "dark" ? "bg-accent text-accent-foreground" : ""
                 }`}
               >
@@ -159,7 +159,7 @@ export function SettingsModal() {
                   max="1920"
                   value={form.attendanceSendWidth}
                   onChange={(e) => setForm({ ...form, attendanceSendWidth: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm"
+                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("attendance.width.help", "Mengatur resolusi frame untuk absensi.")}
@@ -176,7 +176,7 @@ export function SettingsModal() {
                   max="1"
                   value={form.attendanceJpegQuality}
                   onChange={(e) => setForm({ ...form, attendanceJpegQuality: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm"
+                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("attendance.jpeg.help", "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar.")}
@@ -201,7 +201,7 @@ export function SettingsModal() {
                   max="1920"
                   value={form.funSendWidth}
                   onChange={(e) => setForm({ ...form, funSendWidth: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm"
+                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("funMeter.width.help", "Mengatur resolusi frame untuk analisis emosi.")}
@@ -218,7 +218,7 @@ export function SettingsModal() {
                   max="1"
                   value={form.funJpegQuality}
                   onChange={(e) => setForm({ ...form, funJpegQuality: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm"
+                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("funMeter.jpeg.help", "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar.")}
@@ -234,7 +234,7 @@ export function SettingsModal() {
                   max="5000"
                   value={form.baseInterval}
                   onChange={(e) => setForm({ ...form, baseInterval: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm"
+                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("funMeter.interval.help", "Default: 200. Jeda antar frame ke server attendance.")}

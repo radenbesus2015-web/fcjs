@@ -1026,9 +1026,9 @@ export default function AttendanceFunMeterPage() {
         /* Landscape mode - footer lebih pendek dan lebar, sama dengan header */
         @media (orientation: landscape) {
           #banner_bottom {
-            aspect-ratio: 24 / 3 !important;
+            aspect-ratio: 24 / 2 !important;
             min-height: 50px;
-            max-height: 80px;
+            max-height: 50px;
           }
         }
 
@@ -1348,7 +1348,7 @@ export default function AttendanceFunMeterPage() {
             fill
             priority 
             className="object-contain select-none pointer-events-none"
-            sizes="100vw" />
+            sizes="20vw" />
         </div>
       </section>
       </div>
