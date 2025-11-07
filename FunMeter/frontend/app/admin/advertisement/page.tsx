@@ -114,6 +114,93 @@ export default function AdminAdvertisementPage() {
     });
   };
 
+  // Drag and drop handlers
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    // Prevent drag from interactive elements
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button') || target.closest('input')) {
+      e.preventDefault();
+      return;
+    }
+    
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", String(index));
+    // Add visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "0.5";
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Reset visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "1";
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    setItems((prev) => {
+      const next = [...prev];
+      const draggedItem = next[draggedIndex];
+      
+      // Remove dragged item from its original position
+      next.splice(draggedIndex, 1);
+      
+      // Calculate new index after removal
+      // Item yang di-drop akan menggantikan posisi item yang di-drop
+      // Item yang tergantikan akan turun satu posisi
+      let adjustedDropIndex: number;
+      if (draggedIndex < dropIndex) {
+        // Dragging down: after removal, target index shifts down by 1
+        // We want to insert at the position of the target item
+        adjustedDropIndex = dropIndex - 1;
+      } else {
+        // Dragging up: target index stays the same
+        // We want to insert at the position of the target item
+        adjustedDropIndex = dropIndex;
+      }
+      
+      // Insert dragged item at new position
+      // This will push the target item down by one position
+      next.splice(adjustedDropIndex, 0, draggedItem);
+      
+      // Auto-save after reordering
+      try {
+        const enabled = next.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
+        localStorage.setItem(LS_KEY, JSON.stringify(enabled));
+      } catch {}
+      
+      return next;
+    });
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const toggle = (idx: number, val: boolean) => {
     setItems((prev) => {
       const next = prev.map((it, i) => (i === idx ? { ...it, enabled: val } : it));
@@ -302,8 +389,25 @@ export default function AdminAdvertisementPage() {
                 {paginatedItems.map((it, localIdx) => {
                   const globalIdx = startIndex + localIdx;
                   const isSelected = selected.includes(it.src);
+                  const isDragging = draggedIndex === globalIdx;
+                  const isDragOver = dragOverIndex === globalIdx;
                   return (
-                    <div key={it.src} className={`flex items-center gap-3 rounded-md border p-2 transition ${isSelected ? 'opacity-60' : ''}`}>
+                    <div 
+                      key={it.src} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, globalIdx)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => handleDragOver(e, globalIdx)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, globalIdx)}
+                      className={`flex items-center gap-3 rounded-md border p-2 transition cursor-move ${
+                        isSelected ? 'opacity-60' : ''
+                      } ${
+                        isDragging ? 'opacity-50' : ''
+                      } ${
+                        isDragOver ? 'border-primary border-2 bg-primary/5' : ''
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         className="h-4 w-4"
@@ -311,14 +415,15 @@ export default function AdminAdvertisementPage() {
                         onChange={(e) => {
                           setSelected((prev) => e.target.checked ? [...prev, it.src] : prev.filter((s) => s !== it.src));
                         }}
+                        onClick={(e) => e.stopPropagation()}
                         aria-label={t("adminAds.fields.select", "Pilih iklan")}
                       />
                       <div className="w-28 h-16 bg-muted flex items-center justify-center overflow-hidden rounded">
                         {it.type === "image" ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={it.src} alt="Ad" className="w-full h-full object-contain" />
+                          <img src={it.src} alt="Ad" className="w-full h-full object-contain" draggable={false} />
                         ) : (
-                          <video src={it.src} className="w-full h-full object-contain" muted />
+                          <video src={it.src} className="w-full h-full object-contain" muted draggable={false} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -326,10 +431,10 @@ export default function AdminAdvertisementPage() {
                         <div className="text-xs text-muted-foreground">{it.type.toUpperCase()}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" onClick={() => move(globalIdx, -1)} disabled={globalIdx === 0}>
+                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} disabled={globalIdx === 0}>
                           ↑
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => move(globalIdx, 1)} disabled={globalIdx === items.length - 1}>
+                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, 1); }} disabled={globalIdx === items.length - 1}>
                           ↓
                         </Button>
                         <div className="flex items-center gap-2">
@@ -338,7 +443,8 @@ export default function AdminAdvertisementPage() {
                             type="checkbox"
                             className="h-4 w-4"
                             checked={!!it.enabled}
-                            onChange={(e) => toggle(globalIdx, e.target.checked)}
+                            onChange={(e) => { e.stopPropagation(); toggle(globalIdx, e.target.checked); }}
+                            onClick={(e) => e.stopPropagation()}
                           />
                           <Label htmlFor={`ad-${globalIdx}`} className="text-xs">{t("adminAds.fields.show", "Show")}</Label>
                         </div>

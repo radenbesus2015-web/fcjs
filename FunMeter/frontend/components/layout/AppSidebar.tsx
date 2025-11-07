@@ -11,6 +11,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { Icon } from "@/components/common/Icon";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
 import { LogoutConfirmDialog } from "@/components/common/LogoutConfirmDialog";
@@ -153,28 +154,38 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
 
         {/* Admin Navigation */}
         {adminNav.length > 0 && (
-          <div className="mb-6">
-            <h3
-              className={cn(
-                "px-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 transition-all duration-300 ease-in-out will-change-[opacity,height]",
-                isOpen ? "mb-2 opacity-100 h-auto" : "mb-0 opacity-0 h-0 overflow-hidden"
-              )}
-              aria-hidden={!isOpen}
-            >
-              {ft("groups.admin", "Admin")}
-            </h3>
-            <nav className="space-y-1">
-              {adminNav.map((item) => (
-                <NavLink
-                  key={item.to}
-                  item={item}
-                  isActive={pathname === item.to}
-                  t={t}
-                  collapsed={!isOpen}
-                />
-              ))}
-            </nav>
-          </div>
+          <>
+            {/* Separator antara menu public dan admin */}
+            <div className={cn(
+              "transition-all duration-300 ease-in-out",
+              isOpen ? "mb-6" : "mb-4"
+            )}>
+              <Separator className="bg-sidebar-border" />
+            </div>
+            
+            <div className="mb-6">
+              <h3
+                className={cn(
+                  "px-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 transition-all duration-300 ease-in-out will-change-[opacity,height]",
+                  isOpen ? "mb-2 opacity-100 h-auto" : "mb-0 opacity-0 h-0 overflow-hidden"
+                )}
+                aria-hidden={!isOpen}
+              >
+                {ft("groups.admin", "Admin")}
+              </h3>
+              <nav className="space-y-1">
+                {adminNav.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    item={item}
+                    isActive={pathname === item.to}
+                    t={t}
+                    collapsed={!isOpen}
+                  />
+                ))}
+              </nav>
+            </div>
+          </>
         )}
       </div>
 
@@ -321,13 +332,21 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
         rel="noopener noreferrer"
         onClick={handleClick}
         className={cn(
-          "flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
+          "group flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
           "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
           collapsed ? "justify-center px-0 gap-0" : "gap-2"
         )}
       >
-        <Icon name={item.icon} className={cn("transition-all", collapsed ? "h-6 w-6" : "h-4 w-4") } />
+        <div className={cn(
+          "flex items-center justify-center rounded-lg transition-all duration-300 ease-in-out flex-shrink-0",
+          collapsed ? "h-10 w-10" : "h-8 w-8",
+          isActive 
+            ? "bg-orange-500 text-white" 
+            : "bg-transparent group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20"
+        )}>
+          <Icon name={item.icon} className={cn("transition-all flex-shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4") } />
+        </div>
         <span
           className={cn(
             "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
@@ -346,13 +365,21 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
       href={item.to}
       onClick={handleClick}
       className={cn(
-        "flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
+        "group flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
         "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
         collapsed ? "justify-center px-0 gap-0" : "gap-2"
       )}
     >
-      <Icon name={item.icon} className={cn("transition-all", collapsed ? "h-6 w-6" : "h-4 w-4") } />
+      <div className={cn(
+        "flex items-center justify-center rounded-lg transition-all duration-300 ease-in-out flex-shrink-0",
+        collapsed ? "h-10 w-10" : "h-8 w-8",
+        isActive 
+          ? "bg-orange-500 text-white" 
+          : "bg-transparent group-hover:bg-orange-200 group-hover:text-white"
+      )}>
+        <Icon name={item.icon} className={cn("transition-all flex-shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4") } />
+      </div>
       <span
         className={cn(
           "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
