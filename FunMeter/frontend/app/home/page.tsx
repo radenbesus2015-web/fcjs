@@ -177,6 +177,7 @@ export default function HomePage() {
       fun_result(data: unknown) {
         const d = (data || {}) as FunResultPayload;
         const results = Array.isArray(d.results) ? d.results : [];
+        console.log("[FUN_RESULT] Received", results.length, "emotion results:", results);
         setEmotionResults(results);
         drawFun(results);
       },
@@ -214,7 +215,10 @@ export default function HomePage() {
   
   const fuseName = (funBox: number[]) => {
     const now = Date.now();
-    if (!lastAttResults.results.length || now - lastAttResults.t > 1800) return null;
+    if (!lastAttResults.results.length || now - lastAttResults.t > 1800) {
+      console.log("[FUSION] No att results or too old"); // DEBUG LOG
+      return null;
+    }
     let best: { label?: string; bbox?: number[]; box?: number[] } | null = null, bestIoU = 0;
     for (const r of lastAttResults.results) {
       const i = iou(funBox, r.bbox || r.box || [0, 0, 0, 0]);
@@ -223,7 +227,9 @@ export default function HomePage() {
         best = r;
       }
     }
-    return best && best.label && bestIoU >= 0.25 ? best.label : null;
+    const result = best && best.label && bestIoU >= 0.25 ? best.label : null;
+    console.log("[FUSION] Best match:", best?.label, "IoU:", bestIoU.toFixed(3), "-> Result:", result); // DEBUG LOG
+    return result;
   };
   
   const EXP_COLORS: Record<string, string> = {
@@ -269,29 +275,59 @@ export default function HomePage() {
     const video = videoRef.current;
     const host = overlay?.parentElement || video;
     if (!host || !video) return { sx: 1, sy: 1, ox: 0, oy: 0 };
-
+    
     const rect = host.getBoundingClientRect();
     const dispW = rect.width, dispH = rect.height;
-
-    const videoW = video.videoWidth || Number(funSendWidth);
-    const videoH = video.videoHeight || sendHeightRef.current;
-    if (!videoW || !videoH) return { sx: dispW / Number(funSendWidth), sy: dispH / sendHeightRef.current, ox: 0, oy: 0 };
-
+    
+    // Bbox dari server menggunakan koordinat snapCanvas (yang dikirim ke server)
+    // SnapCanvas dibuat dengan: drawImage(video, 0, 0, snapW, snapH)
+    // Jadi koordinat di snapCanvas proporsional dengan video asli
+    
+    // Dimensi snapCanvas (yang dikirim ke server)
+    const snapW = Number(funSendWidth);
+    const snapH = sendHeightRef.current;
+    
+    // Dimensi video asli
+    const videoW = video.videoWidth;
+    const videoH = video.videoHeight;
+    
+    if (!snapW || !snapH || !videoW || !videoH) {
+      // Fallback: langsung dari snapCanvas ke display
+      return { sx: dispW / snapW, sy: dispH / snapH, ox: 0, oy: 0 };
+    }
+    
+    // Transformasi: snapCanvas -> video asli -> display
+    // Karena snapCanvas diambil dari video dengan drawImage, koordinatnya proporsional
+    // Scale factor dari snapCanvas ke video asli
+    const scaleX = videoW / snapW;
+    const scaleY = videoH / snapH;
+    
+    // Transform dari video asli ke display (dengan object-fit: cover)
     const videoAspect = videoW / videoH;
     const displayAspect = dispW / dispH;
-
+    
     let sx: number, sy: number, ox = 0, oy = 0;
+    
     if (displayAspect > videoAspect) {
-      // Display lebih lebar -> video mengisi lebar, ada crop atas/bawah
-      sx = dispW / videoW;
-      sy = sx;
-      oy = (dispH - videoH * sy) / 2;
+      // Display lebih lebar - video mengisi lebar, crop atas/bawah
+      // Video di-scale ke lebar display
+      const displayScale = dispW / videoW;
+      sx = displayScale * scaleX; // dari snapCanvas langsung ke display
+      sy = displayScale * scaleY;
+      // Offset vertikal untuk letterbox (crop atas/bawah)
+      const scaledVideoH = videoH * displayScale;
+      oy = (dispH - scaledVideoH) / 2;
     } else {
-      // Display lebih tinggi -> video mengisi tinggi, ada crop kiri/kanan
-      sy = dispH / videoH;
-      sx = sy;
-      ox = (dispW - videoW * sx) / 2;
+      // Display lebih tinggi - video mengisi tinggi, crop kiri/kanan
+      // Video di-scale ke tinggi display
+      const displayScale = dispH / videoH;
+      sx = displayScale * scaleX; // dari snapCanvas langsung ke display
+      sy = displayScale * scaleY;
+      // Offset horizontal untuk letterbox (crop kiri/kanan)
+      const scaledVideoW = videoW * displayScale;
+      ox = (dispW - scaledVideoW) / 2;
     }
+    
     return { sx, sy, ox, oy };
   };
   
@@ -345,17 +381,43 @@ export default function HomePage() {
   };
   
   const drawFun = (results: Array<{ bbox?: number[]; top?: { label?: string }; expression?: string; emotion?: string; label?: string; name?: string }>) => {
-    if (!sendHeightRef.current) return;
+    // Ensure snap size is calculated
+    if (!ensureSnapSize()) {
+      console.log("[DRAW_FUN] Cannot ensure snap size");
+      return;
+    }
+    
     const overlay = overlayRef.current;
     const ctx = ctxRef.current;
     if (!overlay || !ctx) return;
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     ctx.lineWidth = 3;
     const { sx, sy, ox, oy } = getLetterboxTransform();
+    
+    // Debug logging (bisa di-disable setelah fix)
+    if (results && results.length > 0) {
+      const video = videoRef.current;
+      const snapW = Number(funSendWidth);
+      const snapH = sendHeightRef.current;
+      console.log('[DRAW_FUN] Transform:', { 
+        snapW, snapH, 
+        videoW: video?.videoWidth, 
+        videoH: video?.videoHeight,
+        sx, sy, ox, oy,
+        resultsCount: results.length 
+      });
+    }
+    
     let missingName = false;
     (results || []).forEach((r) => {
       const [bx, by, bw, bh] = r.bbox || [0, 0, 0, 0];
-      const x = ox + bx * sx, y = oy + by * sy, w = bw * sx, h = bh * sy;
+      // Transform dari koordinat snapCanvas ke koordinat display
+      // Bbox dari server dalam koordinat snapCanvas, transform ke display
+      const x = ox + bx * sx;
+      const y = oy + by * sy;
+      const w = bw * sx;
+      const h = bh * sy;
+      
       const exprRaw = (r.top?.label || r.expression || r.emotion || "Biasa").trim();
       const expr = mapExprLabel(exprRaw);
       const fused = fuseName([bx, by, bw, bh]);
@@ -384,17 +446,44 @@ export default function HomePage() {
   };
   
   const pushFunFrame = async () => {
-    if (!socket || !socket.socket?.connected || sendingFun || !ensureSnapSize()) return;
+    if (!socket) {
+      console.log("[PUSH_FUN_FRAME] No socket");
+      return;
+    }
+    if (!socket.socket?.connected) {
+      console.log("[PUSH_FUN_FRAME] Socket not connected");
+      return;
+    }
+    if (sendingFun) {
+      console.log("[PUSH_FUN_FRAME] Already sending");
+      return;
+    }
+    if (!ensureSnapSize()) {
+      console.log("[PUSH_FUN_FRAME] Cannot ensure snap size");
+      return;
+    }
+    
     setSendingFun(true);
     try {
       const snapCanvas = snapCanvasRef.current;
       const video = videoRef.current;
-      if (!snapCanvas || !video) return;
+      if (!snapCanvas || !video) {
+        console.log("[PUSH_FUN_FRAME] Missing canvas or video");
+        return;
+      }
       const sctx = snapCanvas.getContext("2d");
-      if (!sctx) return;
+      if (!sctx) {
+        console.log("[PUSH_FUN_FRAME] Cannot get canvas context");
+        return;
+      }
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
-      if (bytes && socket) socket.emit("fun_frame", bytes);
+      if (bytes && socket) {
+        console.log("[PUSH_FUN_FRAME] Sending frame, size:", bytes.length);
+        socket.emit("fun_frame", bytes);
+      }
+    } catch (error) {
+      console.error("[PUSH_FUN_FRAME] Error:", error);
     } finally {
       setSendingFun(false);
     }
@@ -412,6 +501,7 @@ export default function HomePage() {
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
       if (bytes && socket) {
+        console.log("[PUSH_ATT_FRAME] Sending frame, size:", bytes.length); // DEBUG LOG
         socket.emit("att_frame", bytes);
         setLastAttPush(Date.now());
       }
@@ -485,16 +575,40 @@ export default function HomePage() {
   
   // Setup frame sending intervals
   useEffect(() => {
-    if (!socket) return;
-    if (socket.socket?.connected) {
+    if (!socket) {
+      console.log("[WS_SETUP] No socket available");
+      return;
+    }
+    
+    console.log("[WS_SETUP] Socket available, connected:", socket.socket?.connected);
+    
+    // Send attendance config when socket connects
+    const handleConnect = () => {
+      console.log("[WS] Socket connected, sending att_cfg");
       try {
         socket.emit("att_cfg", { th: 0.4, mark: true });
       } catch (e) {
         console.error("Failed to send att_cfg:", e);
       }
+    };
+    
+    // Send config immediately if already connected
+    if (socket.socket?.connected) {
+      handleConnect();
     }
-    const funInterval = setInterval(pushFunFrame, Number(funIntervalMs));
+    
+    // Listen for connect event
+    socket.on("connect", handleConnect);
+    
+    // Setup interval for sending fun frames
+    console.log("[WS_SETUP] Setting up fun frame interval:", funIntervalMs, "ms");
+    const funInterval = setInterval(() => {
+      pushFunFrame();
+    }, Number(funIntervalMs));
+    
     return () => {
+      console.log("[WS_SETUP] Cleaning up");
+      socket.off("connect", handleConnect);
       clearInterval(funInterval);
     };
   }, [socket, funIntervalMs]);
