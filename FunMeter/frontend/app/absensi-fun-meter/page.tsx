@@ -515,6 +515,8 @@ export default function AttendanceFunMeterPage() {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const adVideoRef = useRef<HTMLVideoElement>(null);
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const preloadedMediaRef = useRef<Map<string, HTMLImageElement | HTMLVideoElement>>(new Map());
+  const [adsLoaded, setAdsLoaded] = useState(false);
 
 
   const startCamera = async () => {
@@ -837,17 +839,32 @@ export default function AttendanceFunMeterPage() {
     else if (currentAd.type === 'video' && adVideoRef.current) {
       const videoElement = adVideoRef.current;
       
-      // Play immediately for instant transition
-      videoElement.play().catch((error) => {
-        console.error('[AD_VIDEO] Autoplay failed:', error);
-        // Quick retry for faster transition
-        setTimeout(() => {
-          videoElement.play().catch(() => {
-            console.warn('[AD_VIDEO] Second play attempt failed, skipping to next ad');
+      // Ensure video is ready before playing
+      if (videoElement.readyState >= 3) {
+        // Video is ready, play immediately
+        videoElement.play().catch((error) => {
+          console.error('[AD_VIDEO] Autoplay failed:', error);
+          goToNextAd();
+        });
+      } else {
+        // Wait for video to be ready
+        const handleCanPlay = () => {
+          videoElement.play().catch((error) => {
+            console.error('[AD_VIDEO] Autoplay failed:', error);
             goToNextAd();
           });
-        }, 500);
-      });
+          videoElement.removeEventListener('canplay', handleCanPlay);
+        };
+        videoElement.addEventListener('canplay', handleCanPlay);
+        
+        // Fallback timeout
+        setTimeout(() => {
+          videoElement.removeEventListener('canplay', handleCanPlay);
+          if (videoElement.paused) {
+            goToNextAd();
+          }
+        }, 100);
+      }
     }
     
     return () => {
@@ -855,45 +872,77 @@ export default function AttendanceFunMeterPage() {
         clearTimeout(adTimerRef.current);
       }
     };
-  }, [currentAdIndex, goToNextAd]);
+  }, [currentAdIndex, goToNextAd, adMediaList]);
 
-  // Preload next ad for seamless transition
+  // Preload ALL ads on mount for instant transitions
   useEffect(() => {
-    const nextIndex = adMediaList.length ? (currentAdIndex + 1) % adMediaList.length : 0;
-    const nextAd = adMediaList[nextIndex];
+    let cancelled = false;
+    const preloadCache = preloadedMediaRef.current;
     
-    if (nextAd && nextAd.type === 'video') {
-      // Preload next video
-      const preloadVideo = document.createElement('video');
-      preloadVideo.src = nextAd.src;
-      preloadVideo.preload = 'auto';
-      preloadVideo.load();
+    const preloadAllAds = async () => {
+      const loadPromises = adMediaList.map((ad) => {
+        return new Promise<void>((resolve) => {
+          if (ad.type === 'image') {
+            const img = new window.Image();
+            img.onload = () => {
+              if (!cancelled) {
+                preloadCache.set(ad.src, img);
+                console.log('[AD_CACHE] Image loaded:', ad.src);
+              }
+              resolve();
+            };
+            img.onerror = () => {
+              console.warn('[AD_CACHE] Image failed to load:', ad.src);
+              resolve();
+            };
+            img.src = ad.src;
+          } else if (ad.type === 'video') {
+            const video = document.createElement('video');
+            video.preload = 'auto';
+            video.muted = true;
+            video.playsInline = true;
+            video.onloadeddata = () => {
+              if (!cancelled) {
+                preloadCache.set(ad.src, video);
+                console.log('[AD_CACHE] Video loaded:', ad.src);
+              }
+              resolve();
+            };
+            video.onerror = () => {
+              console.warn('[AD_CACHE] Video failed to load:', ad.src);
+              resolve();
+            };
+            video.src = ad.src;
+            video.load();
+          }
+        });
+      });
       
-      return () => {
-        preloadVideo.src = '';
-      };
-    } else if (nextAd && nextAd.type === 'image') {
-      // Preload next image
-      const preloadImage = new window.Image();
-      preloadImage.src = nextAd.src;
-    }
-  }, [currentAdIndex]);
+      await Promise.all(loadPromises);
+      if (!cancelled) {
+        setAdsLoaded(true);
+        console.log('[AD_CACHE] All ads preloaded, count:', preloadCache.size);
+      }
+    };
+    
+    preloadAllAds();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [adMediaList]);
 
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
-        /* Layout grid: 3 bagian - header, video+iklan overlay, footer */
+        /* Layout: header overlay di atas video, footer di bawah */
         .page-root {
-          /* Aspect ratio based layout - menyesuaikan exact dengan image dimensions */
-          /* Header dan Footer menggunakan aspect ratio inline style */
-          /* Video: menggunakan sisa space yang ada dengan iklan overlay */
-          
           color: white;
           width: 100vw;
           height: 100vh;
           overflow: hidden;
-          display: grid;
-          grid-template-rows: auto 1fr auto;
+          display: flex;
+          flex-direction: column;
           position: relative;
           background: #000;
         }
@@ -915,7 +964,6 @@ export default function AttendanceFunMeterPage() {
         }
 
         /* Section styles - masing-masing independent */
-        #banner_top,
         #camera,
         #ads,
         #banner_bottom {
@@ -925,48 +973,53 @@ export default function AttendanceFunMeterPage() {
         }
 
         #banner_top {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: auto;
+          max-height: 15vh;
           z-index: 100;
+          pointer-events: none;
         }
 
         /* Portrait mode - adjust header untuk menampilkan tombol mood */
         @media (orientation: portrait) {
           #banner_top {
-            aspect-ratio: 16 / 5 !important;
-            min-height: 120px;
-            max-height: 200px;
+            max-height: 12vh;
           }
         }
 
         /* Narrow screens - ensure header has enough height */
         @media (max-width: 640px) {
           #banner_top {
-            aspect-ratio: 12 / 5 !important;
-            min-height: 140px;
-            max-height: 220px;
+            max-height: 14vh;
           }
         }
 
         /* Very narrow screens - more height */
         @media (max-width: 480px) {
           #banner_top {
-            aspect-ratio: 10 / 5 !important;
-            min-height: 160px;
-            max-height: 240px;
+            max-height: 16vh;
           }
         }
 
         /* Extra narrow screens - maximum height */
         @media (max-width: 360px) {
           #banner_top {
-            aspect-ratio: 8 / 5 !important;
-            min-height: 180px;
-            max-height: 260px;
+            max-height: 18vh;
           }
         }
 
-        /* Header image styling - always contain untuk menampilkan semua konten */
+        /* Header image styling - contain untuk menampilkan gambar utuh tanpa terpotong */
         #banner_top img {
           object-fit: contain !important;
+          object-position: center !important;
+        }
+        
+        /* Footer image styling - sama dengan header */
+        #banner_bottom img {
+          object-fit: cover !important;
           object-position: center !important;
         }
         
@@ -1133,8 +1186,8 @@ export default function AttendanceFunMeterPage() {
         }
       `}} />
       <div className="page-root">
-      {/* Header banner - Section 1 */}
-      <section id="banner_top" className="relative w-screen overflow-hidden bg-[#006CBB]" style={{ aspectRatio: '40/4' }}>
+      {/* Header banner - Overlay di atas video */}
+      <section id="banner_top" className="w-full overflow-hidden bg-[#006CBB]" style={{ aspectRatio: '40/8' }}>
         <div className="relative w-full h-full">
           <Image 
             src="/assets/header/header.png"
@@ -1147,7 +1200,7 @@ export default function AttendanceFunMeterPage() {
       </section>
       
       {/* Video Section with Advertisement Overlay - Section 2 */}
-      <section id="camera" className="relative w-screen overflow-hidden">
+      <section id="camera" className="relative w-full overflow-hidden flex-1">
         <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center">
           <video 
             ref={videoRef} 
@@ -1162,33 +1215,40 @@ export default function AttendanceFunMeterPage() {
           {/* Advertisement Overlay - At Bottom of Video */}
           <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none" style={{ aspectRatio: '4 hh/3' }}>
             <div className="ad-overlay-container relative mb-0">
-              {adMediaList[currentAdIndex].type === 'image' ? (
-                <img 
-                  src={adMediaList[currentAdIndex].src} 
-                  alt="Iklan" 
-                  draggable={false} 
-                  loading="eager" 
-                  decoding="async" 
-                  className="select-none pointer-events-none w-full h-auto object-contain block" 
-                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
-                />
+              {adsLoaded ? (
+                adMediaList[currentAdIndex].type === 'image' ? (
+                  <img 
+                    src={adMediaList[currentAdIndex].src} 
+                    alt="Iklan" 
+                    draggable={false} 
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="sync"
+                    className="select-none pointer-events-none w-full h-auto object-contain block" 
+                    style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                  />
+                ) : (
+                  <video
+                    key={adMediaList[currentAdIndex].src}
+                    ref={adVideoRef}
+                    src={adMediaList[currentAdIndex].src}
+                    autoPlay
+                    muted
+                    playsInline
+                    preload="auto"
+                    onEnded={goToNextAd}
+                    onLoadedData={() => console.log('[AD_VIDEO] Video loaded:', adMediaList[currentAdIndex].src)}
+                    onCanPlay={() => console.log('[AD_VIDEO] Video can play')}
+                    onPlay={() => console.log('[AD_VIDEO] Video started playing')}
+                    onError={(e) => console.error('[AD_VIDEO] Video error:', e)}
+                    className="select-none w-full h-auto object-contain block"
+                    style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                  />
+                )
               ) : (
-                <video
-                  key={adMediaList[currentAdIndex].src}
-                  ref={adVideoRef}
-                  src={adMediaList[currentAdIndex].src}
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="auto"
-                  onEnded={goToNextAd}
-                  onLoadedData={() => console.log('[AD_VIDEO] Video loaded:', adMediaList[currentAdIndex].src)}
-                  onCanPlay={() => console.log('[AD_VIDEO] Video can play')}
-                  onPlay={() => console.log('[AD_VIDEO] Video started playing')}
-                  onError={(e) => console.error('[AD_VIDEO] Video error:', e)}
-                  className="select-none w-full h-auto object-contain block"
-                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
-                />
+                <div className="w-full h-24 flex items-center justify-center text-white/50 text-sm">
+                  Loading ads...
+                </div>
               )}
             </div>
           </div>
@@ -1196,14 +1256,14 @@ export default function AttendanceFunMeterPage() {
       </section>
       
       {/* Footer Section - Section 4 */}
-      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]" style={{ aspectRatio: '40 / 2' }}>
-        <div className="relative w-full h-full">
+      <section id="banner_bottom" className="relative w-full overflow-hidden" style={{ aspectRatio: '40 / 2' }}>
+        <div className="relative w-full h-full object-fit overflow-hidden">
           <Image 
             src="/assets/footer/footer.png" 
             alt="Footer" 
             fill
             priority 
-            className="object-contain select-none pointer-events-none"
+            className="object-cover select-none pointer-events-none"
             sizes="100vw" />
         </div>
       </section>
