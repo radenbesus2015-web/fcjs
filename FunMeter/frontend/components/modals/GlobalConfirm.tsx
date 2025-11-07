@@ -48,24 +48,20 @@ export function GlobalConfirm() {
   return (
     <AlertDialog open={!!currentConfirm} onOpenChange={(open) => { if (!open) resolveCurrentConfirm(false); }}>
       <AlertDialogContent>
+        {/* Close button (X) di pojok kanan atas */}
+        <button
+          onClick={handleCancel}
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          aria-label="Close"
+        >
+          <Icon name="X" className="h-4 w-4" />
+        </button>
+
         <AlertDialogHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <AlertDialogTitle>{options.title}</AlertDialogTitle>
-              {options.description && (
-                <AlertDialogDescription>{options.description}</AlertDialogDescription>
-              )}
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={handleCancel}
-              aria-label="Close"
-            >
-              <Icon name="X" className="h-4 w-4" />
-            </Button>
-          </div>
+          <AlertDialogTitle>{options.title}</AlertDialogTitle>
+          {options.description && (
+            <AlertDialogDescription>{options.description}</AlertDialogDescription>
+          )}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel}>

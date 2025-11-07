@@ -756,6 +756,12 @@
     "menu": {
       "login": "Masuk",
       "logout": "Keluar"
+    },
+    "logout": {
+      "title": "Konfirmasi Keluar",
+      "description": "Apakah Anda yakin ingin keluar dari akun Anda?",
+      "confirm": "Ya, Keluar",
+      "cancel": "Batal"
     }
   },
   "common": {
@@ -1408,10 +1414,6 @@
       "start": "Mulai Upload",
       "cancel": "Tutup"
     },
-    "toast": {
-      "fileNotImage": "{name} bukan gambar, dilewati",
-      "noBulkItems": "Tidak ada file yang dipilih"
-    },
     "search": {
       "placeholder": "Cari label…"
     },
@@ -1482,6 +1484,8 @@
       }
     },
     "toast": {
+      "fileNotImage": "{name} bukan gambar, dilewati",
+      "noBulkItems": "Tidak ada file yang dipilih",
       "fetchError": "Gagal memuat data anggota",
       "deleteSuccess": "Anggota berhasil dihapus: {name}",
       "deleteError": "Gagal menghapus anggota: {error}",
