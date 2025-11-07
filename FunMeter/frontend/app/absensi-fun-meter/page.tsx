@@ -16,29 +16,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/lib/toast";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/common/Icon";
 
-interface AttendanceFunResult {
-  // Attendance data
-  attendance?: {
-    name: string;
-    confidence: number;
-    bbox?: [number, number, number, number];
-  }[];
-  marked?: string[];
-  marked_info?: Array<{
-    label: string;
-    message: string;
-  }>;
-  
-  // Fun meter data
-  emotions?: Array<{
-    emotion: string;
-    confidence: number;
-    bbox?: [number, number, number, number];
-  }>;
-}
 
 export default function AttendanceFunMeterPage() {
   // Dynamic Ads: load from localStorage override or public index.json, fallback to defaults
@@ -120,22 +98,16 @@ export default function AttendanceFunMeterPage() {
   const [statusText, setStatusText] = useState("");
   const [sendingFun, setSendingFun] = useState(false);
   const [sendingAtt, setSendingAtt] = useState(false);
-  const [attendanceResults, setAttendanceResults] = useState<any[]>([]);
   const [emotionResults, setEmotionResults] = useState<any[]>([]);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastAttPush, setLastAttPush] = useState(0);
   const [lastAttResults, setLastAttResults] = useState<any>({ t: 0, results: [] });
   
   const snapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const sendHeightRef = useRef(0);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const DPRRef = useRef(1);
 
   // Settings
   const { model: baseInterval } = useSetting("baseInterval", { clamp: { max: 5000, round: true } });
-  const { model: attSendWidth } = useSetting("attendance.sendWidth", { 
-    clamp: { min: 160, max: 1920, round: true } 
-  });
   const { model: funSendWidth } = useSetting("funMeter.sendWidth", { 
     clamp: { min: 160, max: 1920, round: true } 
   });
@@ -157,29 +129,23 @@ export default function AttendanceFunMeterPage() {
       },
       att_result(data: any) {
         const results = Array.isArray(data?.results) ? data.results : [];
-        console.log("[ATT_RESULT] Received:", { results, marked: data?.marked, marked_info: data?.marked_info });
-        setAttendanceResults(results);
         setLastAttResults({ t: Date.now(), results });
         
         // Handle successful attendance
         const marked = Array.isArray(data?.marked) ? data.marked : [];
         const markedInfo = Array.isArray(data?.marked_info) ? data.marked_info : [];
         
-        console.log("[ATTENDANCE] Marked:", marked, "MarkedInfo:", markedInfo);
-        
         for (const info of markedInfo) {
           const label = info.label || "";
           const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
           const message = info.message || t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}{score}", { label, score });
           if (label) {
-            console.log("[ATTENDANCE] Showing toast for:", label);
             toast.success(message, { duration: 5000 });
           }
         }
         
         if (!markedInfo.length && marked.length > 0) {
           for (const label of marked) {
-            console.log("[ATTENDANCE] Showing toast for (fallback):", label);
             toast.success(t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label }), {
               duration: 5000,
             });
@@ -193,7 +159,6 @@ export default function AttendanceFunMeterPage() {
       },
       fun_result(data: any) {
         const results = Array.isArray(data?.results) ? data.results : [];
-        console.log("[FUN_RESULT] Received", results.length, "emotion results:", results);
         setEmotionResults(results);
         drawFun(results);
       },
@@ -232,7 +197,6 @@ export default function AttendanceFunMeterPage() {
   const fuseName = (funBox: number[]) => {
     const now = Date.now();
     if (!lastAttResults.results.length || now - lastAttResults.t > 1800) {
-      console.log("[FUSION] No att results or too old"); // DEBUG LOG
       return null;
     }
     let best: any = null, bestIoU = 0;
@@ -244,7 +208,6 @@ export default function AttendanceFunMeterPage() {
       }
     }
     const result = best && best.label && bestIoU >= 0.25 ? best.label : null;
-    console.log("[FUSION] Best match:", best?.label, "IoU:", bestIoU.toFixed(3), "-> Result:", result); // DEBUG LOG
     return result;
   };
   
@@ -381,7 +344,6 @@ export default function AttendanceFunMeterPage() {
   const drawFun = (results: any[]) => {
     // Ensure snap size is calculated
     if (!ensureSnapSize()) {
-      console.log("[DRAW_FUN] Cannot ensure snap size");
       return;
     }
     
@@ -391,20 +353,6 @@ export default function AttendanceFunMeterPage() {
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     ctx.lineWidth = 3;
     const { sx, sy, ox, oy } = getLetterboxTransform();
-    
-    // Debug logging (bisa di-disable setelah fix)
-    if (results && results.length > 0) {
-      const video = videoRef.current;
-      const snapW = Number(funSendWidth);
-      const snapH = sendHeightRef.current;
-      console.log('[DRAW_FUN] Transform:', { 
-        snapW, snapH, 
-        videoW: video?.videoWidth, 
-        videoH: video?.videoHeight,
-        sx, sy, ox, oy,
-        resultsCount: results.length 
-      });
-    }
     
     let missingName = false;
     (results || []).forEach((r: any) => {
@@ -444,20 +392,7 @@ export default function AttendanceFunMeterPage() {
   };
   
   const pushFunFrame = useCallback(async () => {
-    if (!socket) {
-      console.log("[PUSH_FUN_FRAME] No socket");
-      return;
-    }
-    if (!socket.socket?.connected) {
-      console.log("[PUSH_FUN_FRAME] Socket not connected");
-      return;
-    }
-    if (sendingFun) {
-      console.log("[PUSH_FUN_FRAME] Already sending");
-      return;
-    }
-    if (!ensureSnapSize()) {
-      console.log("[PUSH_FUN_FRAME] Cannot ensure snap size");
+    if (!socket || !socket.socket?.connected || sendingFun || !ensureSnapSize()) {
       return;
     }
     
@@ -465,19 +400,12 @@ export default function AttendanceFunMeterPage() {
     try {
       const snapCanvas = snapCanvasRef.current;
       const video = videoRef.current;
-      if (!snapCanvas || !video) {
-        console.log("[PUSH_FUN_FRAME] Missing canvas or video");
-        return;
-      }
+      if (!snapCanvas || !video) return;
       const sctx = snapCanvas.getContext("2d");
-      if (!sctx) {
-        console.log("[PUSH_FUN_FRAME] Cannot get canvas context");
-        return;
-      }
+      if (!sctx) return;
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
       if (bytes && socket) {
-        console.log("[PUSH_FUN_FRAME] Sending frame, size:", bytes.length);
         socket.emit("fun_frame", bytes);
       }
     } catch (error) {
@@ -499,7 +427,6 @@ export default function AttendanceFunMeterPage() {
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
       if (bytes && socket) {
-        console.log("[PUSH_ATT_FRAME] Sending frame, size:", bytes.length); // DEBUG LOG
         socket.emit("att_frame", bytes);
         setLastAttPush(Date.now());
       }
@@ -524,7 +451,6 @@ export default function AttendanceFunMeterPage() {
     if (!video) return;
     
     try {
-      console.log("Starting camera..."); // DEBUG
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: true, 
         audio: false 
@@ -542,8 +468,6 @@ export default function AttendanceFunMeterPage() {
         }
       });
       
-      console.log("Camera started successfully"); // DEBUG
-      console.log("Video dimensions:", video.videoWidth, "x", video.videoHeight); // DEBUG
       setCameraActive(true);
       setStatusText("Camera active");
       
@@ -560,11 +484,9 @@ export default function AttendanceFunMeterPage() {
         if (ratioDiff > 0.3) {
           // Very different aspect ratio - use cover to avoid distortion and black bars
           video.style.objectFit = 'cover';
-          console.log("[VIDEO] Using cover mode (aspect ratio difference:", ratioDiff.toFixed(2), ")");
         } else {
           // Similar aspect ratio - can use cover or fill
           video.style.objectFit = 'cover';
-          console.log("[VIDEO] Using cover mode (aspect ratio similar)");
         }
       }
       
@@ -573,7 +495,6 @@ export default function AttendanceFunMeterPage() {
       fitCanvasToVideo();
       
     } catch (error) {
-      console.error("Camera error:", error); // DEBUG
       setStatusText("Camera blocked");
       toast.error(t("attendanceFunMeter.toast.cameraAccessError", "Gagal mengakses kamera."), { duration: 4000 });
     }
@@ -594,16 +515,6 @@ export default function AttendanceFunMeterPage() {
     setStatusText("Camera stopped");
   };
 
-  // Fullscreen functions
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      await document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
 
   // Setup canvas and responsive listeners
   useEffect(() => {
@@ -696,10 +607,6 @@ export default function AttendanceFunMeterPage() {
             // Ensure video always fills container without black bars
             v.style.objectFit = 'cover';
             v.style.objectPosition = 'center center';
-            
-            if (ratioDiff > 0.3) {
-              console.log("[VIDEO] Aspect ratio changed, using cover mode (diff:", ratioDiff.toFixed(2), ")");
-            }
           }
         }
         
@@ -737,31 +644,15 @@ export default function AttendanceFunMeterPage() {
     };
   }, [stream]);
 
-  // Setup fullscreen change listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
   
   // Setup frame sending intervals
   useEffect(() => {
     if (!socket) {
-      console.log("[WS_SETUP] No socket available");
       return;
     }
     
-    console.log("[WS_SETUP] Socket available, connected:", socket.socket?.connected);
-    
     // Send attendance config when socket connects
     const handleConnect = () => {
-      console.log("[WS] Socket connected, sending att_cfg");
       try {
         socket.emit("att_cfg", { th: 0.4, mark: true });
       } catch (e) {
@@ -778,13 +669,11 @@ export default function AttendanceFunMeterPage() {
     socket.on("connect", handleConnect);
     
     // Setup interval for sending fun frames
-    console.log("[WS_SETUP] Setting up fun frame interval:", funIntervalMs, "ms");
     const funInterval = setInterval(() => {
       pushFunFrame();
     }, Number(funIntervalMs));
     
     return () => {
-      console.log("[WS_SETUP] Cleaning up");
       socket.off("connect", handleConnect);
       clearInterval(funInterval);
     };
@@ -801,19 +690,6 @@ export default function AttendanceFunMeterPage() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [router]);
 
-  // Emotion color mapping
-  const getEmotionColor = (emotion: string): string => {
-    const colors: Record<string, string> = {
-      happy: "text-green-400",
-      sad: "text-blue-400",
-      angry: "text-red-400",
-      surprised: "text-yellow-400",
-      fear: "text-purple-400",
-      disgust: "text-orange-400",
-      neutral: "text-gray-400",
-    };
-    return colors[emotion] || "text-gray-400";
-  };
   
   // Ad rotation logic: 5 detik untuk foto, auto-advance untuk video setelah selesai
   const goToNextAd = useCallback(() => {
