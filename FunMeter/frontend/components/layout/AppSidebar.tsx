@@ -3,7 +3,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -13,6 +13,7 @@ import { Icon } from "@/components/common/Icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
+import { LogoutConfirmDialog } from "@/components/common/LogoutConfirmDialog";
 
 interface NavItem {
   name: string;
@@ -54,6 +55,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
   const { t } = useI18n();
   const { openModal: openSettingsModal } = useSettings();
   const { isOpen, setIsOpen, isMobile } = useSidebar();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const ft = (path: string, fallback: string, values?: Record<string, unknown>) => 
     t(`aside.${path}`, fallback, values);
@@ -64,6 +66,14 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
 
   const displayName = user?.username || user?.name || "";
   const initials = getInitials(displayName);
+
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+  };
 
   return (
     <>
@@ -86,7 +96,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
         ] : [
           // Desktop: sticky position with width animation
           "sticky top-0 pl-0.5",
-          isOpen ? "w-64" : "w-14"
+          isOpen ? "w-64" : "w-18"
         ]
       )}>
       {/* Header */}
@@ -98,8 +108,8 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
           "flex items-center transition-all duration-300 ease-in-out",
           isOpen ? "gap-2" : "gap-0"
         )}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Icon name="Smile" className={cn("transition-all", isOpen ? "h-4 w-4" : "h-5 w-5")} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Icon name="Smile" className={cn("transition-all", isOpen ? "h-4 w-4" : "h-6 w-6")} />
           </div>
           <span
             className={cn(
@@ -185,7 +195,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
         >
           <Icon name="Settings" className={cn(
             "transition-all duration-300 ease-in-out",
-            isOpen ? "h-4 w-4 mr-2" : "h-5 w-5"
+            isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
           )} />
           <span
             className={cn(
@@ -214,7 +224,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
               </div>
             ) : (
               <div className="flex items-center justify-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground text-base font-semibold">
                   {initials}
                 </div>
               </div>
@@ -226,13 +236,13 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
                 "w-full transition-all duration-300 ease-in-out",
                 isOpen ? "justify-start" : "justify-center px-0"
               )}
-              onClick={logout}
+              onClick={handleLogoutClick}
               aria-label={t("avatar.menu.logout", "Sign out")}
               title={t("avatar.menu.logout", "Sign out")}
             >
               <Icon name="LogOut" className={cn(
                 "transition-all duration-300 ease-in-out",
-                isOpen ? "h-4 w-4 mr-2" : "h-5 w-5"
+                isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
               )} />
               <span
                 className={cn(
@@ -259,7 +269,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
           >
             <Icon name="LogIn" className={cn(
             "transition-all duration-300 ease-in-out",
-            isOpen ? "h-4 w-4 mr-2" : "h-5 w-5"
+            isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
           )} />
             <span
               className={cn(
@@ -273,6 +283,13 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
           </Button>
         )}
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutConfirmDialog
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={handleLogoutConfirm}
+      />
     </div>
     </>
   );
