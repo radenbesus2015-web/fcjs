@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useConfirmDialog } from "@/components/providers/ConfirmDialogProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,6 +26,9 @@ export default function AdminAdvertisementPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importJsonInputRef = useRef<HTMLInputElement | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [arrowAnimation, setArrowAnimation] = useState<{ index: number; direction: -1 | 1 } | null>(null);
+  const itemRefs = useRef(new Map<string, HTMLDivElement>());
+  const prevPositionsRef = useRef(new Map<string, DOMRect>());
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +38,40 @@ export default function AdminAdvertisementPage() {
   const startIndex = (currentPage - 1) * effectivePerPage;
   const endIndex = startIndex + effectivePerPage;
   const paginatedItems = items.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    if (!arrowAnimation) return;
+    const timeout = window.setTimeout(() => setArrowAnimation(null), 280);
+    return () => window.clearTimeout(timeout);
+  }, [arrowAnimation]);
+
+  useLayoutEffect(() => {
+    const currentPositions = new Map<string, DOMRect>();
+    itemRefs.current.forEach((el, key) => {
+      currentPositions.set(key, el.getBoundingClientRect());
+    });
+
+    currentPositions.forEach((rect, key) => {
+      const prev = prevPositionsRef.current.get(key);
+      if (!prev) return;
+      const el = itemRefs.current.get(key);
+      if (!el) return;
+      const deltaY = prev.top - rect.top;
+      if (Math.abs(deltaY) < 1) return;
+      el.animate(
+        [
+          { transform: `translateY(${deltaY}px)` },
+          { transform: "translateY(0)" }
+        ],
+        {
+          duration: 280,
+          easing: "cubic-bezier(0.22, 0.61, 0.36, 1)",
+        }
+      );
+    });
+
+    prevPositionsRef.current = currentPositions;
+  }, [items, startIndex, endIndex]);
 
   // Load available media from static index + merge with local enabled config
   const load = useCallback(async () => {
@@ -103,6 +140,7 @@ export default function AdminAdvertisementPage() {
   };
 
   const move = (idx: number, dir: -1 | 1) => {
+    let targetIndex: number | null = null;
     setItems((prev) => {
       const next = [...prev];
       const j = idx + dir;
@@ -110,8 +148,12 @@ export default function AdminAdvertisementPage() {
       const tmp = next[idx];
       next[idx] = next[j];
       next[j] = tmp;
+      targetIndex = j;
       return next;
     });
+    if (targetIndex !== null) {
+      setArrowAnimation({ index: targetIndex, direction: dir });
+    }
   };
 
   // Drag and drop handlers
@@ -391,9 +433,23 @@ export default function AdminAdvertisementPage() {
                   const isSelected = selected.includes(it.src);
                   const isDragging = draggedIndex === globalIdx;
                   const isDragOver = dragOverIndex === globalIdx;
+                  const isArrowAnimated = arrowAnimation?.index === globalIdx;
+                  const itemStyle: React.CSSProperties = {
+                    transition: "background-color 0.25s ease, box-shadow 0.25s ease",
+                  };
+                  if (isArrowAnimated) {
+                    itemStyle.boxShadow = "0 12px 28px rgba(15, 23, 42, 0.18)";
+                  }
                   return (
                     <div 
                       key={it.src} 
+                      ref={(el) => {
+                        if (el) {
+                          itemRefs.current.set(it.src, el);
+                        } else {
+                          itemRefs.current.delete(it.src);
+                        }
+                      }}
                       draggable
                       onDragStart={(e) => handleDragStart(e, globalIdx)}
                       onDragEnd={handleDragEnd}
@@ -406,7 +462,10 @@ export default function AdminAdvertisementPage() {
                         isDragging ? 'opacity-50' : ''
                       } ${
                         isDragOver ? 'border-primary border-2 bg-primary/5' : ''
+                      } ${
+                        isArrowAnimated ? 'ring-2 ring-primary/60 bg-primary/10' : ''
                       }`}
+                      style={itemStyle}
                     >
                       <input
                         type="checkbox"
