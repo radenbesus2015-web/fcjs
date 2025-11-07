@@ -83,6 +83,18 @@ const routes = [
     },
   },
   {
+    path: "/admin/advertisement",
+    name: "adminAdvertisement",
+    icon: "Megaphone",
+    meta: {
+      titleKey: "pages.adminAdvertisement.title",
+      navKey: "nav.adminAdvertisement",
+      titleFallback: "Advertisement",
+      navFallback: "Advertisement",
+      requiresAdmin: true,
+    },
+  },
+  {
     path: "/admin/list-members",
     name: "adminRegisterDb",
     icon: "Database",

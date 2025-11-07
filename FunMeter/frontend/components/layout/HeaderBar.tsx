@@ -91,6 +91,12 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
     navKey: "nav.adminConfig",
     navFallback: "Konfigurasi Sistem",
   },
+  "/admin/advertisement": {
+    titleKey: "pages.adminAdvertisement.title",
+    titleFallback: "Advertisement",
+    navKey: "nav.adminAdvertisement",
+    navFallback: "Advertisement",
+  },
 };
 
 export function HeaderBar({ hidden = false, onHeightChange }: HeaderBarProps) {

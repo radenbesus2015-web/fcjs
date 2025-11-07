@@ -11,7 +11,8 @@
     "adminAttendanceSummary": "Attendance Summary",
     "adminSchedule": "Admin Schedule",
     "adminUsers": "Admin Users",
-    "adminConfig": "Admin Config"
+    "adminConfig": "Admin Config",
+    "adminAdvertisement": "Advertisement"
   },
   "pages": {
     "home": {
@@ -46,6 +47,47 @@
     },
     "adminConfig": {
       "title": "System Configuration"
+    },
+    "adminAdvertisement": {
+      "title": "Advertisement"
+    }
+  },
+  "adminAds": {
+    "title": "Manage Advertisements (Attendance Fun Meter)",
+    "subtitle": "Configure which advertisements appear on the Attendance Fun Meter page.",
+    "empty": "No advertisement media found.",
+    "fields": {
+      "show": "Show",
+      "select": "Select advertisement"
+    },
+    "toast": {
+      "saved": "Advertisements saved. Attendance page will use this list after refresh.",
+      "saveFailed": "Failed to save advertisements.",
+      "imported": "Successfully imported advertisement media.",
+      "importFailed": "Failed to import files.",
+      "deletedSelected": "Selected advertisements deleted successfully.",
+      "deleteFailed": "Failed to delete advertisements.",
+      "importJsonInvalid": "Invalid JSON format.",
+      "importJsonEmpty": "No valid advertisements in JSON file.",
+      "importJsonSuccess": "{count} advertisements imported from JSON successfully.",
+      "importJsonFailed": "Failed to import JSON file."
+    },
+    "confirm": {
+      "delete": {
+        "title": "Delete Advertisement",
+        "descSelected": "Are you sure you want to delete {count} selected advertisements? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
+    },
+    "pagination": {
+      "info": "Showing {start}-{end} of {total} advertisements",
+      "first": "First page",
+      "previous": "Previous",
+      "next": "Next",
+      "last": "Last page",
+      "perPage": "Per page:",
+      "all": "All"
     }
   },
   "adminAttendanceSummary": {
@@ -507,7 +549,10 @@
     "cancel": "Cancel",
     "clear": "Clear",
     "delete": "Delete",
-    "view": "View"
+    "view": "View",
+    "save": "Save",
+    "reload": "Reload",
+    "import": "Import"
   },
   "adminDashboard": {
     "state": {

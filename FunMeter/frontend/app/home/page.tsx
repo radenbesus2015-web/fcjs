@@ -3,21 +3,15 @@
 
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/lib/toast";
 import Image from "next/image";
 
-// Rotating ad images (from public/images). Exclude footer.png which is used as footer.
-const adImages = [
-  "/images/upskilling.png",
-  "/images/nobox.jpg",
-  "/images/karyasmk.jpg",
-  "/images/expo.jpg",
-  "/images/eschool.png",
-];
+// Dynamic Ads media type
+type AdMedia = { src: string; type: 'image' | 'video' };
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -53,197 +47,78 @@ export default function HomePage() {
   const DPRRef = useRef(1);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Header edge colors and 1px strips (match absensi-fun-meter header style)
-  const [headerEdgeColors, setHeaderEdgeColors] = useState({ left: '#1e3a8a', right: '#1e3a8a' });
-  const [headerStrips, setHeaderStrips] = useState<{ left: string; right: string }>({ left: '', right: '' });
-  // Footer edge colors and 1px strips
-  const [footerEdgeColors, setFooterEdgeColors] = useState({ left: '#1e3a8a', right: '#1e3a8a' });
-  const [footerStrips, setFooterStrips] = useState<{ left: string; right: string }>({ left: '', right: '' });
-
-  // Ads rotation every 3 seconds
-  const [adIndex, setAdIndex] = useState(0);
+  // Ads list loaded like absensi-fun-meter (from localStorage or index.json)
+  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
+    { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+    { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+    { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+    { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+    { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+  ]);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const adVideoRef = useRef<HTMLVideoElement>(null);
+  const adTimerRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    const id = setInterval(() => {
-      setAdIndex((i) => (i + 1) % adImages.length);
-    }, 3000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Extract edge colors + 1px strips from header image
-  useEffect(() => {
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
+    let cancelled = false;
+    const LS_KEY = "ads.enabled";
+    const load = async () => {
       try {
-        const leftPixels: string[] = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const p = ctx.getImageData(0, y, 1, 1).data;
-          leftPixels.push(`rgb(${p[0]}, ${p[1]}, ${p[2]})`);
+        const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
+        if (stored) {
+          const parsed = JSON.parse(stored) as AdMedia[];
+          if (Array.isArray(parsed) && parsed.length) {
+            if (!cancelled) setAdMediaList(parsed);
+            return;
+          }
         }
-        const rightPixels: string[] = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const p = ctx.getImageData(img.width - 1, y, 1, 1).data;
-          rightPixels.push(`rgb(${p[0]}, ${p[1]}, ${p[2]})`);
+        const res = await fetch('/assets/advertisements/index.json', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const images: string[] = Array.isArray(data?.images) ? data.images : [];
+          const videos: string[] = Array.isArray(data?.videos) ? data.videos : [];
+          const list: AdMedia[] = [
+            ...images.map((src) => ({ src, type: 'image' as const })),
+            ...videos.map((src) => ({ src, type: 'video' as const })),
+          ];
+          if (list.length && !cancelled) setAdMediaList(list);
         }
-        const leftColor = leftPixels[Math.floor(leftPixels.length / 2)] || '#1e3a8a';
-        const rightColor = rightPixels[Math.floor(rightPixels.length / 2)] || '#1e3a8a';
-        setHeaderEdgeColors({ left: leftColor, right: rightColor });
-
-        // Build 1px vertical strips from edges
-        const stripL = document.createElement('canvas');
-        stripL.width = 1; stripL.height = img.height;
-        const stripLCtx = stripL.getContext('2d');
-        if (stripLCtx) {
-          stripLCtx.drawImage(img, 0, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const leftStripUrl = stripL.toDataURL('image/png');
-
-        const stripR = document.createElement('canvas');
-        stripR.width = 1; stripR.height = img.height;
-        const stripRCtx = stripR.getContext('2d');
-        if (stripRCtx) {
-          stripRCtx.drawImage(img, img.width - 1, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const rightStripUrl = stripR.toDataURL('image/png');
-
-        setHeaderStrips({ left: leftStripUrl, right: rightStripUrl });
-      } catch {
-        // ignore, fallbacks will be used
-      }
-    };
-    img.src = '/images/header.png';
-  }, []);
-
-  // Extract edge colors + 1px strips from footer image
-  useEffect(() => {
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      try {
-        const leftPixels: string[] = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const p = ctx.getImageData(0, y, 1, 1).data;
-          leftPixels.push(`rgb(${p[0]}, ${p[1]}, ${p[2]})`);
-        }
-        const rightPixels: string[] = [];
-        for (let y = 0; y < img.height; y += 10) {
-          const p = ctx.getImageData(img.width - 1, y, 1, 1).data;
-          rightPixels.push(`rgb(${p[0]}, ${p[1]}, ${p[2]})`);
-        }
-        const leftColor = leftPixels[Math.floor(leftPixels.length / 2)] || '#1e3a8a';
-        const rightColor = rightPixels[Math.floor(rightPixels.length / 2)] || '#1e3a8a';
-        setFooterEdgeColors({ left: leftColor, right: rightColor });
-
-        const stripL = document.createElement('canvas');
-        stripL.width = 1; stripL.height = img.height;
-        const stripLCtx = stripL.getContext('2d');
-        if (stripLCtx) {
-          stripLCtx.drawImage(img, 0, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const leftStripUrl = stripL.toDataURL('image/png');
-
-        const stripR = document.createElement('canvas');
-        stripR.width = 1; stripR.height = img.height;
-        const stripRCtx = stripR.getContext('2d');
-        if (stripRCtx) {
-          stripRCtx.drawImage(img, img.width - 1, 0, 1, img.height, 0, 0, 1, img.height);
-        }
-        const rightStripUrl = stripR.toDataURL('image/png');
-
-        setFooterStrips({ left: leftStripUrl, right: rightStripUrl });
       } catch {
         // ignore
       }
     };
-    img.src = '/images/footer.png';
+    load();
+    return () => { cancelled = true; };
   }, []);
-
-  // Measure marquee segment width and store as CSS variable for seamless loop
+  const goToNextAd = useCallback(() => {
+    setCurrentAdIndex((prevIndex) => (prevIndex + 1) % Math.max(1, adMediaList.length));
+  }, [adMediaList.length]);
   useEffect(() => {
-    const measure = () => {
-      const el = marqueeSegRef.current;
-      if (el) {
-        const w = el.scrollWidth || el.offsetWidth || 0;
-        if (w > 0) {
-          setMarqueeSegW(w);
-          measuredRef.current = true;
-          return true;
-        }
-      }
-      return false;
-    };
-    
-    // Try multiple times to ensure measurement happens
-    const tryMeasure = () => {
-      if (!measure()) {
-        // Retry with requestAnimationFrame
-        requestAnimationFrame(() => {
-          if (!measure()) {
-            // Retry with setTimeout
+    const currentAd = adMediaList[currentAdIndex];
+    if (adTimerRef.current) {
+      clearTimeout(adTimerRef.current);
+      adTimerRef.current = null;
+    }
+    if (!currentAd) return;
+    if (currentAd.type === 'image') {
+      adTimerRef.current = setTimeout(() => {
+        goToNextAd();
+      }, 5000);
+    } else if (currentAd.type === 'video' && adVideoRef.current) {
+      const videoElement = adVideoRef.current;
+      videoElement.play().catch(() => {
             setTimeout(() => {
-              if (!measure()) {
-                // Final retry after images load
-                setTimeout(() => measure(), 200);
-              }
-            }, 100);
-          }
-        });
-      }
-    };
-    
-    // Immediate measure
-    tryMeasure();
-    
-    // Also try after a short delay
-    const tm1 = setTimeout(tryMeasure, 50);
-    const tm2 = setTimeout(tryMeasure, 150);
-    const tm3 = setTimeout(tryMeasure, 300);
-    
-    // Force start animation after max delay if still not measured
-    const forceStart = setTimeout(() => {
-      if (!measuredRef.current && marqueeSegRef.current) {
-        // Use a default width estimate based on number of images
-        const estimatedWidth = adImages.length * 300; // Rough estimate
-        setMarqueeSegW(estimatedWidth);
-        measuredRef.current = true;
-      }
-    }, 500);
-    
-    // Handle image load events
-    const handleImageLoad = () => {
-      tryMeasure();
-    };
-    
-    // Preload images and measure when loaded
-    adImages.forEach((src) => {
-      const img = new window.Image();
-      img.onload = handleImageLoad;
-      img.onerror = handleImageLoad;
-      img.src = src;
-    });
-    
-    window.addEventListener("resize", tryMeasure);
-    
+          videoElement.play().catch(() => goToNextAd());
+        }, 500);
+      });
+    }
     return () => {
-      clearTimeout(tm1);
-      clearTimeout(tm2);
-      clearTimeout(tm3);
-      clearTimeout(forceStart);
-      window.removeEventListener("resize", tryMeasure);
+      if (adTimerRef.current) clearTimeout(adTimerRef.current);
     };
-  }, []);
+  }, [currentAdIndex, adMediaList, goToNextAd]);
+
+  // (Header/Footer strips removed; use static assets like absensi-fun-meter)
+
+  // Remove marquee measurement (ads now slideshow at bottom)
 
   // WebSocket connection
   type AttResultPayload = {
@@ -391,11 +266,33 @@ export default function HomePage() {
   
   const getLetterboxTransform = () => {
     const overlay = overlayRef.current;
-    const host = overlay?.parentElement || videoRef.current;
-    if (!host) return { sx: 1, sy: 1, ox: 0, oy: 0 };
+    const video = videoRef.current;
+    const host = overlay?.parentElement || video;
+    if (!host || !video) return { sx: 1, sy: 1, ox: 0, oy: 0 };
+
     const rect = host.getBoundingClientRect();
     const dispW = rect.width, dispH = rect.height;
-    return { sx: dispW / Number(funSendWidth), sy: dispH / sendHeightRef.current, ox: 0, oy: 0 };
+
+    const videoW = video.videoWidth || Number(funSendWidth);
+    const videoH = video.videoHeight || sendHeightRef.current;
+    if (!videoW || !videoH) return { sx: dispW / Number(funSendWidth), sy: dispH / sendHeightRef.current, ox: 0, oy: 0 };
+
+    const videoAspect = videoW / videoH;
+    const displayAspect = dispW / dispH;
+
+    let sx: number, sy: number, ox = 0, oy = 0;
+    if (displayAspect > videoAspect) {
+      // Display lebih lebar -> video mengisi lebar, ada crop atas/bawah
+      sx = dispW / videoW;
+      sy = sx;
+      oy = (dispH - videoH * sy) / 2;
+    } else {
+      // Display lebih tinggi -> video mengisi tinggi, ada crop kiri/kanan
+      sy = dispH / videoH;
+      sx = sy;
+      ox = (dispW - videoW * sx) / 2;
+    }
+    return { sx, sy, ox, oy };
   };
   
   // Drawing functions
@@ -534,6 +431,9 @@ export default function HomePage() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        // Samakan perilaku dengan halaman absensi: gunakan cover agar transform hitbox akurat
+        videoRef.current.style.objectFit = 'cover';
+        videoRef.current.style.objectPosition = 'center center';
       }
     } catch (err) {
       const msg = (err as { message?: string })?.message || "-";
@@ -600,207 +500,99 @@ export default function HomePage() {
   }, [socket, funIntervalMs]);
 
   return (
-    <div className="overflow-hidden" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div className="flex-1 flex flex-col" style={{ gap: '0', minHeight: 0 }}>
-        <div className="flex-1 flex flex-col" style={{ gap: '0', minHeight: 0 }}>
-          {/* Header banner */}
-          <section className="relative w-full h-20 overflow-hidden flex-shrink-0">
-            {/* Background with pixel edges repeated */}
-            <div className="absolute inset-0 flex">
-              {/* Left edge */}
-              <div
-                className="flex-1"
-                style={{
-                  backgroundImage: `url(${headerStrips.left || '/images/header.png'})`,
-                  backgroundPosition: 'right center',
-                  backgroundSize: '1px 100%',
-                  backgroundRepeat: 'repeat-x',
-                  backgroundColor: headerEdgeColors.left,
-                }}
-              />
-              {/* Right edge */}
-              <div
-                className="flex-1"
-                style={{
-                  backgroundImage: `url(${headerStrips.left || '/images/header.png'})`,
-                  backgroundPosition: 'right center',
-                  backgroundSize: '1px 100%',
-                  backgroundRepeat: 'repeat-x',
-                  backgroundColor: headerEdgeColors.left,
-                }}
-              />
-            </div>
-            {/* Center image overlay - not stretched */}
-            <div className="absolute inset-0 flex items-center justify-center">
+    <div className="page-root">
+      {/* Header banner - same approach as absensi-fun-meter */}
+      <section id="banner_top" className="relative w-full overflow-hidden bg-[#006CBB]" style={{ aspectRatio: '40/4' }}>
+        <div className="relative w-full h-full">
               <Image
-                src="/images/header.png"
+            src="/assets/header/header.png"
                 alt="Header"
-                width={1920}
-                height={400}
+            fill
                 priority
-                className="max-w-full max-h-full object-contain select-none pointer-events-none"
-              />
+            className="object-contain select-none pointer-events-none"
+            sizes="100vw" />
             </div>
           </section>
 
-          {/* Video */}
-          <div ref={hostRef} id="camera-host" className="relative overflow-hidden flex-1" style={{ minHeight: 0, flex: '1 1 0' }}>
+      {/* Video with overlay */}
+      <section id="camera" className="relative w-full overflow-hidden">
+        <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center">
             <video
               ref={videoRef}
               id="video"
               autoPlay
               playsInline
               muted
-              className="w-full object-fill"
-              style={{ height: 'calc(100% - 200px)', width: '100%' }}
-            />
-            <canvas ref={overlayRef} id="overlay" className="absolute top-0 left-0 w-full pointer-events-none" style={{ height: 'calc(100% - 200px)', width: '100%' }} />
-            
-            {/* Footer dengan iklan overlay di bagian bawah video */}
-            <div id="footer-overlay" style={{ bottom: '0', top: 'calc(100% - 200px)' }}>
-              {/* Advertisement - continuous left-to-right marquee */}
-              <section id="ads" className="relative w-full overflow-hidden bg-gray-100">
-                <div className="absolute inset-0">
-                  <div
-                    className="marquee-track"
-                    ref={marqueeTrackRef}
-                    style={{ 
-                      ["--segW" as unknown as string]: `${marqueeSegW}px`,
-                      ["--marqueePlay" as unknown as string]: marqueeSegW > 0 ? 'running' : 'paused'
-                    } as React.CSSProperties}
-                    aria-label="Iklan"
-                  >
-                    <div className="marquee-segment" ref={marqueeSegRef}>
-                      {adImages.map((src) => (
-                        <img key={`seg1-${src}`} src={src} alt="Iklan" draggable={false} loading="eager" decoding="async" className="h-full w-auto select-none pointer-events-none block" style={{ flex: '0 0 auto' }} />
-                      ))}
-                    </div>
-                    <div className="marquee-segment">
-                      {adImages.map((src) => (
-                        <img key={`seg2-${src}`} src={src} alt="Iklan" draggable={false} loading="eager" decoding="async" className="h-full w-auto select-none pointer-events-none block" style={{ flex: '0 0 auto' }} />
-                      ))}
+            className="block w-full h-full object-cover"
+          />
+          <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
+
+          {/* Advertisement Overlay - bottom center */}
+          <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none">
+            <div className="ad-overlay-container relative mb-0">
+              {adMediaList[currentAdIndex]?.type === 'image' ? (
+                <img
+                  src={adMediaList[currentAdIndex]?.src || ''}
+                  alt="Iklan"
+                  draggable={false}
+                  loading="eager"
+                  decoding="async"
+                  className="select-none pointer-events-none w-full h-auto object-contain block"
+                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                />
+              ) : (
+                <video
+                  key={adMediaList[currentAdIndex]?.src}
+                  ref={adVideoRef}
+                  src={adMediaList[currentAdIndex]?.src}
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="auto"
+                  onEnded={goToNextAd}
+                  className="select-none w-full h-auto object-contain block"
+                  style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                />
+              )}
                     </div>
                   </div>
                 </div>
               </section>
 
-              {/* Footer image */}
-              <section id="banner_bottom" className="relative w-full h-20 overflow-hidden">
-                <div className="absolute inset-0 flex">
-                  <div
-                    className="flex-1"
-                    style={{
-                      backgroundImage: `url(${footerStrips.left || '/images/footer.png'})`,
-                      backgroundPosition: 'right center',
-                      backgroundSize: '1px 100%',
-                      backgroundRepeat: 'repeat-x',
-                      backgroundColor: footerEdgeColors.left,
-                    }}
-                  />
-                  <div
-                    className="flex-1"
-                    style={{
-                      backgroundImage: `url(${footerStrips.right || '/images/footer.png'})`,
-                      backgroundPosition: 'left center',
-                      backgroundSize: '1px 100%',
-                      backgroundRepeat: 'repeat-x',
-                      backgroundColor: footerEdgeColors.right,
-                    }}
-                  />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
+      {/* Footer banner */}
+      <section id="banner_bottom" className="relative w-full overflow-hidden bg-[#A3092E]" style={{ aspectRatio: '40 / 2' }}>
+        <div className="relative w-full h-full">
                   <Image
-                    src="/images/footer.png"
+            src="/assets/footer/footer.png" 
                     alt="Footer"
-                    width={1920}
-                    height={220}
+            fill
                     priority
-                    className="max-w-full max-h-full object-contain select-none pointer-events-none"
-                  />
+            className="object-contain select-none pointer-events-none"
+            sizes="100vw" />
                 </div>
               </section>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Scoped styles for marquee and footer overlay */}
+
+      {/* Scoped styles matching absensi-fun-meter */}
       <style jsx>{`
-        .marquee-track {
-          display: flex;
-          flex-wrap: nowrap;
-          height: 100%;
-          animation: marquee-right var(--marqueeDur, 30s) linear infinite;
-          animation-play-state: var(--marqueePlay, paused);
-          will-change: transform;
-        }
-        .marquee-segment {
-          display: flex;
-          flex-wrap: nowrap;
-          align-items: center;
-          height: 100%;
-          flex: 0 0 auto;
-        }
-        .marquee-segment :global(img) {
-          height: 100% !important;
-          width: auto !important;
-          flex: 0 0 auto;
-          display: block;
-          object-fit: contain;
-        }
-        @keyframes marquee-right {
-          0% { transform: translateX(calc(-1 * var(--segW))); }
-          100% { transform: translateX(0); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .marquee-track { animation: none; }
-        }
-
-        /* Footer dengan iklan overlay di bagian bawah video */
-        #footer-overlay {
-          position: absolute;
-          left: 0;
-          right: 0;
-          z-index: 30;
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-
-        #ads {
-          height: 120px;
-          flex-shrink: 0;
-        }
-
-        #banner_bottom {
-          height: 80px;
-          flex-shrink: 0;
-        }
-
-        /* Prevent scrolling and fill available space */
-        #camera-host {
+        .page-root {
+          color: white;
+          width: 70vw;
+          height: 80vh;
           overflow: hidden;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-rows: auto 1fr auto;
+          position: relative;
+          background: #000;
+          margin: 0 auto;
         }
-        
-        #video {
-          height: 100%;
-          flex: 1;
-        }
-        
-        #overlay {
-          height: 100%;
-        }
-        
-        /* Footer overlay positioning */
-        #footer-overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 200px;
-        }
+        #overlay { border-radius: 0 !important; overflow: visible !important; }
+        #video { object-fit: cover; object-position: center center; background: #000; }
+        #camera-host { background: #000; }
+        .ad-overlay-container { max-width: 280px; }
+        @media (orientation: portrait) { .ad-overlay-container { max-width: 240px; } }
+        @media (orientation: landscape) { .ad-overlay-container { max-width: 350px; } }
+        @media (orientation: landscape) and (min-width: 1024px) { .ad-overlay-container { max-width: 450px; } }
+        @media (min-width: 1920px) { .ad-overlay-container { max-width: 600px; } }
       `}</style>
     </div>
   );

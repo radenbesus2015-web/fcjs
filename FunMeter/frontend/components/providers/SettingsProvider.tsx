@@ -79,7 +79,7 @@ function setByPath(obj: Record<string, unknown>, path: string, val: unknown): vo
 }
 
 // Default settings structure
-const DEFAULT_SETTINGS: SettingsState = {
+const DEFAULT_SETTINGS = {
   theme: "light",
   language: "en",
   funMeter: {
@@ -93,7 +93,7 @@ const DEFAULT_SETTINGS: SettingsState = {
     jpegQuality: 0.8,
   },
   baseInterval: 200,
-};
+} as const satisfies SettingsState;
 
 interface SettingsProviderProps {
   children: ReactNode;
@@ -132,11 +132,11 @@ function loadSettingsFromStorage(): SettingsState {
         ...parsed,
         // Merge nested objects
         attendance: {
-          ...DEFAULT_SETTINGS.attendance,
+          ...(DEFAULT_SETTINGS.attendance as Record<string, unknown>),
           ...(parsed.attendance || {}),
         },
         funMeter: {
-          ...DEFAULT_SETTINGS.funMeter,
+          ...(DEFAULT_SETTINGS.funMeter as Record<string, unknown>),
           ...(parsed.funMeter || {}),
         },
       };
@@ -196,11 +196,11 @@ export function SettingsProvider({ children, initialSettings }: SettingsProvider
               ...DEFAULT_SETTINGS,
               ...parsed,
               attendance: {
-                ...DEFAULT_SETTINGS.attendance,
+                ...(DEFAULT_SETTINGS.attendance as Record<string, unknown>),
                 ...(parsed.attendance || {}),
               },
               funMeter: {
-                ...DEFAULT_SETTINGS.funMeter,
+                ...(DEFAULT_SETTINGS.funMeter as Record<string, unknown>),
                 ...(parsed.funMeter || {}),
               },
             });
@@ -209,11 +209,11 @@ export function SettingsProvider({ children, initialSettings }: SettingsProvider
                 ...DEFAULT_SETTINGS,
                 ...parsed,
                 attendance: {
-                  ...DEFAULT_SETTINGS.attendance,
+                  ...(DEFAULT_SETTINGS.attendance as Record<string, unknown>),
                   ...(parsed.attendance || {}),
                 },
                 funMeter: {
-                  ...DEFAULT_SETTINGS.funMeter,
+                  ...(DEFAULT_SETTINGS.funMeter as Record<string, unknown>),
                   ...(parsed.funMeter || {}),
                 },
               };

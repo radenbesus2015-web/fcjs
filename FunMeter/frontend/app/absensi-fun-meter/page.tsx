@@ -9,15 +9,6 @@ interface AdMedia {
   type: 'image' | 'video';
 }
 
-const adMediaList: AdMedia[] = [
-  { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-  { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-  { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-  { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-  { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-  { src: "/assets/advertisements/images/eschool.png", type: 'image' },
-];
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -50,6 +41,48 @@ interface AttendanceFunResult {
 }
 
 export default function AttendanceFunMeterPage() {
+  // Dynamic Ads: load from localStorage override or public index.json, fallback to defaults
+  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
+    { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+    { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+    { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+    { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+    { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+  ]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const LS_KEY = "ads.enabled";
+    const load = async () => {
+      try {
+        // Prefer localStorage (managed by admin page)
+        const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
+        if (stored) {
+          const parsed = JSON.parse(stored) as { src: string; type: 'image' | 'video' }[];
+          if (Array.isArray(parsed) && parsed.length) {
+            if (!cancelled) setAdMediaList(parsed);
+            return;
+          }
+        }
+        // Else fetch static index to auto-discover assets
+        const res = await fetch('/assets/advertisements/index.json', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const images: string[] = Array.isArray(data?.images) ? data.images : [];
+          const videos: string[] = Array.isArray(data?.videos) ? data.videos : [];
+          const list: AdMedia[] = [
+            ...images.map((src: string) => ({ src, type: 'image' as const })),
+            ...videos.map((src: string) => ({ src, type: 'video' as const })),
+          ];
+          if (list.length && !cancelled) setAdMediaList(list);
+        }
+      } catch (e) {
+        console.warn('[ADS] Failed to load ads list, using defaults', e);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
   const { t } = useI18n();
   const { useSetting } = useSettings();
   const router = useRouter();
@@ -244,30 +277,53 @@ export default function AttendanceFunMeterPage() {
     const rect = host.getBoundingClientRect();
     const dispW = rect.width, dispH = rect.height;
     
-    // Get actual video dimensions
-    const videoW = video.videoWidth || Number(funSendWidth);
-    const videoH = video.videoHeight || sendHeightRef.current;
+    // Bbox dari server menggunakan koordinat snapCanvas (yang dikirim ke server)
+    // SnapCanvas dibuat dengan: drawImage(video, 0, 0, snapW, snapH)
+    // Jadi koordinat di snapCanvas proporsional dengan video asli
     
-    if (!videoW || !videoH) return { sx: dispW / Number(funSendWidth), sy: dispH / sendHeightRef.current, ox: 0, oy: 0 };
+    // Dimensi snapCanvas (yang dikirim ke server)
+    const snapW = Number(funSendWidth);
+    const snapH = sendHeightRef.current;
     
-    // Calculate aspect ratios
+    // Dimensi video asli
+    const videoW = video.videoWidth;
+    const videoH = video.videoHeight;
+    
+    if (!snapW || !snapH || !videoW || !videoH) {
+      // Fallback: langsung dari snapCanvas ke display
+      return { sx: dispW / snapW, sy: dispH / snapH, ox: 0, oy: 0 };
+    }
+    
+    // Transformasi: snapCanvas -> video asli -> display
+    // Karena snapCanvas diambil dari video dengan drawImage, koordinatnya proporsional
+    // Scale factor dari snapCanvas ke video asli
+    const scaleX = videoW / snapW;
+    const scaleY = videoH / snapH;
+    
+    // Transform dari video asli ke display (dengan object-fit: cover)
     const videoAspect = videoW / videoH;
     const displayAspect = dispW / dispH;
     
-    // For object-fit: cover - video fills container, uniform scaling
-    // Video is scaled to cover the entire container
     let sx, sy, ox = 0, oy = 0;
     
     if (displayAspect > videoAspect) {
-      // Display is wider - video fills width, crops top/bottom
-      sx = dispW / videoW;
-      sy = sx; // uniform scaling
-      oy = (dispH - videoH * sy) / 2;
+      // Display lebih lebar - video mengisi lebar, crop atas/bawah
+      // Video di-scale ke lebar display
+      const displayScale = dispW / videoW;
+      sx = displayScale * scaleX; // dari snapCanvas langsung ke display
+      sy = displayScale * scaleY;
+      // Offset vertikal untuk letterbox (crop atas/bawah)
+      const scaledVideoH = videoH * displayScale;
+      oy = (dispH - scaledVideoH) / 2;
     } else {
-      // Display is taller - video fills height, crops left/right
-      sy = dispH / videoH;
-      sx = sy; // uniform scaling
-      ox = (dispW - videoW * sx) / 2;
+      // Display lebih tinggi - video mengisi tinggi, crop kiri/kanan
+      // Video di-scale ke tinggi display
+      const displayScale = dispH / videoH;
+      sx = displayScale * scaleX; // dari snapCanvas langsung ke display
+      sy = displayScale * scaleY;
+      // Offset horizontal untuk letterbox (crop kiri/kanan)
+      const scaledVideoW = videoW * displayScale;
+      ox = (dispW - scaledVideoW) / 2;
     }
     
     return { sx, sy, ox, oy };
@@ -323,17 +379,43 @@ export default function AttendanceFunMeterPage() {
   };
   
   const drawFun = (results: any[]) => {
-    if (!sendHeightRef.current) return;
+    // Ensure snap size is calculated
+    if (!ensureSnapSize()) {
+      console.log("[DRAW_FUN] Cannot ensure snap size");
+      return;
+    }
+    
     const overlay = overlayRef.current;
     const ctx = ctxRef.current;
     if (!overlay || !ctx) return;
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     ctx.lineWidth = 3;
     const { sx, sy, ox, oy } = getLetterboxTransform();
+    
+    // Debug logging (bisa di-disable setelah fix)
+    if (results && results.length > 0) {
+      const video = videoRef.current;
+      const snapW = Number(funSendWidth);
+      const snapH = sendHeightRef.current;
+      console.log('[DRAW_FUN] Transform:', { 
+        snapW, snapH, 
+        videoW: video?.videoWidth, 
+        videoH: video?.videoHeight,
+        sx, sy, ox, oy,
+        resultsCount: results.length 
+      });
+    }
+    
     let missingName = false;
     (results || []).forEach((r: any) => {
       const [bx, by, bw, bh] = r.bbox || [0, 0, 0, 0];
-      const x = ox + bx * sx, y = oy + by * sy, w = bw * sx, h = bh * sy;
+      // Transform dari koordinat snapCanvas ke koordinat display
+      // Bbox dari server dalam koordinat snapCanvas, transform ke display
+      const x = ox + bx * sx;
+      const y = oy + by * sy;
+      const w = bw * sx;
+      const h = bh * sy;
+      
       const exprRaw = (r.top?.label || r.expression || r.emotion || "Biasa").trim();
       const expr = mapExprLabel(exprRaw);
       const fused = fuseName([bx, by, bw, bh]);
@@ -733,8 +815,8 @@ export default function AttendanceFunMeterPage() {
   
   // Ad rotation logic: 5 detik untuk foto, auto-advance untuk video setelah selesai
   const goToNextAd = useCallback(() => {
-    setCurrentAdIndex((prevIndex) => (prevIndex + 1) % adMediaList.length);
-  }, []);
+    setCurrentAdIndex((prevIndex) => (prevIndex + 1) % Math.max(1, adMediaList.length));
+  }, [adMediaList.length]);
 
   useEffect(() => {
     const currentAd = adMediaList[currentAdIndex];
@@ -777,10 +859,10 @@ export default function AttendanceFunMeterPage() {
 
   // Preload next ad for seamless transition
   useEffect(() => {
-    const nextIndex = (currentAdIndex + 1) % adMediaList.length;
+    const nextIndex = adMediaList.length ? (currentAdIndex + 1) % adMediaList.length : 0;
     const nextAd = adMediaList[nextIndex];
     
-    if (nextAd.type === 'video') {
+    if (nextAd && nextAd.type === 'video') {
       // Preload next video
       const preloadVideo = document.createElement('video');
       preloadVideo.src = nextAd.src;
@@ -790,7 +872,7 @@ export default function AttendanceFunMeterPage() {
       return () => {
         preloadVideo.src = '';
       };
-    } else if (nextAd.type === 'image') {
+    } else if (nextAd && nextAd.type === 'image') {
       // Preload next image
       const preloadImage = new window.Image();
       preloadImage.src = nextAd.src;

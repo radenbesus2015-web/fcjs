@@ -11,7 +11,8 @@
     "adminAttendanceSummary": "Ringkasan Absensi",
     "adminSchedule": "Jadwal",
     "adminUsers": "Manajemen Pengguna",
-    "adminConfig": "Konfigurasi Sistem"
+    "adminConfig": "Konfigurasi Sistem",
+    "adminAdvertisement": "Advertisement"
   },
   "pages": {
     "home": {
@@ -46,6 +47,47 @@
     },
     "adminConfig": {
       "title": "Konfigurasi Sistem"
+    },
+    "adminAdvertisement": {
+      "title": "Advertisement"
+    }
+  },
+  "adminAds": {
+    "title": "Kelola Iklan (Absensi Fun Meter)",
+    "subtitle": "Atur iklan yang muncul pada halaman Absensi Fun Meter.",
+    "empty": "Tidak ada media iklan ditemukan.",
+    "fields": {
+      "show": "Tampilkan",
+      "select": "Pilih iklan"
+    },
+    "toast": {
+      "saved": "Daftar iklan tersimpan. Halaman Absensi akan menggunakan daftar ini setelah di-refresh.",
+      "saveFailed": "Gagal menyimpan daftar iklan.",
+      "imported": "Berhasil mengimpor media iklan.",
+      "importFailed": "Gagal mengimpor file.",
+      "deletedSelected": "Iklan terpilih berhasil dihapus.",
+      "deleteFailed": "Gagal menghapus iklan.",
+      "importJsonInvalid": "Format JSON tidak valid.",
+      "importJsonEmpty": "Tidak ada iklan valid dalam file JSON.",
+      "importJsonSuccess": "{count} iklan berhasil diimpor dari JSON.",
+      "importJsonFailed": "Gagal mengimpor file JSON."
+    },
+    "confirm": {
+      "delete": {
+        "title": "Hapus Iklan",
+        "descSelected": "Apakah Anda yakin ingin menghapus {count} iklan yang dipilih? Tindakan ini tidak dapat dibatalkan.",
+        "confirm": "Hapus",
+        "cancel": "Batal"
+      }
+    },
+    "pagination": {
+      "info": "Menampilkan {start}-{end} dari {total} iklan",
+      "first": "Halaman pertama",
+      "previous": "Sebelumnya",
+      "next": "Selanjutnya",
+      "last": "Halaman terakhir",
+      "perPage": "Per halaman:",
+      "all": "Semua"
     }
   },
   "adminAttendanceSummary": {
@@ -720,7 +762,10 @@
     "close": "Tutup",
     "cancel": "Batal",
     "clear": "Bersihkan",
-    "delete": "Hapus"
+    "delete": "Hapus",
+    "save": "Simpan",
+    "reload": "Muat Ulang",
+    "import": "Import"
   },
   "aside": {
     "brand": {

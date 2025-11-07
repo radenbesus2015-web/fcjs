@@ -99,7 +99,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
           isOpen ? "gap-2" : "gap-0"
         )}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Icon name="Smile" className="h-4 w-4" />
+            <Icon name="Smile" className={cn("transition-all", isOpen ? "h-4 w-4" : "h-5 w-5")} />
           </div>
           <span
             className={cn(
@@ -184,8 +184,8 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
           title={ft("actions.openSettings", "Buka Pengaturan")}
         >
           <Icon name="Settings" className={cn(
-            "h-4 w-4 transition-all duration-300 ease-in-out",
-            isOpen && "mr-2"
+            "transition-all duration-300 ease-in-out",
+            isOpen ? "h-4 w-4 mr-2" : "h-5 w-5"
           )} />
           <span
             className={cn(
@@ -231,8 +231,8 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
               title={t("avatar.menu.logout", "Sign out")}
             >
               <Icon name="LogOut" className={cn(
-                "h-4 w-4 transition-all duration-300 ease-in-out",
-                isOpen && "mr-2"
+                "transition-all duration-300 ease-in-out",
+                isOpen ? "h-4 w-4 mr-2" : "h-5 w-5"
               )} />
               <span
                 className={cn(
@@ -258,9 +258,9 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
             title={t("avatar.menu.login", "Sign in")}
           >
             <Icon name="LogIn" className={cn(
-              "h-4 w-4 transition-all duration-300 ease-in-out",
-              isOpen && "mr-2"
-            )} />
+            "transition-all duration-300 ease-in-out",
+            isOpen ? "h-4 w-4 mr-2" : "h-5 w-5"
+          )} />
             <span
               className={cn(
                 "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
@@ -310,7 +310,7 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
           collapsed ? "justify-center px-0 gap-0" : "gap-2"
         )}
       >
-        <Icon name={item.icon} className="h-4 w-4" />
+        <Icon name={item.icon} className={cn("transition-all", collapsed ? "h-6 w-6" : "h-4 w-4") } />
         <span
           className={cn(
             "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
@@ -335,7 +335,7 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
         collapsed ? "justify-center px-0 gap-0" : "gap-2"
       )}
     >
-      <Icon name={item.icon} className="h-4 w-4" />
+      <Icon name={item.icon} className={cn("transition-all", collapsed ? "h-6 w-6" : "h-4 w-4") } />
       <span
         className={cn(
           "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
