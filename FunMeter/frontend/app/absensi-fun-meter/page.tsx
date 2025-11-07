@@ -928,39 +928,42 @@ export default function AttendanceFunMeterPage() {
           z-index: 100;
         }
 
-        /* Portrait mode - adjust header untuk menampilkan tombol mood */
+        /* Landscape mode - header lebih pendek dan lebar */
+        @media (orientation: landscape) {
+          #banner_top {
+            aspect-ratio: 24 / 3 !important;
+            min-height: 50px;
+            max-height: 80px;
+          }
+        }
+
+        /* Portrait mode - height mengikuti proporsi image header (40:4 = 10:1) */
         @media (orientation: portrait) {
           #banner_top {
-            aspect-ratio: 16 / 5 !important;
-            min-height: 120px;
-            max-height: 200px;
+            aspect-ratio: 40 / 4 !important;
+            min-height: auto;
+            max-height: none;
           }
         }
 
-        /* Narrow screens - ensure header has enough height */
-        @media (max-width: 640px) {
+        /* Narrow screens - tetap proporsi image header */
+        @media (orientation: portrait) and (max-width: 640px) {
           #banner_top {
-            aspect-ratio: 12 / 5 !important;
-            min-height: 140px;
-            max-height: 220px;
+            aspect-ratio: 40 / 4 !important;
           }
         }
 
-        /* Very narrow screens - more height */
-        @media (max-width: 480px) {
+        /* Very narrow screens - tetap proporsi image header */
+        @media (orientation: portrait) and (max-width: 480px) {
           #banner_top {
-            aspect-ratio: 10 / 5 !important;
-            min-height: 160px;
-            max-height: 240px;
+            aspect-ratio: 40 / 4 !important;
           }
         }
 
-        /* Extra narrow screens - maximum height */
-        @media (max-width: 360px) {
+        /* Extra narrow screens - tetap proporsi image header */
+        @media (orientation: portrait) and (max-width: 360px) {
           #banner_top {
-            aspect-ratio: 8 / 5 !important;
-            min-height: 180px;
-            max-height: 260px;
+            aspect-ratio: 40 / 4 !important;
           }
         }
 
@@ -979,6 +982,25 @@ export default function AttendanceFunMeterPage() {
         }
 
         #banner_bottom {
+          z-index: 100;
+        }
+
+        /* Landscape mode - footer lebih pendek dan lebar, sama dengan header */
+        @media (orientation: landscape) {
+          #banner_bottom {
+            aspect-ratio: 24 / 3 !important;
+            min-height: 50px;
+            max-height: 80px;
+          }
+        }
+
+        /* Portrait mode - footer mengikuti proporsi image footer (40:2 = 20:1) */
+        @media (orientation: portrait) {
+          #banner_bottom {
+            aspect-ratio: 40 / 2 !important;
+            min-height: auto;
+            max-height: none;
+          }
         }
 
 
@@ -1134,7 +1156,7 @@ export default function AttendanceFunMeterPage() {
       `}} />
       <div className="page-root">
       {/* Header banner - Section 1 */}
-      <section id="banner_top" className="relative w-screen overflow-hidden bg-[#006CBB]" style={{ aspectRatio: '40/4' }}>
+      <section id="banner_top" className="relative w-screen overflow-hidden bg-[#006CBB]">
         <div className="relative w-full h-full">
           <Image 
             src="/assets/header/header.png"
@@ -1196,7 +1218,7 @@ export default function AttendanceFunMeterPage() {
       </section>
       
       {/* Footer Section - Section 4 */}
-      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]" style={{ aspectRatio: '40 / 2' }}>
+      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]">
         <div className="relative w-full h-full">
           <Image 
             src="/assets/footer/footer.png" 
