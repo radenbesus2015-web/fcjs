@@ -333,7 +333,7 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
         onClick={handleClick}
         className={cn(
           "group flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
-          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "hover:bg-sidebar-accent hover:text-black",
           isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
           collapsed ? "justify-center px-0 gap-0" : "gap-2"
         )}
@@ -342,8 +342,8 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
           "flex items-center justify-center rounded-lg transition-all duration-300 ease-in-out flex-shrink-0",
           collapsed ? "h-10 w-10" : "h-8 w-8",
           isActive 
-            ? "bg-orange-500 text-white" 
-            : "bg-transparent group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20"
+            ? "bg-orange-600 text-white" 
+            : "bg-transparent group-hover:bg-orange-200 dark:group-hover:bg-orange-600 dark:group-hover:text-white"
         )}>
           <Icon name={item.icon} className={cn("transition-all flex-shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4") } />
         </div>
@@ -366,7 +366,7 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
       onClick={handleClick}
       className={cn(
         "group flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
-        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        "hover:bg-sidebar-accent hover:text-black",
         isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
         collapsed ? "justify-center px-0 gap-0" : "gap-2"
       )}
@@ -376,7 +376,7 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
         collapsed ? "h-10 w-10" : "h-8 w-8",
         isActive 
           ? "bg-orange-500 text-white" 
-          : "bg-transparent group-hover:bg-orange-200 group-hover:text-white"
+          : "bg-transparent group-hover:bg-orange-200 dark:group-hover:bg-orange-600 dark:group-hover:text-white"
       )}>
         <Icon name={item.icon} className={cn("transition-all flex-shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4") } />
       </div>
