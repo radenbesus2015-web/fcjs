@@ -9,6 +9,7 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/lib/toast";
 import Image from "next/image";
+import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
 
 // Dynamic Ads media type
 type AdMedia = { src: string; type: 'image' | 'video' };
@@ -56,6 +57,11 @@ export default function HomePage() {
     { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
   ]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  
+  // Debug: log when adMediaList changes
+  useEffect(() => {
+    console.log('[HOME] adMediaList updated:', adMediaList.length, 'ads');
+  }, [adMediaList]);
   const adVideoRef = useRef<HTMLVideoElement>(null);
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [repeatCount, setRepeatCount] = useState(3); // Jumlah repeat iklan ke kanan dan kiri (total = 1 center + 3 kiri + 3 kanan = 7)
@@ -103,30 +109,49 @@ export default function HomePage() {
   
   useEffect(() => {
     let cancelled = false;
-    const LS_KEY = "ads.enabled";
     const load = async () => {
       try {
-        const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
-        if (stored) {
-          const parsed = JSON.parse(stored) as AdMedia[];
-          if (Array.isArray(parsed) && parsed.length) {
-            if (!cancelled) setAdMediaList(parsed);
-            return;
-          }
+        // Load active advertisements from backend API
+        const data = await fetchActiveAdvertisements();
+        if (cancelled) return;
+        
+        // Convert backend Advertisement to AdMedia
+        const list: AdMedia[] = data
+          .filter((ad) => ad.enabled) // Only enabled ads
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)) // Sort by display_order
+          .map((ad) => ({
+            src: ad.src,
+            type: ad.type as 'image' | 'video',
+          }));
+        
+        console.log('[HOME] Loaded advertisements:', list.length, list);
+        
+        if (list.length && !cancelled) {
+          setAdMediaList(list);
+          // Reset to first ad when list changes
+          setCurrentAdIndex(0);
+        } else if (!cancelled) {
+          // Fallback to default ads if no active ads found
+          setAdMediaList([
+            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+          ]);
         }
-        const res = await fetch('/assets/advertisements/index.json', { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          const images: string[] = Array.isArray(data?.images) ? data.images : [];
-          const videos: string[] = Array.isArray(data?.videos) ? data.videos : [];
-          const list: AdMedia[] = [
-            ...images.map((src) => ({ src, type: 'image' as const })),
-            ...videos.map((src) => ({ src, type: 'video' as const })),
-          ];
-          if (list.length && !cancelled) setAdMediaList(list);
+      } catch (e) {
+        console.warn('[ADS] Failed to load ads from backend, using defaults', e);
+        if (!cancelled) {
+          // Fallback to default ads on error
+          setAdMediaList([
+            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+          ]);
         }
-      } catch {
-        // ignore
       }
     };
     load();
@@ -141,16 +166,18 @@ export default function HomePage() {
       clearTimeout(adTimerRef.current);
       adTimerRef.current = null;
     }
-    if (!currentAd) return;
+    if (!currentAd || adMediaList.length === 0) return;
     
     if (currentAd.type === 'image') {
-      // Untuk gambar, langsung set timer tanpa delay
+      // Untuk gambar, set timer 5 detik untuk rotasi
       adTimerRef.current = setTimeout(() => {
         goToNextAd();
       }, 5000);
     } else if (currentAd.type === 'video') {
       // Untuk video, play semua instance sekaligus
+      // Timer akan di-set setelah video selesai (onEnded) atau max 30 detik
       const videoElements = document.querySelectorAll(`video[src="${currentAd.src}"]`);
+      let videoPlayed = false;
       videoElements.forEach((video) => {
         const videoEl = video as HTMLVideoElement;
         videoEl.currentTime = 0; // Reset ke awal
@@ -158,6 +185,13 @@ export default function HomePage() {
           // Retry sekali jika gagal
           setTimeout(() => videoEl.play().catch(() => {}), 100);
         });
+        // Set max timeout 30 detik untuk video (fallback jika onEnded tidak trigger)
+        if (!videoPlayed) {
+          videoPlayed = true;
+          adTimerRef.current = setTimeout(() => {
+            goToNextAd();
+          }, 30000); // Max 30 detik untuk video
+        }
       });
     }
     
@@ -785,7 +819,6 @@ export default function HomePage() {
                     src={adMediaList[currentAdIndex]?.src}
                     autoPlay
                     muted
-                    loop
                     playsInline
                     preload="auto"
                     crossOrigin="anonymous"
@@ -795,7 +828,14 @@ export default function HomePage() {
                       const video = e.currentTarget;
                       video.play().catch(() => {});
                     }}
-                    onEnded={goToNextAd}
+                    onEnded={() => {
+                      // Clear timer jika ada, karena onEnded sudah trigger
+                      if (adTimerRef.current) {
+                        clearTimeout(adTimerRef.current);
+                        adTimerRef.current = null;
+                      }
+                      goToNextAd();
+                    }}
                   />
                 )}
               </div>
