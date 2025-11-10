@@ -42,8 +42,22 @@ export default function AdminAdvertisementPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [arrowAnimation, setArrowAnimation] = useState<{ index: number; direction: -1 | 1 } | null>(null);
-  const itemRefs = useRef(new Map<string, HTMLDivElement>());
+  const itemRefs = useRef(new Map<string, HTMLDivElement | HTMLTableRowElement>());
   const prevPositionsRef = useRef(new Map<string, DOMRect>());
+  
+  // View mode state (grid or list)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('adminAds.viewMode');
+      return (saved === 'grid' || saved === 'list') ? saved : 'list';
+    }
+    return 'list';
+  });
+  
+  // Save view mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('adminAds.viewMode', viewMode);
+  }, [viewMode]);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,7 +74,22 @@ export default function AdminAdvertisementPage() {
     return () => window.clearTimeout(timeout);
   }, [arrowAnimation]);
 
+  // Track previous view mode untuk skip animasi saat switch view
+  const prevViewModeRef = useRef(viewMode);
+  
   useLayoutEffect(() => {
+    // Skip animasi jika view mode berubah (grid ↔ list)
+    if (prevViewModeRef.current !== viewMode) {
+      prevViewModeRef.current = viewMode;
+      // Reset positions untuk view baru
+      const currentPositions = new Map<string, DOMRect>();
+      itemRefs.current.forEach((el, key) => {
+        currentPositions.set(key, el.getBoundingClientRect());
+      });
+      prevPositionsRef.current = currentPositions;
+      return;
+    }
+    
     const currentPositions = new Map<string, DOMRect>();
     itemRefs.current.forEach((el, key) => {
       currentPositions.set(key, el.getBoundingClientRect());
@@ -71,22 +100,29 @@ export default function AdminAdvertisementPage() {
       if (!prev) return;
       const el = itemRefs.current.get(key);
       if (!el) return;
+      
+      // Calculate delta for both X and Y (untuk grid view)
+      const deltaX = prev.left - rect.left;
       const deltaY = prev.top - rect.top;
-      if (Math.abs(deltaY) < 1) return;
+      
+      // Skip jika tidak ada perubahan posisi
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return;
+      
+      // FLIP animation: First, Last, Invert, Play
       el.animate(
         [
-          { transform: `translateY(${deltaY}px)` },
-          { transform: "translateY(0)" }
+          { transform: `translate(${deltaX}px, ${deltaY}px)`, opacity: 0.8 },
+          { transform: "translate(0, 0)", opacity: 1 }
         ],
         {
-          duration: 280,
-          easing: "cubic-bezier(0.22, 0.61, 0.36, 1)",
+          duration: 320,
+          easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", // Bouncy easing
         }
       );
     });
 
     prevPositionsRef.current = currentPositions;
-  }, [items, startIndex, endIndex]);
+  }, [items, startIndex, endIndex, viewMode]);
 
   // Load advertisements from backend API
   const load = useCallback(async () => {
@@ -426,15 +462,33 @@ export default function AdminAdvertisementPage() {
       <Card>
         <CardHeader className="flex sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1.5">
-            <CardTitle>{t("adminAds.title", "Manage Advertisements (Attendance Fun Meter)")}</CardTitle>
+            <CardTitle>{t("pages.adminAdvertisement.title", "Kelola Iklan")}</CardTitle>
             <CardDescription>
-              {t("adminAds.subtitle", "Configure which advertisements appear on the Attendance Fun Meter page.")}
+              {t("pages.adminAdvertisement.subtitle", "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter.")}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleImportJson} variant="outline" size="icon" title={t("common.import", "Import")} aria-label={t("common.import", "Import")} disabled={loading}>
-              <Icon name="Upload" className="h-4 w-4" />
-            </Button>
+            {/* View Mode Toggle */}
+            <div className="flex items-center border rounded-md">
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                size="icon"
+                className="rounded-r-none"
+                onClick={() => setViewMode('grid')}
+                title={t("adminAds.view.grid", "Tampilan Grid")}
+              >
+                <Icon name="LayoutGrid" className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={viewMode === 'list' ? 'default' : 'ghost'} 
+                size="icon"
+                className="rounded-l-none border-l"
+                onClick={() => setViewMode('list')}
+                title={t("adminAds.view.list", "Tampilan List")}
+              >
+                <Icon name="LayoutList" className="h-4 w-4" />
+              </Button>
+            </div>
             <Button variant="outline" size="icon" onClick={() => void load()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")} disabled={loading}>
               <Icon name="RefreshCw" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -473,112 +527,301 @@ export default function AdminAdvertisementPage() {
 
           {!loading && !error && (
             <>
-              <div className="space-y-3">
-                {items.length === 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    {t("adminAds.empty", "No advertisement media found.")}
-                  </div>
-                )}
-                {paginatedItems.map((it, localIdx) => {
-                  const globalIdx = startIndex + localIdx;
-                  const isSelected = selected.includes(it.src);
-                  const isDragging = draggedIndex === globalIdx;
-                  const isDragOver = dragOverIndex === globalIdx;
-                  const isArrowAnimated = arrowAnimation?.index === globalIdx;
-                  const itemStyle: React.CSSProperties = {
-                    transition: "background-color 0.25s ease, box-shadow 0.25s ease",
-                  };
-                  if (isArrowAnimated) {
-                    itemStyle.boxShadow = "0 12px 28px rgba(15, 23, 42, 0.18)";
-                  }
-                  return (
-                    <div 
-                      key={it.id || it.src} 
-                      ref={(el) => {
-                        if (el) {
-                          itemRefs.current.set(it.id || it.src, el);
-                        } else {
-                          itemRefs.current.delete(it.id || it.src);
-                        }
-                      }}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, globalIdx)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) => handleDragOver(e, globalIdx)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, globalIdx)}
-                      className={`flex items-center gap-3 rounded-md border p-2 transition cursor-move ${
-                        isSelected ? 'opacity-60' : ''
-                      } ${
-                        isDragging ? 'opacity-50' : ''
-                      } ${
-                        isDragOver ? 'border-primary border-2 bg-primary/5' : ''
-                      } ${
-                        isArrowAnimated ? 'ring-2 ring-primary/60 bg-primary/10' : ''
-                      }`}
-                      style={itemStyle}
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          setSelected((prev) => e.target.checked ? [...prev, it.src] : prev.filter((s) => s !== it.src));
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={t("adminAds.fields.select", "Pilih iklan")}
-                      />
-                      <div className="w-28 h-16 bg-muted flex items-center justify-center overflow-hidden rounded">
-                        {it.type === "image" ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img 
-                            src={it.src} 
-                            alt="Ad preview" 
-                            className="w-full h-full object-cover" 
-                            draggable={false}
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        ) : (
-                          <video 
-                            src={it.src} 
-                            className="w-full h-full object-cover" 
-                            muted 
-                            draggable={false}
-                            preload="metadata"
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{it.title || it.file_name || it.src}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {it.type.toUpperCase()}
-                          {it.file_size && ` • ${(it.file_size / 1024).toFixed(1)} KB`}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} disabled={globalIdx === 0} className="hidden md:flex">
-                          ↑
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, 1); }} disabled={globalIdx === items.length - 1} className="hidden md:flex">
-                          ↓
-                        </Button>
-                        <div className="flex items-center gap-2">
+              {items.length === 0 ? (
+                <div className="text-sm text-muted-foreground p-6 text-center">
+                  {t("adminAds.empty", "No advertisement media found.")}
+                </div>
+              ) : viewMode === 'list' ? (
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-3 font-medium w-12">
                           <input
-                            id={`ad-${globalIdx}`}
                             type="checkbox"
                             className="h-4 w-4"
-                            checked={!!it.enabled}
-                            onChange={(e) => { e.stopPropagation(); toggle(globalIdx, e.target.checked); }}
-                            onClick={(e) => e.stopPropagation()}
+                            checked={paginatedItems.length > 0 && paginatedItems.every((it) => selected.includes(it.src))}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelected((prev) => [...new Set([...prev, ...paginatedItems.map((it) => it.src)])]);
+                              } else {
+                                const pageSrcs = new Set(paginatedItems.map((it) => it.src));
+                                setSelected((prev) => prev.filter((s) => !pageSrcs.has(s)));
+                              }
+                            }}
+                            aria-label="Select all"
                           />
-                          <Label htmlFor={`ad-${globalIdx}`} className="text-xs">{t("adminAds.fields.show", "Show")}</Label>
+                        </th>
+                        <th className="text-left p-3 font-medium w-24">{t("adminAds.table.preview", "Preview")}</th>
+                        <th className="text-left p-3 font-medium">{t("adminAds.table.fileName", "Nama File")}</th>
+                        <th className="text-left p-3 font-medium w-20">{t("adminAds.table.type", "Jenis")}</th>
+                        <th className="text-right p-3 font-medium w-24">{t("adminAds.table.size", "Ukuran")}</th>
+                        <th className="text-center p-3 font-medium w-24 hidden md:table-cell">{t("adminAds.table.order", "Urutan")}</th>
+                        <th className="text-center p-3 font-medium w-20">{t("adminAds.table.show", "Show")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedItems.map((it, localIdx) => {
+                        const globalIdx = startIndex + localIdx;
+                        const isSelected = selected.includes(it.src);
+                        const isDragging = draggedIndex === globalIdx;
+                        const isDragOver = dragOverIndex === globalIdx;
+                        const isArrowAnimated = arrowAnimation?.index === globalIdx;
+                        
+                        return (
+                          <tr 
+                            key={it.id || it.src}
+                            ref={(el) => {
+                              if (el) {
+                                itemRefs.current.set(it.id || it.src, el);
+                              } else {
+                                itemRefs.current.delete(it.id || it.src);
+                              }
+                            }}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, globalIdx)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) => handleDragOver(e, globalIdx)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, globalIdx)}
+                            className={`border-b last:border-0 transition-colors cursor-move ${
+                              isSelected ? 'bg-muted/50' : ''
+                            } ${
+                              isDragging ? 'opacity-50' : ''
+                            } ${
+                              isDragOver ? 'bg-primary/10' : ''
+                            } ${
+                              isArrowAnimated ? 'bg-primary/20' : ''
+                            } hover:bg-muted/30`}
+                          >
+                            <td className="p-3">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  setSelected((prev) => e.target.checked ? [...prev, it.src] : prev.filter((s) => s !== it.src));
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={t("adminAds.fields.select", "Pilih iklan")}
+                              />
+                            </td>
+                            <td className="p-3">
+                              <div className="w-20 h-12 bg-muted flex items-center justify-center overflow-hidden rounded">
+                                {it.type === "image" ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img 
+                                    src={it.src} 
+                                    alt="Ad preview" 
+                                    className="w-full h-full object-cover" 
+                                    draggable={false}
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                ) : (
+                                  <video 
+                                    src={it.src} 
+                                    className="w-full h-full object-cover" 
+                                    muted 
+                                    draggable={false}
+                                    preload="metadata"
+                                  />
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <div className="text-sm font-medium truncate max-w-xs">
+                                {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                                it.type === 'image' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                              }`}>
+                                {it.type.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="p-3 text-right text-sm text-muted-foreground">
+                              {it.file_size ? `${(it.file_size / 1024 / 1024).toFixed(2)} MB` : '-'}
+                            </td>
+                            <td className="p-3 hidden md:table-cell">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} 
+                                  disabled={globalIdx === 0}
+                                  title="Move up"
+                                >
+                                  ↑
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  onClick={(e) => { e.stopPropagation(); move(globalIdx, 1); }} 
+                                  disabled={globalIdx === items.length - 1}
+                                  title="Move down"
+                                >
+                                  ↓
+                                </Button>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center justify-center">
+                                <input
+                                  id={`ad-show-${globalIdx}`}
+                                  type="checkbox"
+                                  className="h-4 w-4"
+                                  checked={!!it.enabled}
+                                  onChange={(e) => { e.stopPropagation(); toggle(globalIdx, e.target.checked); }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title={it.enabled ? 'Hide' : 'Show'}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                /* Grid View */
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {paginatedItems.map((it, localIdx) => {
+                    const globalIdx = startIndex + localIdx;
+                    const isSelected = selected.includes(it.src);
+                    const isDragging = draggedIndex === globalIdx;
+                    const isDragOver = dragOverIndex === globalIdx;
+                    const isArrowAnimated = arrowAnimation?.index === globalIdx;
+                    
+                    return (
+                      <div 
+                        key={it.id || it.src}
+                        ref={(el) => {
+                          if (el) {
+                            itemRefs.current.set(it.id || it.src, el);
+                          } else {
+                            itemRefs.current.delete(it.id || it.src);
+                          }
+                        }}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, globalIdx)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleDragOver(e, globalIdx)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, globalIdx)}
+                        className={`rounded-lg border transition-all duration-300 cursor-move ${
+                          isSelected ? 'ring-2 ring-primary bg-primary/5' : ''
+                        } ${
+                          isDragging ? 'opacity-50 scale-95' : ''
+                        } ${
+                          isDragOver ? 'border-primary border-2 bg-primary/10 scale-105 shadow-xl' : ''
+                        } ${
+                          isArrowAnimated ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 scale-105' : ''
+                        } hover:shadow-lg hover:border-primary/50 hover:scale-[1.02]`}
+                        style={{
+                          transition: isArrowAnimated 
+                            ? 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+                            : 'all 0.3s ease-in-out'
+                        }}
+                      >
+                        {/* Card Header with Checkbox */}
+                        <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              setSelected((prev) => e.target.checked ? [...prev, it.src] : prev.filter((s) => s !== it.src));
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={t("adminAds.fields.select", "Pilih iklan")}
+                          />
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 hover:bg-primary/20 active:scale-90 transition-all"
+                              onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} 
+                              disabled={globalIdx === 0}
+                              title={t("adminAds.actions.moveLeft", "Pindah ke kiri")}
+                            >
+                              <span className="text-lg">←</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 hover:bg-primary/20 active:scale-90 transition-all"
+                              onClick={(e) => { e.stopPropagation(); move(globalIdx, 1); }} 
+                              disabled={globalIdx === items.length - 1}
+                              title={t("adminAds.actions.moveRight", "Pindah ke kanan")}
+                            >
+                              <span className="text-lg">→</span>
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Preview */}
+                        <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                          {it.type === "image" ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img 
+                              src={it.src} 
+                              alt="Ad preview" 
+                              className="w-full h-full object-cover" 
+                              draggable={false}
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          ) : (
+                            <video 
+                              src={it.src} 
+                              className="w-full h-full object-cover" 
+                              muted 
+                              draggable={false}
+                              preload="metadata"
+                            />
+                          )}
+                        </div>
+
+                        {/* Card Footer with Info */}
+                        <div className="p-3 space-y-2">
+                          <div className="text-sm font-medium truncate" title={it.title || it.file_name || it.src}>
+                            {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                              it.type === 'image' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                            }`}>
+                              {it.type.toUpperCase()}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {it.file_size ? `${(it.file_size / 1024 / 1024).toFixed(2)} MB` : '-'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <Label htmlFor={`ad-grid-${globalIdx}`} className="text-xs font-medium">
+                              {t("adminAds.fields.show", "Show")}
+                            </Label>
+                            <input
+                              id={`ad-grid-${globalIdx}`}
+                              type="checkbox"
+                              className="h-4 w-4"
+                              checked={!!it.enabled}
+                              onChange={(e) => { e.stopPropagation(); toggle(globalIdx, e.target.checked); }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
+              
               
               {/* Pagination Controls */}
               {items.length > 0 && totalPages > 1 && (
@@ -659,29 +902,48 @@ export default function AdminAdvertisementPage() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => save()} disabled={loading || saving || !!error}>
+              <Button 
+                onClick={() => save()} 
+                disabled={loading || saving || !!error}
+                title={t("common.save", "Save")}
+                aria-label={t("common.save", "Save")}
+              >
                 {saving ? (
                   <>
-                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    {t("adminAds.actions.saving", "Menyimpan...")}
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="ml-2 hidden lg:inline">
+                      {t("adminAds.actions.saving", "Menyimpan...")}
+                    </span>
                   </>
                 ) : (
                   <>
-                    <Icon name="Save" className="h-4 w-4 mr-2" />
-                    {t("common.save", "Save")}
+                    <Icon name="Save" className="h-4 w-4" />
+                    <span className="ml-2 hidden lg:inline">
+                      {t("common.save", "Save")}
+                    </span>
                   </>
                 )}
               </Button>
-              <Button onClick={deleteSelected} variant="destructive" disabled={loading || deleting || !!error || selected.length === 0}>
+              <Button 
+                onClick={deleteSelected} 
+                variant="destructive" 
+                disabled={loading || deleting || !!error || selected.length === 0}
+                title={t("common.delete", "Delete")}
+                aria-label={t("common.delete", "Delete")}
+              >
                 {deleting ? (
                   <>
-                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    {t("adminAds.actions.deleting", "Menghapus...")}
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="ml-2 hidden lg:inline">
+                      {t("adminAds.actions.deleting", "Menghapus...")}
+                    </span>
                   </>
                 ) : (
                   <>
-                    <Icon name="Trash2" className="h-4 w-4 mr-2" />
-                    {t("common.delete", "Delete")}
+                    <Icon name="Trash2" className="h-4 w-4" />
+                    <span className="ml-2 hidden lg:inline">
+                      {t("common.delete", "Delete")}
+                    </span>
                   </>
                 )}
               </Button>
@@ -689,9 +951,13 @@ export default function AdminAdvertisementPage() {
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading || saving || !!error}
+                title={t("common.upload", "Upload")}
+                aria-label={t("common.upload", "Upload")}
               >
-                <Icon name="Upload" className="h-4 w-4 mr-2" />
-                {t("common.upload", "Upload")}
+                <Icon name="Upload" className="h-4 w-4" />
+                <span className="ml-2 hidden lg:inline">
+                  {t("common.upload", "Upload")}
+                </span>
               </Button>
               <input
                 ref={fileInputRef}
