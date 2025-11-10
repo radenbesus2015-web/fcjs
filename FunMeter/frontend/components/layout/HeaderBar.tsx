@@ -162,10 +162,10 @@ export function HeaderBar({ hidden = false, onHeightChange }: HeaderBarProps) {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/"
-            className="hidden sm:inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex items-center gap-2 rounded-md border px-2 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground sm:px-2.5"
           >
-            <Icon name="Radio" className="h-4 w-4" />
-            <span>{t("header.actions.live", "Langsung")}</span>
+            <Icon name="Radio" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline sm:inline">{t("header.actions.live", "Langsung")}</span>
           </Link>
         </div>
       </div>

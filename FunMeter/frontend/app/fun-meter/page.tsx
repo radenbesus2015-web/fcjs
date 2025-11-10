@@ -34,6 +34,7 @@ export default function FunMeterPage() {
   const [facesCount, setFacesCount] = useState(0);
   const [emotionLabels, setEmotionLabels] = useState<string[]>([]);
   const [emotionData, setEmotionData] = useState<Array<{face: number; probs: Record<string, number>}>>([]);
+  const [modelName, setModelName] = useState<string>("");
 
   // Settings
   const { model: funSendWidth } = useSetting("funMeter.sendWidth", { 
@@ -54,6 +55,13 @@ export default function FunMeterPage() {
       disconnect(..._args: unknown[]) {
         setStatusText(t("funMeter.status.wsDisconnected", "WS terputus"));
         toast.warn(t("funMeter.toast.wsDisconnected", "Koneksi WebSocket terputus"));
+      },
+      fun_metadata(data: any) {
+        // Receive model metadata from server
+        if (data?.model) {
+          console.log("[FUN_METADATA] Received model:", data.model);
+          setModelName(data.model);
+        }
       },
       fun_result(data: any) {
         const funResults = Array.isArray(data?.results) ? data.results : [];
@@ -401,12 +409,12 @@ export default function FunMeterPage() {
     cameraActiveRef.current = cameraActive;
   }, [cameraActive]);
 
-  // Auto-start camera
+  // Cleanup: stop camera on unmount (when navigating away)
   useEffect(() => {
-    void startCamera();
     return () => {
       stopCamera();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Emotion color mapping
@@ -429,9 +437,9 @@ export default function FunMeterPage() {
         {/* Left: Camera Card */}
         <div className="bg-card rounded-lg border p-6">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("funMeter.camera.title", "Camera")}
+            {t("funMeter.camera.title", "Kamera")}
           </p>
-          <h3 className="text-lg font-semibold mb-4">{t("funMeter.camera.subtitle", "Fun Meter Streaming")}</h3>
+          <h3 className="text-lg font-semibold mb-4">{t("funMeter.camera.subtitle", "Streaming Fun Meter")}</h3>
 
           <div ref={hostRef} className="relative aspect-video rounded-lg border bg-muted/30 overflow-hidden mb-4">
             <video
@@ -475,7 +483,7 @@ export default function FunMeterPage() {
                 {t("funMeter.form.model", "Model")}
               </label>
               <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground">
-                {t("funMeter.model.waiting", "Waiting for metadata...")}
+                {modelName || t("funMeter.model.waiting", "Menunggu metadata...")}
               </div>
             </div>
           </div>
@@ -483,13 +491,13 @@ export default function FunMeterPage() {
           <div className="flex gap-2 mb-2">
             <Button onClick={toggleCamera}>
               {cameraActive
-                ? t("funMeter.actions.stopCamera", "Stop Camera")
-                : t("funMeter.actions.startCamera", "Start Camera")}
+                ? t("funMeter.actions.stopCamera", "Hentikan Kamera")
+                : t("funMeter.actions.startCamera", "Mulai Kamera")}
             </Button>
           </div>
 
           <p className="text-sm text-muted-foreground">
-            {t("funMeter.camera.help", "Press start to send fun meter frames.")}
+            {t("funMeter.camera.help", "Tekan mulai untuk mengirim frame ke server.")}
           </p>
         </div>
 
@@ -498,19 +506,19 @@ export default function FunMeterPage() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {t("funMeter.summary.title", "Summary")}
+                {t("funMeter.summary.title", "Ringkasan")}
               </p>
-              <h3 className="text-lg font-semibold">{t("funMeter.summary.subtitle", "Labels & Last Results")}</h3>
+              <h3 className="text-lg font-semibold">{t("funMeter.summary.subtitle", "Label & Hasil Terakhir")}</h3>
             </div>
             <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
-              {emotionLabels.length} {t("funMeter.summary.labels", "labels")}
+              {emotionLabels.length} {t("funMeter.summary.labels", "label")}
             </span>
           </div>
 
           <p className="text-sm text-muted-foreground mb-4">
             {t(
               "funMeter.summary.description",
-              "Fun represents the probability of happiness (0–100%). The label list is fetched directly from the model on the server."
+              "Fun merepresentasikan probabilitas kebahagiaan (0–100%). Daftar label diambil langsung dari model di server."
             )}
           </p>
 
@@ -555,8 +563,8 @@ export default function FunMeterPage() {
               {emotionData.length === 0 && (
                 <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground text-center">
                   {results.length === 0
-                    ? t("funMeter.summary.empty", "No results from camera yet.")
-                    : t("funMeter.summary.nonEmpty", "Receiving results…")}
+                    ? t("funMeter.summary.empty", "Belum ada hasil dari kamera.")
+                    : t("funMeter.summary.nonEmpty", "Menerima hasil…")}
                 </div>
               )}
             </>

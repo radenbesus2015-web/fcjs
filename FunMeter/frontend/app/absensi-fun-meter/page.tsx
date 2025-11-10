@@ -663,12 +663,8 @@ export default function AttendanceFunMeterPage() {
 
     fitCanvasToVideo();
 
-    // Auto-start camera like Vue original
-    const initCamera = async () => {
-      await startCamera();
-      fitCanvasToVideo();
-    };
-    initCamera();
+    // Camera will NOT auto-start - user must click button to start
+    // This ensures camera stops when navigating away and stays off on mount
 
     // Responsive event listeners (like Vue original)
     const handleResize = () => {
