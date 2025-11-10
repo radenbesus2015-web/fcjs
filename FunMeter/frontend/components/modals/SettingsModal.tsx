@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export function SettingsModal() {
+export default function SettingsModal() {
   const { t, setLocale } = useI18n();
   const { setTheme } = useTheme();
   const { user, logout } = useAuth();

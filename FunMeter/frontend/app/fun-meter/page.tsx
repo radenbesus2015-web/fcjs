@@ -427,12 +427,12 @@ export default function FunMeterPage() {
   // Emotion color mapping
   const getEmotionColor = (emotion: string): string => {
     const colors: Record<string, string> = {
-      happy: "bg-green-100 text-green-800",
-      sad: "bg-blue-100 text-blue-800",
-      angry: "bg-red-100 text-red-800",
-      surprised: "bg-yellow-100 text-yellow-800",
-      fear: "bg-purple-100 text-purple-800",
-      disgust: "bg-orange-100 text-orange-800",
+      happy: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+      sad: "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+      angry: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
+      surprised: "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200",
+      fear: "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200",
+      disgust: "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
       neutral: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
     };
     return colors[emotion] || "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
@@ -478,7 +478,7 @@ export default function FunMeterPage() {
                   const val = Number(e.target.value);
                   // Note: funIntervalMs is read-only from useSetting, use SettingsProvider to change
                 }}
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
                 min={100}
                 max={2000}
                 disabled
@@ -489,7 +489,7 @@ export default function FunMeterPage() {
               <label className="text-sm font-medium block mb-1">
                 {t("funMeter.form.model", "Model")}
               </label>
-              <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground">
+              <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground bg-background">
                 {modelName || t("funMeter.model.waiting", "Menunggu metadata...")}
               </div>
             </div>

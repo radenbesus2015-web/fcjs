@@ -1441,6 +1441,7 @@
     }
   },
   "adminListMembers": {
+    "title": "Kelola Anggota",
     "actions": {
       "export": "Ekspor",
       "bulkUpload": "Upload Massal",
@@ -1461,9 +1462,15 @@
       "files": "File ({count})",
       "statusReady": "Siap diunggah",
       "labelEmpty": "Label kosong, dilewati",
+      "labelPlaceholder": "Label",
       "duplicate": "Duplikat: {msg}",
       "error": "Error: {msg}",
+      "success": "Berhasil: {label}",
       "completed": "Selesai. {summary}",
+      "summarySuccess": "Sukses: {count}",
+      "summaryDuplicate": "Duplikat: {count}",
+      "summaryError": "Gagal: {count}",
+      "summarySkip": "Lewati: {count}",
       "empty": "Belum ada file yang dipilih",
       "totalFiles": "{count} file siap diupload",
       "start": "Mulai Upload",
@@ -1546,8 +1553,70 @@
       "deleteError": "Gagal menghapus anggota: {error}",
       "deleteMultipleSuccess": "{count} anggota berhasil dihapus",
       "deleteMultipleError": "Gagal menghapus anggota: {error}",
-      "noSelection": "Tidak ada anggota yang dipilih"
+      "noSelection": "Tidak ada anggota yang dipilih",
+      "exportSuccess": "Ekspor selesai: {filename}",
+      "exportError": "Gagal ekspor: {error}",
+      "reordered": "Urutan item berhasil diubah"
     },
-    "subtitle": "Kelola database wajah anggota ({total} anggota)"
+    "dragToReorder": "Seret untuk mengubah urutan",
+    "subtitle": "Kelola database wajah anggota ({total} anggota)",
+    "viewMode": {
+      "grid": "Grid",
+      "list": "List"
+    }
+  },
+  "funMeter": {
+    "camera": {
+      "title": "Kamera",
+      "subtitle": "Streaming Fun Meter",
+      "faces": "Wajah: {count}",
+      "help": "Tekan mulai untuk mengirim frame ke server."
+    },
+    "form": {
+      "interval": "Interval (ms)",
+      "model": "Model",
+      "changeViaSettings": "Ubah melalui Pengaturan"
+    },
+    "model": {
+      "waiting": "Menunggu metadata..."
+    },
+    "actions": {
+      "startCamera": "Mulai Kamera",
+      "stopCamera": "Hentikan Kamera"
+    },
+    "summary": {
+      "title": "Ringkasan",
+      "subtitle": "Label & Hasil Terakhir",
+      "label": "label",
+      "labels": "labels",
+      "description": "Fun merepresentasikan probabilitas kebahagiaan (0–100%). Daftar label diambil langsung dari model di server.",
+      "faceLabel": "WAJAH #{n}",
+      "empty": "Belum ada hasil dari kamera.",
+      "nonEmpty": "Menerima hasil…"
+    },
+    "emotions": {
+      "happy": "Senang",
+      "sad": "Sedih",
+      "surprised": "Kaget",
+      "angry": "Marah",
+      "fear": "Takut",
+      "disgust": "Jijik",
+      "neutral": "Biasa"
+    },
+    "canvas": {
+      "fun": "Fun"
+    },
+    "status": {
+      "wsConnected": "WS terhubung",
+      "wsDisconnected": "WS terputus",
+      "cameraActive": "Kamera aktif",
+      "cameraDenied": "Akses kamera ditolak",
+      "cameraStopped": "Kamera dihentikan"
+    },
+    "toast": {
+      "wsConnected": "Terhubung ke server WebSocket",
+      "wsDisconnected": "Koneksi WebSocket terputus",
+      "cameraError": "Gagal mengakses kamera"
+    }
   }
 }

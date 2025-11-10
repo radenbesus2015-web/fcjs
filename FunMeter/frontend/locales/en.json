@@ -1430,6 +1430,7 @@
     }
   },
   "adminListMembers": {
+    "title": "Manage Members",
     "actions": {
       "export": "Export",
       "bulkUpload": "Bulk Upload",
@@ -1519,8 +1520,10 @@
       "fileNotImage": "{name} is not an image, skipped",
       "noBulkItems": "No files selected",
       "exportSuccess": "Export complete: {filename}",
-      "exportError": "Export failed: {error}"
+      "exportError": "Export failed: {error}",
+      "reordered": "Items reordered successfully"
     },
+    "dragToReorder": "Drag to reorder",
     "bulk": {
       "title": "Bulk Upload",
       "description": "Upload many photos at once",
@@ -1529,16 +1532,80 @@
       "forceUpload": "Force upload (override duplicates)",
       "uploading": "Uploading...",
       "files": "Files ({count})",
-      "statusReady": "Upload Ready",
+      "statusReady": "Ready to upload",
       "labelEmpty": "Empty label, skipped",
+      "labelPlaceholder": "Label",
       "duplicate": "Duplicate: {msg}",
       "error": "Error: {msg}",
+      "success": "Success: {label}",
       "completed": "Done. {summary}",
+      "summarySuccess": "Success: {count}",
+      "summaryDuplicate": "Duplicate: {count}",
+      "summaryError": "Failed: {count}",
+      "summarySkip": "Skipped: {count}",
       "empty": "No files selected yet",
       "totalFiles": "{count} files ready to upload",
       "start": "Start Upload",
       "cancel": "Close"
     },
-    "subtitle": "Manage face database members ({total} members)"
+    "subtitle": "Manage face database members ({total} members)",
+    "viewMode": {
+      "grid": "Grid",
+      "list": "List"
+    }
+  },
+  "funMeter": {
+    "camera": {
+      "title": "Camera",
+      "subtitle": "Fun Meter Streaming",
+      "faces": "Faces: {count}",
+      "help": "Press start to send frames to server."
+    },
+    "form": {
+      "interval": "Interval (ms)",
+      "model": "Model",
+      "changeViaSettings": "Change via Settings"
+    },
+    "model": {
+      "waiting": "Waiting for metadata..."
+    },
+    "actions": {
+      "startCamera": "Start Camera",
+      "stopCamera": "Stop Camera"
+    },
+    "summary": {
+      "title": "Summary",
+      "subtitle": "Labels & Latest Results",
+      "label": "label",
+      "labels": "labels",
+      "description": "Fun represents happiness probability (0–100%). Label list is taken directly from the model on the server.",
+      "faceLabel": "FACE #{n}",
+      "empty": "No results from camera yet.",
+      "nonEmpty": "Receiving results…"
+    },
+    "emotions": {
+      "happy": "Happy",
+      "sad": "Sad",
+      "surprised": "Surprised",
+      "angry": "Angry",
+      "fear": "Fear",
+      "disgust": "Disgust",
+      "neutral": "Neutral"
+    },
+    "canvas": {
+      "fun": "Fun"
+    },
+    "status": {
+      "wsConnected": "WS connected",
+      "wsDisconnected": "WS disconnected",
+      "cameraActive": "Camera active",
+      "cameraDenied": "Camera access denied",
+      "cameraStopped": "Camera stopped"
+    },
+    "toast": {
+      "wsConnected": "Connected to WebSocket server",
+      "wsDisconnected": "WebSocket connection lost",
+      "cameraError": "Failed to access camera"
+    }
   }
 }

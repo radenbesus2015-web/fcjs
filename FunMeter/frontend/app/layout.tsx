@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import dynamic from "next/dynamic";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -10,20 +9,7 @@ import { I18nProvider } from "@/components/providers/I18nProvider";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AppShell } from "@/components/layout/AppShell";
-
-// Lazy load modals untuk performa lebih baik (hanya dimuat saat dibutuhkan)
-const GlobalConfirm = dynamic(
-  () => import("@/components/modals/GlobalConfirm").then((mod) => ({ default: mod.GlobalConfirm })),
-  { ssr: false }
-);
-const SettingsModal = dynamic(
-  () => import("@/components/modals/SettingsModal").then((mod) => ({ default: mod.SettingsModal })),
-  { ssr: false }
-);
-const LoginModal = dynamic(
-  () => import("@/components/modals/LoginModal").then((mod) => ({ default: mod.LoginModal })),
-  { ssr: false }
-);
+import { GlobalModals } from "@/components/layout/GlobalModals";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,7 +30,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          <I18nProvider initialLocale="id">
+          <I18nProvider>
             <SettingsProvider>
               <AuthProvider>
                 <WsProvider>
@@ -52,9 +38,7 @@ export default function RootLayout({
                     <AppShell>
                       {children}
                     </AppShell>
-                    <LoginModal />
-                    <GlobalConfirm />
-                    <SettingsModal />
+                    <GlobalModals />
                     <Toaster
                       position="bottom-right"
                       richColors

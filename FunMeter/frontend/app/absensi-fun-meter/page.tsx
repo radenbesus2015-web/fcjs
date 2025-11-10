@@ -1312,6 +1312,7 @@ export default function AttendanceFunMeterPage() {
                       height={400}
                       priority
                       quality={100}
+                      unoptimized
                       draggable={false} 
                       className="select-none pointer-events-none w-full h-auto object-contain block" 
                       style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
@@ -1399,6 +1400,7 @@ export default function AttendanceFunMeterPage() {
                       height={400}
                       priority
                       quality={100}
+                      unoptimized
                       draggable={false} 
                       className="select-none pointer-events-none w-full h-auto object-contain block" 
                       style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}

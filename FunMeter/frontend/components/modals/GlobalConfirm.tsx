@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export function GlobalConfirm() {
+export default function GlobalConfirm() {
   const { currentConfirm, resolveCurrentConfirm } = useConfirmDialogState();
 
   if (!currentConfirm) return null;

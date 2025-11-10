@@ -55,6 +55,76 @@ export default function AdminListMembersPage() {
   const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const editFileInputRef = React.useRef<HTMLInputElement>(null);
   
+  // Drag and drop state
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+  
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, itemId: string) => {
+    setDraggedItem(itemId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", itemId);
+    // Add drag image styling
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "0.5";
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "1";
+    }
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDragEnter = (e: React.DragEvent, itemId: string) => {
+    e.preventDefault();
+    if (draggedItem !== itemId) {
+      setDragOverItem(itemId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the actual card, not child elements
+    if (e.currentTarget === e.target) {
+      setDragOverItem(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetItemId: string) => {
+    e.preventDefault();
+    
+    if (!draggedItem || draggedItem === targetItemId) {
+      setDragOverItem(null);
+      return;
+    }
+
+    // Reorder items locally
+    const draggedIndex = items.findIndex(item => String(item.id) === draggedItem);
+    const targetIndex = items.findIndex(item => String(item.id) === targetItemId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDragOverItem(null);
+      return;
+    }
+
+    const newItems = [...items];
+    const [removed] = newItems.splice(draggedIndex, 1);
+    newItems.splice(targetIndex, 0, removed);
+    
+    setItems(newItems);
+    setDragOverItem(null);
+    
+    // Optional: Show success feedback
+    toast.success(t("adminListMembers.toast.reordered", "Items reordered"));
+  };
+
   // Bulk upload state
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkItems, setBulkItems] = useState<BulkUploadItem[]>([]);
@@ -586,7 +656,7 @@ export default function AdminListMembersPage() {
   return (
     <div className="space-y-6">
       {/* DIV 1: CRUD Operations - Header, Search, Filters, Actions */}
-      <div className="space-y-4 p-6 border rounded-lg bg-white">
+      <div className="space-y-4 p-6 border rounded-lg bg-card">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -613,18 +683,18 @@ export default function AdminListMembersPage() {
                 placeholder={t("adminListMembers.search.placeholder", "Search labels…")}
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-md bg-background"
+                className="w-full pl-10 pr-4 py-2 border rounded-md bg-background text-foreground"
               />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {/* View switch */}
             <div className="hidden md:flex items-center gap-1 mr-2">
-              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>Grid</Button>
-              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>List</Button>
+              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>{t("adminListMembers.viewMode.grid", "Grid")}</Button>
+              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>{t("adminListMembers.viewMode.list", "List")}</Button>
             </div>
             <select
-              className="h-9 rounded-md border px-2 text-sm bg-background"
+              className="h-9 rounded-md border px-2 text-sm bg-background text-foreground"
               value={perPage}
               onChange={(e) => { 
                 const value = e.target.value;
@@ -639,7 +709,7 @@ export default function AdminListMembersPage() {
               <option value="all">{t("adminListMembers.perPage.all", "Semua")}</option>
             </select>
             <select
-              className="h-9 rounded-md border px-2 text-sm bg-background"
+              className="h-9 rounded-md border px-2 text-sm bg-background text-foreground"
               value={order}
               onChange={(e) => { 
                 const newOrder = e.target.value as "asc" | "desc";
@@ -827,54 +897,83 @@ export default function AdminListMembersPage() {
             </div>
           ) : items.length > 0 ? (
             items.map((row) => (
-              <div key={String(row.id)} className="border rounded-lg overflow-hidden bg-card">
+              <div 
+                key={String(row.id)} 
+                draggable
+                onDragStart={(e) => handleDragStart(e, String(row.id))}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragEnter={(e) => handleDragEnter(e, String(row.id))}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, String(row.id))}
+                className={`border rounded-lg overflow-hidden bg-card transition-all cursor-move ${
+                  draggedItem === String(row.id) ? "opacity-50 scale-95" : ""
+                } ${
+                  dragOverItem === String(row.id) ? "ring-2 ring-primary scale-105 shadow-lg" : ""
+                }`}
+              >
                 <div className="flex items-center gap-3 p-4 border-b">
+                  <div title={t("adminListMembers.dragToReorder", "Drag to reorder")}>
+                    <Icon 
+                      name="GripVertical" 
+                      className="h-5 w-5 text-muted-foreground cursor-grab active:cursor-grabbing flex-shrink-0" 
+                    />
+                  </div>
                   <input
                     type="checkbox"
                     checked={selectedMembers.includes(String(row.id))}
                     onChange={() => toggleMemberSelection(String(row.id))}
                     className="rounded"
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <div className="min-w-0">
                     <div className="font-medium truncate">{row.label}</div>
                     <div className="text-xs text-muted-foreground truncate">{t("common.idLabel", "ID:")} {String(row.id)} {t("common.separator", "•")} {rowTs(row)}</div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-3">
-                    {photoUrl(row) ? (
-                      <Image 
-                        src={photoUrl(row)} 
-                        alt={row.label} 
-                        width={64} 
-                        height={64} 
-                        className="h-16 w-16 rounded-md object-cover border" 
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 rounded-md bg-muted" />
-                    )}
-                    <div className="flex flex-col items-start gap-2">
-                      <button
-                        onClick={() => startEditLabel(row)}
-                          title={t("adminListMembers.actions.edit", "Edit")}
-                          aria-label={t("adminListMembers.actions.edit", "Edit")}
-                          className="flex items-center gap-2 p-2 rounded hover:bg-muted text-blue-600"
-                      >
-                        <Icon name="Pencil" className="h-4 w-4" />
-                          <span className="text-xs hidden md:inline">{t("adminListMembers.grid.edit", "Edit")}</span>
-                      </button>
-                      <button
-                          onClick={() => deleteMember(String(row.id), row.label)}
-                          title={t("adminListMembers.actions.delete", "Delete")}
-                          aria-label={t("adminListMembers.actions.delete", "Delete")}
-                          className="flex items-center gap-2 p-2 rounded hover:bg-muted text-red-600"
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                          <span className="text-xs hidden md:inline">{t("adminListMembers.actions.delete", "Delete")}</span>
-                      </button>
+                {/* Photo Preview with Actions */}
+                <div className="relative group overflow-hidden">
+                  {photoUrl(row) ? (
+                    <Image 
+                      src={photoUrl(row)} 
+                      alt={row.label} 
+                      width={400} 
+                      height={400} 
+                      className="w-full aspect-square rounded-b-lg object-cover transition-transform group-hover:scale-105" 
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-square rounded-b-lg bg-muted flex items-center justify-center">
+                      <Icon name="User" className="h-16 w-16 text-muted-foreground" />
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* Overlay on Hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all rounded-b-lg" />
+                  
+                  {/* Edit Button - Bottom Right Corner */}
+                  <button
+                    onClick={() => startEditLabel(row)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onDragStart={(e) => e.preventDefault()}
+                    title={t("adminListMembers.actions.edit", "Edit")}
+                    aria-label={t("adminListMembers.actions.edit", "Edit")}
+                    className="absolute bottom-3 right-3 p-2.5 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
+                  >
+                    <Icon name="Pencil" className="h-4 w-4" />
+                  </button>
+                  
+                  {/* Delete Button - Bottom Left Corner */}
+                  <button
+                    onClick={() => deleteMember(String(row.id), row.label)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onDragStart={(e) => e.preventDefault()}
+                    title={t("adminListMembers.actions.delete", "Delete")}
+                    aria-label={t("adminListMembers.actions.delete", "Delete")}
+                    className="absolute bottom-3 left-3 p-2.5 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
+                  >
+                    <Icon name="Trash2" className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))
@@ -976,7 +1075,7 @@ export default function AdminListMembersPage() {
                       if (!savingEdit) saveEditLabel();
                     }
                   }}
-                  className="w-full px-3 py-2 border rounded-lg bg-background border-border"
+                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground border-border"
                   autoFocus
                   disabled={savingEdit}
                 />
@@ -1005,7 +1104,7 @@ export default function AdminListMembersPage() {
                   </div>
                 )}
                 <div className="flex-1">
-                    <p className="text-sm font-medium mb-2">{t("adminListMembers.edit.currentPhoto", "Foto saat ini")}</p>
+                    <p className="text-sm font-medium text-foreground mb-2">{t("adminListMembers.edit.currentPhoto", "Foto saat ini")}</p>
                     <p className="text-xs text-muted-foreground">{t("adminListMembers.edit.photoHint", "Pilih foto baru untuk mengganti foto saat ini")}</p>
                 </div>
               </div>
@@ -1026,7 +1125,7 @@ export default function AdminListMembersPage() {
                 <Icon name="Upload" className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
                   {editingReplaceFile ? (
                   <div className="space-y-2">
-                      <p className="text-sm font-medium">{editingReplaceFile.name}</p>
+                      <p className="text-sm font-medium text-foreground">{editingReplaceFile.name}</p>
                       <p className="text-xs text-muted-foreground">{(editingReplaceFile.size / 1024).toFixed(1)} KB</p>
                   </div>
                 ) : (
@@ -1096,12 +1195,12 @@ export default function AdminListMembersPage() {
 
       {/* Bulk Upload Modal */}
       {bulkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col border">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70">
+          <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-border">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
-                <h2 className="text-xl font-semibold">{t("adminListMembers.bulk.title", "Bulk Upload")}</h2>
+                <h2 className="text-xl font-semibold text-foreground">{t("adminListMembers.bulk.title", "Bulk Upload")}</h2>
                 <p className="text-sm text-muted-foreground">
                   {t("adminListMembers.bulk.description", "Upload banyak foto sekaligus")}
                 </p>
@@ -1118,7 +1217,7 @@ export default function AdminListMembersPage() {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {/* File Input */}
-              <div className="border-2 border-dashed rounded-lg p-8 text-center border-border hover:border-primary transition">
+              <div className="border-2 border-dashed rounded-lg p-8 text-center border-border hover:border-primary transition bg-muted/20">
                 <input
                   ref={bulkFileInputRef}
                   type="file"
@@ -1176,7 +1275,7 @@ export default function AdminListMembersPage() {
               {/* Items List */}
               {bulkItems.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">
+                  <h3 className="font-semibold text-sm text-foreground">
                     {t("adminListMembers.bulk.files", "File ({count})", { count: bulkItems.length })}
                   </h3>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -1209,8 +1308,8 @@ export default function AdminListMembersPage() {
                             value={item.label}
                             onChange={(e) => updateBulkItemLabel(item.id, e.target.value)}
                             disabled={bulkRunning || item.status === "ok"}
-                            className="w-full px-2 py-1 text-sm border rounded bg-background border-border"
-                            placeholder="Label"
+                            className="w-full px-2 py-1 text-sm border rounded bg-background text-foreground border-border"
+                            placeholder={t("adminListMembers.bulk.labelPlaceholder", "Label")}
                           />
                           <p className={`text-xs ${
                             item.status === "ok" ? "text-green-600 dark:text-green-400" :
@@ -1247,14 +1346,14 @@ export default function AdminListMembersPage() {
               )}
 
               {bulkItems.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-8">
+                <p className="text-center text-sm text-muted-foreground py-8 bg-muted/20 rounded-lg border border-dashed border-border">
                   {t("adminListMembers.bulk.empty", "Belum ada file yang dipilih")}
                 </p>
               )}
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-border">
+            <div className="flex items-center justify-between p-6 border-t border-border bg-muted/20">
               <div className="text-sm text-muted-foreground">
                 {bulkItems.length > 0 && (
                   <span>

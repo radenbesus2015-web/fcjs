@@ -18,7 +18,7 @@ import { api } from "@/lib/api";
 
 type AuthMode = "login" | "register";
 
-export function LoginModal() {
+export default function LoginModal() {
   const { t } = useI18n();
   const { showModal, closeModal, login, status } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
