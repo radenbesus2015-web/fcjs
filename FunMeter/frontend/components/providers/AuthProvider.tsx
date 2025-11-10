@@ -5,6 +5,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { api, setAuthHeader, setQueryToken } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
+  const [isReturningUser, setIsReturningUser] = useState(false);
 
   const openModal = useCallback(() => setShowModal(true), []);
   const closeModal = useCallback(() => setShowModal(false), []);
@@ -85,7 +87,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const bootstrap = useCallback(async () => {
     // load token kalau ada
     const saved = localStorage.getItem("fm_token") || "";
-    if (saved) applyToken(saved);
+    if (saved) {
+      applyToken(saved);
+      setIsReturningUser(true);
+    }
 
     setStatus("loading");
     try {
@@ -135,13 +140,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } : null;
       setUser(frontendUser);
       setStatus(frontendUser ? "authenticated" : "unauthenticated");
+      
+      // Show welcome toast after successful login
+      if (frontendUser) {
+        const userName = frontendUser.username || frontendUser.name || "User";
+        const welcomeMessage = isReturningUser 
+          ? `🎉 Selamat datang kembali, ${userName}!`
+          : `🎉 Selamat datang, ${userName}!`;
+        
+        // Delay toast slightly to ensure modal closes first
+        setTimeout(() => {
+          toast.success(welcomeMessage, { duration: 4000 });
+        }, 300);
+        
+        // Reset returning user flag after first login
+        setIsReturningUser(false);
+      }
+      
       closeModal();
       return true;
     } catch (err) {
       setStatus("unauthenticated");
       throw err;
     }
-  }, [applyToken, closeModal]);
+  }, [applyToken, closeModal, isReturningUser]);
 
   const logout = useCallback(async () => {
     try {

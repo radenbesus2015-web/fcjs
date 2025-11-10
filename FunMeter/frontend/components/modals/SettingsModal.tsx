@@ -3,12 +3,14 @@
 
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { LogoutConfirmDialog } from "@/components/common/LogoutConfirmDialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -19,6 +21,7 @@ import {
 export function SettingsModal() {
   const { t, setLocale } = useI18n();
   const { setTheme } = useTheme();
+  const { user, logout } = useAuth();
   const { 
     modalOpen, 
     closeModal, 
@@ -28,6 +31,8 @@ export function SettingsModal() {
     reset,
     languageOptions 
   } = useSettings();
+  
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const ft = (path: string, fallback: string) => t(`settings.${path}`, fallback);
 
@@ -52,6 +57,15 @@ export function SettingsModal() {
       setTheme(form.theme);
     }
     submit();
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+    closeModal();
   };
 
   return (
@@ -244,28 +258,50 @@ export function SettingsModal() {
           </section>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={reset}
-            >
-              {ft("actions.reset", "Atur Ulang ke Bawaan")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeModal}
-            >
-              {ft("actions.cancel", "Batal")}
-            </Button>
-            <Button type="submit">
-              {ft("actions.save", "Simpan")}
-            </Button>
+          <div className="flex flex-wrap justify-between items-center gap-3">
+            {/* Logout button on the left */}
+            {user && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleLogoutClick}
+              >
+                <Icon name="LogOut" className="h-4 w-4 mr-2" />
+                {t("avatar.menu.logout", "Sign out")}
+              </Button>
+            )}
+            
+            {/* Other buttons on the right */}
+            <div className="flex flex-wrap gap-3 ml-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={reset}
+              >
+                {ft("actions.reset", "Atur Ulang ke Bawaan")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeModal}
+              >
+                {ft("actions.cancel", "Batal")}
+              </Button>
+              <Button type="submit">
+                {ft("actions.save", "Simpan")}
+              </Button>
+            </div>
           </div>
         </form>
         </div>
       </AlertDialogContent>
+      
+      {/* Logout Confirmation Dialog */}
+      <LogoutConfirmDialog
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={handleLogoutConfirm}
+      />
     </AlertDialog>
   );
 }
