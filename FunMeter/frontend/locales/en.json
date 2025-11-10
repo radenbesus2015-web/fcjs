@@ -1086,6 +1086,60 @@
       "totalLabel": "Total"
     }
   },
+  "funMeter": {
+    "camera": {
+      "title": "Camera",
+      "subtitle": "Fun Meter Streaming",
+      "faces": "{count} Faces",
+      "help": "Press start to send frames to server."
+    },
+    "form": {
+      "interval": "Interval (ms)",
+      "model": "Model",
+      "changeViaSettings": "Change via Settings"
+    },
+    "actions": {
+      "startCamera": "Start Camera",
+      "stopCamera": "Stop Camera"
+    },
+    "status": {
+      "wsConnected": "WebSocket connected",
+      "wsDisconnected": "WebSocket disconnected",
+      "cameraActive": "Camera active",
+      "cameraDenied": "Camera access denied",
+      "cameraStopped": "Camera stopped"
+    },
+    "toast": {
+      "wsConnected": "Connected to server (WebSocket).",
+      "wsDisconnected": "WebSocket connection lost.",
+      "cameraError": "Failed to access camera"
+    },
+    "summary": {
+      "title": "Summary",
+      "subtitle": "Labels & Last Results",
+      "description": "Fun represents the probability of happiness (0–100%). The label list is fetched directly from the model on the server.",
+      "faceLabel": "FACE #{n}",
+      "empty": "No results from camera yet.",
+      "nonEmpty": "Receiving results…",
+      "label": "label",
+      "labels": "labels"
+    },
+    "canvas": {
+      "fun": "Fun"
+    },
+    "model": {
+      "waiting": "Waiting for metadata..."
+    },
+    "emotions": {
+      "happy": "Happy",
+      "sad": "Sad",
+      "surprised": "Surprised",
+      "angry": "Angry",
+      "fear": "Fear",
+      "disgust": "Disgust",
+      "neutral": "Neutral"
+    }
+  },
   "fun": {
     "breadcrumb": "Fun Meter",
     "title": "Expression Analytics",

@@ -19,7 +19,7 @@ interface FunMeterResult {
 }
 
 export default function FunMeterPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -164,7 +164,7 @@ export default function FunMeterPage() {
   // Canvas drawing helpers
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   
-  const mapExprLabel = (s: string): string => {
+  const mapExprLabel = React.useCallback((s: string): string => {
     const k = String(s || "").toLowerCase().trim();
     if (["happiness", "happy", "senang"].includes(k)) return t("funMeter.emotions.happy", "Senang");
     if (["sadness", "sad", "sedih"].includes(k)) return t("funMeter.emotions.sad", "Sedih");
@@ -176,7 +176,7 @@ export default function FunMeterPage() {
     
     // Fallback: capitalize first letter untuk emotion tidak dikenal
     return k ? k.charAt(0).toUpperCase() + k.slice(1) : t("funMeter.emotions.neutral", "Biasa");
-  };
+  }, [t]);
 
   const getLetterboxTransform = () => {
     const overlay = overlayRef.current;
@@ -322,7 +322,7 @@ export default function FunMeterPage() {
       
       console.log(`[DRAW_FUN] Face ${idx + 1} drawn:`, { expr, funScore });
     });
-  }, [t]);
+  }, [t, mapExprLabel]);
 
   // Frame sending logic (wrapped with useCallback to ensure fresh values)
   const pushFunFrame = React.useCallback(async () => {
@@ -404,6 +404,13 @@ export default function FunMeterPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, [results, drawFun]);
 
+  // Re-draw when locale changes to update emotion labels
+  useEffect(() => {
+    if (cameraActiveRef.current && results.length > 0) {
+      drawFun(results);
+    }
+  }, [locale, results, drawFun]);
+
   // Keep ref in sync with state
   useEffect(() => {
     cameraActiveRef.current = cameraActive;
@@ -432,7 +439,7 @@ export default function FunMeterPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={locale}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Camera Card */}
         <div className="bg-card rounded-lg border p-6">
@@ -511,7 +518,7 @@ export default function FunMeterPage() {
               <h3 className="text-lg font-semibold">{t("funMeter.summary.subtitle", "Label & Hasil Terakhir")}</h3>
             </div>
             <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
-              {emotionLabels.length} {t("funMeter.summary.labels", "label")}
+              {emotionLabels.length} {emotionLabels.length === 1 ? t("funMeter.summary.label", "label") : t("funMeter.summary.labels", "labels")}
             </span>
           </div>
 
@@ -540,7 +547,7 @@ export default function FunMeterPage() {
                           .sort((a, b) => b[1] - a[1])
                           .map(([emotion, prob]) => (
                             <div key={emotion} className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground capitalize">{emotion}</span>
+                              <span className="text-muted-foreground capitalize">{mapExprLabel(emotion)}</span>
                               <div className="flex items-center gap-2">
                                 <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                                   <div

@@ -8,7 +8,7 @@ import { toast } from "@/lib/toast";
 import { request } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
-import { fmtAttendanceWIB } from "@/lib/format";
+import { fmtAttendanceMultilingual } from "@/lib/format";
 import * as Cam from "@/lib/cameraManager";
 
 
@@ -22,7 +22,7 @@ interface AttendanceRecord {
 //
 
 export default function AttendancePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -74,20 +74,12 @@ export default function AttendancePage() {
         const markedInfo = Array.isArray(data?.marked_info) ? data.marked_info : [];
         const blocked = Array.isArray(data?.blocked) ? data.blocked : [];
         
-        console.log("[ATT_RESULT] Received:", { 
-          resultsCount: results.length, 
-          marked, 
-          markedInfo, 
-          blocked 
-        });
-        
         // Show toast notifications for marked attendance
         for (const info of markedInfo) {
           const label = info.label || "";
           const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
           const message = info.message || t("attendance.toast.attendanceSuccess", "✅ Absen berhasil: {label}{score}", { label, score });
           if (label) {
-            console.log("[ATTENDANCE] Showing success toast for:", label);
             toast.success(message, { duration: 5000 });
           }
         }
@@ -95,7 +87,6 @@ export default function AttendancePage() {
         // Fallback: show toast for marked labels without detailed info
         if (!markedInfo.length && marked.length > 0) {
           for (const label of marked) {
-            console.log("[ATTENDANCE] Showing success toast for (fallback):", label);
             toast.success(t("attendance.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label }), { duration: 5000 });
           }
         }
@@ -103,7 +94,6 @@ export default function AttendancePage() {
         // Show blocked messages if any
         for (const block of blocked) {
           if (block.message) {
-            console.log("[ATTENDANCE] Blocked:", block.message);
             // Use message from server if provided, otherwise use default translation
             const blockMessage = block.message || t("attendance.toast.attendanceBlocked", "Absensi diblokir");
             toast.info(blockMessage, { duration: 4000 });
@@ -112,7 +102,6 @@ export default function AttendancePage() {
         
         // Refresh log when attendance is marked - always go to page 1 to see latest entries
         if (marked.length > 0 || markedInfo.length > 0) {
-          console.log("[ATTENDANCE] Refreshing log after marked attendance");
           // Small delay to ensure backend has saved the attendance
           setTimeout(() => {
             const refresh = refreshLogRef.current;
@@ -137,16 +126,13 @@ export default function AttendancePage() {
   // Camera functions
   const startCamera = async () => {
     if (!videoRef.current) {
-      console.log("[CAMERA] Cannot start: videoRef is null");
       return;
     }
     try {
-      console.log("[CAMERA] Starting camera...");
       const video = videoRef.current;
       
       // Ensure video element is ready - clear any existing stream first
       if (video.srcObject) {
-        console.log("[CAMERA] Video already has srcObject, clearing first");
         video.pause();
         video.srcObject = null;
         // Small delay to ensure cleanup completes
@@ -197,23 +183,19 @@ export default function AttendancePage() {
       // Ensure video plays
       try {
         await video.play();
-        console.log("[CAMERA] Video playing");
       } catch (playError: any) {
-        console.warn("[CAMERA] Auto-play failed:", playError);
         // Try again after a short delay
         setTimeout(async () => {
           try {
             await video.play();
-            console.log("[CAMERA] Video playing after retry");
           } catch (retryError) {
-            console.error("[CAMERA] Retry play also failed:", retryError);
+            console.error("[CAMERA] Play failed:", retryError);
           }
         }, 200);
       }
       
       setCameraActive(true);
       fitCanvasToVideo();
-      console.log("[CAMERA] Camera started successfully");
     } catch (error: any) {
       console.error("[CAMERA] Error starting camera:", error);
       setCameraActive(false);
@@ -223,7 +205,6 @@ export default function AttendancePage() {
   };
 
   const stopCamera = () => {
-    console.log("[CAMERA] Stopping camera...");
     const video = videoRef.current;
     if (video) {
       // Pause video first
@@ -244,7 +225,6 @@ export default function AttendancePage() {
       ctx.clearRect(0, 0, overlay.width, overlay.height);
     }
     setLastResults([]);
-    console.log("[CAMERA] Camera stopped");
   };
 
   // Helpers for drawing and sending (inside component)
@@ -290,19 +270,16 @@ export default function AttendancePage() {
 
   const pushAttFrame = async () => {
     if (!socket || !socket.socket?.connected) {
-      console.log("[PUSH_ATT_FRAME] Skipped: WebSocket not connected");
       return;
     }
     if (sending) {
-      console.log("[PUSH_ATT_FRAME] Skipped: Already sending");
+      // Skip if already sending to prevent queue buildup
       return;
     }
     if (!ensureSnapSize()) {
-      console.log("[PUSH_ATT_FRAME] Skipped: Cannot ensure snap size");
       return;
     }
     if (!isMountedRef.current) {
-      console.log("[PUSH_ATT_FRAME] Skipped: Component not mounted");
       return;
     }
     
@@ -311,21 +288,16 @@ export default function AttendancePage() {
       const snapCanvas = snapCanvasRef.current;
       const video = videoRef.current;
       if (!snapCanvas || !video || !isMountedRef.current) {
-        console.log("[PUSH_ATT_FRAME] Skipped: Missing canvas or video");
         return;
       }
       const sctx = snapCanvas.getContext("2d");
       if (!sctx) {
-        console.log("[PUSH_ATT_FRAME] Skipped: Cannot get canvas context");
         return;
       }
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
       if (bytes && socket && isMountedRef.current) {
-        console.log("[PUSH_ATT_FRAME] Sending frame, size:", bytes.length, "bytes");
         socket.emit("att_frame", bytes);
-      } else {
-        console.log("[PUSH_ATT_FRAME] Skipped: No bytes or socket disconnected");
       }
     } catch (error) {
       console.error("[PUSH_ATT_FRAME] Error:", error);
@@ -445,18 +417,16 @@ export default function AttendancePage() {
   // Send frames periodically
   useEffect(() => {
     if (!cameraActive || !isMountedRef.current) {
-      console.log("[ATT_INTERVAL] Not starting: cameraActive=", cameraActive, "isMounted=", isMountedRef.current);
       return;
     }
-    const interval = Number(baseInterval.model ?? 2000);
-    console.log("[ATT_INTERVAL] Starting interval:", interval, "ms");
+    // Optimized: default 3000ms (3 seconds) for better server performance
+    const interval = Number(baseInterval.model ?? 3000);
     const id = setInterval(() => {
-      if (isMountedRef.current && cameraActive) {
+      if (isMountedRef.current && cameraActive && !sending) {
         void pushAttFrame();
       }
     }, interval);
     return () => {
-      console.log("[ATT_INTERVAL] Clearing interval");
       clearInterval(id);
     };
   }, [cameraActive, baseInterval.model]);
@@ -727,7 +697,7 @@ export default function AttendancePage() {
                       <tr key={`${item.ts}-${idx}`} className="border-b last:border-0">
                         <td className="p-3">{no}</td>
                         <td className="p-3">{item.label || "-"}</td>
-                        <td className="p-3">{fmtAttendanceWIB(item.ts)}</td>
+                        <td className="p-3">{fmtAttendanceMultilingual(item.ts, locale)}</td>
                         <td className="p-3 text-right font-mono">{(item.score || 0).toFixed(3)}</td>
                       </tr>
                     );
