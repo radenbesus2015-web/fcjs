@@ -306,7 +306,7 @@ export default function HomePage() {
     }
   };
   
-  const ensureSnapSize = () => {
+  const ensureSnapSize = useCallback(() => {
     const v = videoRef.current;
     if (!v) return false;
     const vw = v.videoWidth, vh = v.videoHeight;
@@ -318,7 +318,7 @@ export default function HomePage() {
     snapCanvasRef.current.width = Number(funSendWidth);
     snapCanvasRef.current.height = sendHeightRef.current;
     return true;
-  };
+  }, [funSendWidth]);
   
   const getLetterboxTransform = () => {
     const overlay = overlayRef.current;
@@ -485,7 +485,7 @@ export default function HomePage() {
   };
   
   // Frame encoding and sending
-  const toBytes = async () => {
+  const toBytes = useCallback(async () => {
     if (!snapCanvasRef.current) return null;
     const canvas = snapCanvasRef.current;
     const preferWebP = !!document.createElement("canvas").toDataURL("image/webp").match("data:image/webp");
@@ -493,9 +493,9 @@ export default function HomePage() {
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, type, Number(jpegQuality)));
     if (!blob) return null;
     return new Uint8Array(await blob.arrayBuffer());
-  };
+  }, [jpegQuality]);
   
-  const pushFunFrame = async () => {
+  const pushFunFrame = useCallback(async () => {
     if (!socket) {
       console.log("[PUSH_FUN_FRAME] No socket");
       return;
@@ -537,7 +537,7 @@ export default function HomePage() {
     } finally {
       setSendingFun(false);
     }
-  };
+  }, [socket, sendingFun, toBytes, ensureSnapSize]);
   
   const pushAttFrame = async () => {
     if (!socket || !socket.socket?.connected || sendingAtt || !ensureSnapSize()) return;
@@ -613,7 +613,7 @@ export default function HomePage() {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [ensureSnapSize]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -661,7 +661,7 @@ export default function HomePage() {
       socket.off("connect", handleConnect);
       clearInterval(funInterval);
     };
-  }, [socket, funIntervalMs]);
+  }, [socket, funIntervalMs, pushFunFrame]);
 
   return (
     <div className="page-root">

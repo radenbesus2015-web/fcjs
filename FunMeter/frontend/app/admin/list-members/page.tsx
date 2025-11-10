@@ -562,14 +562,14 @@ export default function AdminListMembersPage() {
           </div>
           <div className="flex gap-2">
             <Button onClick={() => fetchMembers(currentPage, searchQuery)} variant="outline" size="sm">
-              <Icon name="RefreshCw" className="h-4 w-4 mr-2" />
-              {t("adminListMembers.actions.refresh", "Refresh")}
+              <Icon name="RefreshCw" className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">{t("adminListMembers.actions.refresh", "Refresh")}</span>
             </Button>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -582,7 +582,7 @@ export default function AdminListMembersPage() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* View switch */}
             <div className="hidden md:flex items-center gap-1 mr-2">
               <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>Grid</Button>
@@ -615,20 +615,20 @@ export default function AdminListMembersPage() {
               <option value="desc">{t("adminListMembers.order.newest", "Newest")}</option>
               <option value="asc">{t("adminListMembers.order.oldest", "Oldest")}</option>
             </select>
-          <div className="flex items-center gap-2">
-            <Button onClick={openBulkUploadModal} variant="outline" size="sm">
-              <Icon name="Upload" className="h-4 w-4 mr-2" />
-              {t("adminListMembers.actions.bulkUpload", "Bulk Upload")}
-            </Button>
-            <Button onClick={exportSelectedMembers} variant="outline" size="sm" disabled={selectedMembers.length===0}>
-              <Icon name="FileArchive" className="h-4 w-4 mr-2" />
-              {t("adminListMembers.actions.export", "Ekspor")}
-            </Button>
-            <Button onClick={deleteSelectedMembers} variant="destructive" size="sm" disabled={selectedMembers.length===0}>
-              <Icon name="Trash2" className="h-4 w-4 mr-2" />
-              {t("adminListMembers.actions.deleteSelected", "Delete")}
-            </Button>
-          </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={openBulkUploadModal} variant="outline" size="sm">
+                <Icon name="Upload" className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{t("adminListMembers.actions.bulkUpload", "Bulk Upload")}</span>
+              </Button>
+              <Button onClick={exportSelectedMembers} variant="outline" size="sm" disabled={selectedMembers.length===0}>
+                <Icon name="FileArchive" className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{t("adminListMembers.actions.export", "Ekspor")}</span>
+              </Button>
+              <Button onClick={deleteSelectedMembers} variant="destructive" size="sm" disabled={selectedMembers.length===0}>
+                <Icon name="Trash2" className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{t("adminListMembers.actions.deleteSelected", "Delete")}</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -707,16 +707,16 @@ export default function AdminListMembersPage() {
                           size="sm"
                           onClick={() => startEditLabel(row)}
                         >
-                          <Icon name="Pencil" className="h-4 w-4 mr-2" />
-                          {t("adminListMembers.actions.edit", "Edit")}
+                          <Icon name="Pencil" className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">{t("adminListMembers.actions.edit", "Edit")}</span>
                         </Button>
                       <Button 
                         variant="destructive" 
                         size="sm"
                         onClick={() => deleteMember(String(row.id), row.label)}
                       >
-                        <Icon name="Trash2" className="h-4 w-4 mr-2" />
-                        {t("adminListMembers.actions.delete", "Delete")}
+                        <Icon name="Trash2" className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">{t("adminListMembers.actions.delete", "Delete")}</span>
                       </Button>
                       </div>
                     </td>
@@ -752,10 +752,11 @@ export default function AdminListMembersPage() {
                 onClick={() => fetchMembers(currentPage - 1, searchQuery)}
                 disabled={currentPage <= 1}
               >
-                {t("adminListMembers.pagination.previous", "Sebelumnya")}
+                <Icon name="ChevronLeft" className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{t("adminListMembers.pagination.previous", "Sebelumnya")}</span>
               </Button>
               
-              <span className="text-sm">
+              <span className="text-sm hidden md:inline">
                 {t("adminListMembers.pagination.current", "Halaman {page} dari {total}", {
                   page: currentPage,
                   total: totalPages,
@@ -768,7 +769,8 @@ export default function AdminListMembersPage() {
                 onClick={() => fetchMembers(currentPage + 1, searchQuery)}
                 disabled={currentPage >= totalPages}
               >
-                {t("adminListMembers.pagination.next", "Selanjutnya")}
+                <span className="hidden md:inline">{t("adminListMembers.pagination.next", "Selanjutnya")}</span>
+                <Icon name="ChevronRight" className="h-4 w-4 md:ml-2" />
               </Button>
             </div>
           </div>
@@ -811,7 +813,7 @@ export default function AdminListMembersPage() {
                           className="flex items-center gap-2 p-2 rounded hover:bg-muted text-blue-600"
                       >
                         <Icon name="Pencil" className="h-4 w-4" />
-                          <span className="text-xs">{t("adminListMembers.grid.edit", "Edit")}</span>
+                          <span className="text-xs hidden md:inline">{t("adminListMembers.grid.edit", "Edit")}</span>
                       </button>
                       <button
                           onClick={() => deleteMember(String(row.id), row.label)}
@@ -820,7 +822,7 @@ export default function AdminListMembersPage() {
                           className="flex items-center gap-2 p-2 rounded hover:bg-muted text-red-600"
                         >
                           <Icon name="Trash2" className="h-4 w-4" />
-                          <span className="text-xs">{t("adminListMembers.actions.delete", "Delete")}</span>
+                          <span className="text-xs hidden md:inline">{t("adminListMembers.actions.delete", "Delete")}</span>
                       </button>
                     </div>
                   </div>
@@ -860,10 +862,11 @@ export default function AdminListMembersPage() {
                 onClick={() => fetchMembers(currentPage - 1, searchQuery)}
                 disabled={currentPage <= 1}
               >
-                {t("adminListMembers.pagination.previous", "Sebelumnya")}
+                <Icon name="ChevronLeft" className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{t("adminListMembers.pagination.previous", "Sebelumnya")}</span>
               </Button>
               
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground hidden md:inline">
                 {t("adminListMembers.pagination.current", "Halaman {page} dari {total}", {
                   page: currentPage,
                   total: totalPages,
@@ -876,7 +879,8 @@ export default function AdminListMembersPage() {
                 onClick={() => fetchMembers(currentPage + 1, searchQuery)}
                 disabled={currentPage >= totalPages}
               >
-                {t("adminListMembers.pagination.next", "Selanjutnya")}
+                <span className="hidden md:inline">{t("adminListMembers.pagination.next", "Selanjutnya")}</span>
+                <Icon name="ChevronRight" className="h-4 w-4 md:ml-2" />
               </Button>
             </div>
           )}
@@ -984,8 +988,8 @@ export default function AdminListMembersPage() {
                   variant="outline"
                   className="flex-1"
                 >
-                  <Icon name="FileImage" className="h-4 w-4 mr-2" />
-                    {t("adminListMembers.edit.chooseFile", "Pilih File")}
+                  <Icon name="FileImage" className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">{t("adminListMembers.edit.chooseFile", "Pilih File")}</span>
                 </Button>
                   {editingReplaceFile && (
                 <Button
@@ -994,8 +998,8 @@ export default function AdminListMembersPage() {
                   variant="outline"
                       size="sm"
                 >
-                      <Icon name="X" className="h-4 w-4 mr-2" />
-                      {t("common.clear", "Clear")}
+                      <Icon name="X" className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">{t("common.clear", "Clear")}</span>
                 </Button>
                   )}
                 </div>
@@ -1009,7 +1013,8 @@ export default function AdminListMembersPage() {
                 onClick={cancelEditLabel}
                 disabled={savingEdit}
               >
-                {t("common.cancel", "Cancel")}
+                <Icon name="X" className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">{t("common.cancel", "Cancel")}</span>
               </Button>
               <Button
                 onClick={saveEditLabel}
@@ -1017,11 +1022,14 @@ export default function AdminListMembersPage() {
               >
                 {savingEdit ? (
                   <>
-                    <Icon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
-                    {t("adminListMembers.edit.saving", "Menyimpan...")}
+                    <Icon name="Loader2" className="h-4 w-4 md:mr-2 animate-spin" />
+                    <span className="hidden md:inline">{t("adminListMembers.edit.saving", "Menyimpan...")}</span>
                   </>
                 ) : (
-                  t("common.save", "Save")
+                  <>
+                    <Icon name="Check" className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">{t("common.save", "Save")}</span>
+                  </>
                 )}
               </Button>
             </div>
@@ -1069,8 +1077,8 @@ export default function AdminListMembersPage() {
                   disabled={bulkRunning}
                   variant="outline"
                 >
-                  <Icon name="Upload" className="h-4 w-4 mr-2" />
-                  {t("adminListMembers.bulk.selectFiles", "Pilih File")}
+                  <Icon name="Upload" className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">{t("adminListMembers.bulk.selectFiles", "Pilih File")}</span>
                 </Button>
                 <p className="text-sm text-muted-foreground mt-2">
                   {t("adminListMembers.bulk.hint", "Pilih satu atau lebih file gambar")}
@@ -1200,7 +1208,8 @@ export default function AdminListMembersPage() {
                   variant="outline"
                   disabled={bulkRunning}
                 >
-                  {t("adminListMembers.bulk.cancel", "Tutup")}
+                  <Icon name="X" className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">{t("adminListMembers.bulk.cancel", "Tutup")}</span>
                 </Button>
                 <Button
                   onClick={startBulkUpload}
@@ -1208,13 +1217,13 @@ export default function AdminListMembersPage() {
                 >
                   {bulkRunning ? (
                     <>
-                      <Icon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
-                      {t("adminListMembers.bulk.uploading", "Mengunggah...")}
+                      <Icon name="Loader2" className="h-4 w-4 md:mr-2 animate-spin" />
+                      <span className="hidden md:inline">{t("adminListMembers.bulk.uploading", "Mengunggah...")}</span>
                     </>
                   ) : (
                     <>
-                      <Icon name="Upload" className="h-4 w-4 mr-2" />
-                      {t("adminListMembers.bulk.start", "Mulai Upload")}
+                      <Icon name="Upload" className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">{t("adminListMembers.bulk.start", "Mulai Upload")}</span>
                     </>
                   )}
                 </Button>

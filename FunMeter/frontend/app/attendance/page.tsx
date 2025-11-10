@@ -32,6 +32,8 @@ export default function AttendancePage() {
   const sendHeightRef = useRef(0);
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const refreshLogRef = useRef<((page?: number) => Promise<void>) | null>(null);
+  const logMetaRef = useRef({ page: 1 });
   const [lastResults, setLastResults] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
   
@@ -65,25 +67,173 @@ export default function AttendancePage() {
         const results = Array.isArray(data?.results) ? data.results : [];
         setLastResults(results);
         draw(results);
+        
+        // Handle successful attendance notification and refresh log
+        const marked = Array.isArray(data?.marked) ? data.marked : [];
+        const markedInfo = Array.isArray(data?.marked_info) ? data.marked_info : [];
+        const blocked = Array.isArray(data?.blocked) ? data.blocked : [];
+        
+        console.log("[ATT_RESULT] Received:", { 
+          resultsCount: results.length, 
+          marked, 
+          markedInfo, 
+          blocked 
+        });
+        
+        // Show toast notifications for marked attendance
+        for (const info of markedInfo) {
+          const label = info.label || "";
+          const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
+          const message = info.message || `✅ Absen berhasil: ${label}${score}`;
+          if (label) {
+            console.log("[ATTENDANCE] Showing success toast for:", label);
+            toast.success(message, { duration: 5000 });
+          }
+        }
+        
+        // Fallback: show toast for marked labels without detailed info
+        if (!markedInfo.length && marked.length > 0) {
+          for (const label of marked) {
+            console.log("[ATTENDANCE] Showing success toast for (fallback):", label);
+            toast.success(`✅ Absen berhasil: ${label}`, { duration: 5000 });
+          }
+        }
+        
+        // Show blocked messages if any
+        for (const block of blocked) {
+          if (block.message) {
+            console.log("[ATTENDANCE] Blocked:", block.message);
+            toast.info(block.message, { duration: 4000 });
+          }
+        }
+        
+        // Refresh log when attendance is marked - always go to page 1 to see latest entries
+        if (marked.length > 0 || markedInfo.length > 0) {
+          console.log("[ATTENDANCE] Refreshing log after marked attendance");
+          // Small delay to ensure backend has saved the attendance
+          setTimeout(() => {
+            const refresh = refreshLogRef.current;
+            if (refresh) {
+              // Refresh to page 1 to show latest attendance (since order is desc)
+              refresh(1);
+            }
+          }, 500);
+        }
+      },
+      att_log_snapshot(data: any) {
+        // Refresh log when server sends snapshot update
+        const refresh = refreshLogRef.current;
+        const currentPage = logMetaRef.current.page;
+        if (refresh) {
+          refresh(currentPage);
+        }
       },
     },
   });
 
   // Camera functions
   const startCamera = async () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      console.log("[CAMERA] Cannot start: videoRef is null");
+      return;
+    }
     try {
-      await Cam.attach(videoRef.current);
+      console.log("[CAMERA] Starting camera...");
+      const video = videoRef.current;
+      
+      // Ensure video element is ready - clear any existing stream first
+      if (video.srcObject) {
+        console.log("[CAMERA] Video already has srcObject, clearing first");
+        video.pause();
+        video.srcObject = null;
+        // Small delay to ensure cleanup completes
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Load video element
+      video.load();
+      
+      await Cam.attach(video);
+      
+      // Wait for video to be ready
+      if (video.readyState < 2) {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            video.removeEventListener("loadedmetadata", onLoadedMetadata);
+            video.removeEventListener("error", onError);
+            reject(new Error("Timeout waiting for video metadata"));
+          }, 5000);
+          
+          const onLoadedMetadata = () => {
+            clearTimeout(timeout);
+            video.removeEventListener("loadedmetadata", onLoadedMetadata);
+            video.removeEventListener("error", onError);
+            resolve();
+          };
+          
+          const onError = (e: Event) => {
+            clearTimeout(timeout);
+            video.removeEventListener("loadedmetadata", onLoadedMetadata);
+            video.removeEventListener("error", onError);
+            reject(new Error("Video load error"));
+          };
+          
+          video.addEventListener("loadedmetadata", onLoadedMetadata);
+          video.addEventListener("error", onError);
+          
+          // If already loaded, resolve immediately
+          if (video.readyState >= 2) {
+            clearTimeout(timeout);
+            video.removeEventListener("loadedmetadata", onLoadedMetadata);
+            video.removeEventListener("error", onError);
+            resolve();
+          }
+        });
+      }
+      
+      // Ensure video plays
+      try {
+        await video.play();
+        console.log("[CAMERA] Video playing");
+      } catch (playError: any) {
+        console.warn("[CAMERA] Auto-play failed:", playError);
+        // Try again after a short delay
+        setTimeout(async () => {
+          try {
+            await video.play();
+            console.log("[CAMERA] Video playing after retry");
+          } catch (retryError) {
+            console.error("[CAMERA] Retry play also failed:", retryError);
+          }
+        }, 200);
+      }
+      
       setCameraActive(true);
       fitCanvasToVideo();
-    } catch {
-      toast.error(t("attendance.toast.cameraError", "Gagal mengakses kamera"));
+      console.log("[CAMERA] Camera started successfully");
+    } catch (error: any) {
+      console.error("[CAMERA] Error starting camera:", error);
+      setCameraActive(false);
+      const errorMsg = error?.message || "Unknown error";
+      toast.error(t("attendance.toast.cameraError", "Gagal mengakses kamera: {error}", { error: errorMsg }));
     }
   };
 
   const stopCamera = () => {
-    Cam.detach(videoRef.current);
-    setCameraActive(Cam.isActive());
+    console.log("[CAMERA] Stopping camera...");
+    const video = videoRef.current;
+    if (video) {
+      // Pause video first
+      video.pause();
+      // Clear srcObject
+      video.srcObject = null;
+    }
+    
+    Cam.detach(video);
+    
+    // Always set to false when stopping
+    setCameraActive(false);
+    
     // Clear canvas and reset results
     const overlay = overlayRef.current;
     const ctx = ctxRef.current;
@@ -91,6 +241,7 @@ export default function AttendancePage() {
       ctx.clearRect(0, 0, overlay.width, overlay.height);
     }
     setLastResults([]);
+    console.log("[CAMERA] Camera stopped");
   };
 
   // Helpers for drawing and sending (inside component)
@@ -135,19 +286,46 @@ export default function AttendancePage() {
   };
 
   const pushAttFrame = async () => {
-    if (!socket || !socket.socket?.connected || sending || !ensureSnapSize() || !isMountedRef.current) return;
+    if (!socket || !socket.socket?.connected) {
+      console.log("[PUSH_ATT_FRAME] Skipped: WebSocket not connected");
+      return;
+    }
+    if (sending) {
+      console.log("[PUSH_ATT_FRAME] Skipped: Already sending");
+      return;
+    }
+    if (!ensureSnapSize()) {
+      console.log("[PUSH_ATT_FRAME] Skipped: Cannot ensure snap size");
+      return;
+    }
+    if (!isMountedRef.current) {
+      console.log("[PUSH_ATT_FRAME] Skipped: Component not mounted");
+      return;
+    }
+    
     setSending(true);
     try {
       const snapCanvas = snapCanvasRef.current;
       const video = videoRef.current;
-      if (!snapCanvas || !video || !isMountedRef.current) return;
+      if (!snapCanvas || !video || !isMountedRef.current) {
+        console.log("[PUSH_ATT_FRAME] Skipped: Missing canvas or video");
+        return;
+      }
       const sctx = snapCanvas.getContext("2d");
-      if (!sctx) return;
+      if (!sctx) {
+        console.log("[PUSH_ATT_FRAME] Skipped: Cannot get canvas context");
+        return;
+      }
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
       if (bytes && socket && isMountedRef.current) {
+        console.log("[PUSH_ATT_FRAME] Sending frame, size:", bytes.length, "bytes");
         socket.emit("att_frame", bytes);
+      } else {
+        console.log("[PUSH_ATT_FRAME] Skipped: No bytes or socket disconnected");
       }
+    } catch (error) {
+      console.error("[PUSH_ATT_FRAME] Error:", error);
     } finally {
       if (isMountedRef.current) {
         setSending(false);
@@ -263,13 +441,21 @@ export default function AttendancePage() {
 
   // Send frames periodically
   useEffect(() => {
-    if (!cameraActive || !isMountedRef.current) return;
+    if (!cameraActive || !isMountedRef.current) {
+      console.log("[ATT_INTERVAL] Not starting: cameraActive=", cameraActive, "isMounted=", isMountedRef.current);
+      return;
+    }
+    const interval = Number(baseInterval.model ?? 2000);
+    console.log("[ATT_INTERVAL] Starting interval:", interval, "ms");
     const id = setInterval(() => {
       if (isMountedRef.current && cameraActive) {
         void pushAttFrame();
       }
-    }, Number(baseInterval.model ?? 500));
-    return () => clearInterval(id);
+    }, interval);
+    return () => {
+      console.log("[ATT_INTERVAL] Clearing interval");
+      clearInterval(id);
+    };
   }, [cameraActive, baseInterval.model]);
 
   // Fetch attendance log
@@ -307,6 +493,8 @@ export default function AttendancePage() {
         has_next: pageSafe < totalPages,
       };
       setLogMeta(computed);
+      // Update ref for WebSocket handler
+      logMetaRef.current = { page: pageSafe };
     } catch (error: unknown) {
       // Ignore errors if request was aborted or component unmounted
       const isAborted = error && typeof error === 'object' && ('name' in error) && error.name === 'AbortError';
@@ -316,6 +504,16 @@ export default function AttendancePage() {
       toast.error(t("attendance.toast.fetchError", "Gagal memuat data absensi"));
     }
   }, [order, perPage, t]);
+
+  // Update refreshLog ref whenever refreshLog changes
+  useEffect(() => {
+    refreshLogRef.current = refreshLog;
+  }, [refreshLog]);
+
+  // Update logMetaRef whenever logMeta changes
+  useEffect(() => {
+    logMetaRef.current = { page: logMeta.page };
+  }, [logMeta.page]);
 
   // Load initial data and react to perPage/order changes
   useEffect(() => {
@@ -403,6 +601,7 @@ export default function AttendancePage() {
               ref={videoRef}
               autoPlay
               playsInline
+              muted
               className="w-full h-auto object-contain block"
             />
             <canvas

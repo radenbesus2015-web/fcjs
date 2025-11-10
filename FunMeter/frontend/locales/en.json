@@ -832,7 +832,7 @@
       },
       "interval": {
         "label": "Attendance & FunMeter Interval (ms)",
-        "help": "Default: 200. Delay between frame sends to the attendance server."
+        "help": "Default: 2000. Delay between frame sends to the attendance server."
       }
     },
     "actions": {
