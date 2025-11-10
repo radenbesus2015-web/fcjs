@@ -26,6 +26,8 @@ export default function AdminAdvertisementPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importJsonInputRef = useRef<HTMLInputElement | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [arrowAnimation, setArrowAnimation] = useState<{ index: number; direction: -1 | 1 } | null>(null);
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
   const prevPositionsRef = useRef(new Map<string, DOMRect>());
@@ -77,6 +79,8 @@ export default function AdminAdvertisementPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
+    toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
+    
     try {
       const res = await fetch("/assets/advertisements/index.json", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load advertisements list.");
@@ -104,18 +108,25 @@ export default function AdminAdvertisementPage() {
           })()
         : discovered;
       setItems(merged);
+      toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: merged.length }), { duration: 3000 });
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Failed to load advertisements list.";
       setError(error);
+      toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { void load(); }, [load]);
 
   const save = (silent?: boolean) => {
     try {
+      if (!silent) {
+        setSaving(true);
+        toast.info(t("adminAds.toast.saving", "Menyimpan iklan..."), { duration: 2000 });
+      }
+      
       const enabled = items.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
       const jsonStr = JSON.stringify(enabled);
       localStorage.setItem(LS_KEY, jsonStr);
@@ -125,16 +136,20 @@ export default function AdminAdvertisementPage() {
         throw new Error("Save verification failed");
       }
       if (!silent) {
-        const message = t("adminAds.toast.saved", "Advertisements saved. Attendance page will use this list after refresh.");
+        const message = t("adminAds.toast.saved", "✅ Iklan berhasil disimpan. Halaman attendance akan menggunakan daftar ini setelah refresh.");
         console.log("[ADMIN_ADS] Showing success toast:", message);
-        toast.success(message);
+        toast.success(message, { duration: 3000 });
       }
     } catch (e: unknown) {
       console.error("[ADMIN_ADS] Save error:", e);
       if (!silent) {
-        const message = e instanceof Error ? e.message : t("adminAds.toast.saveFailed", "Failed to save advertisements.");
+        const message = e instanceof Error ? e.message : t("adminAds.toast.saveFailed", "❌ Gagal menyimpan iklan.");
         console.log("[ADMIN_ADS] Showing error toast:", message);
-        toast.error(message);
+        toast.error(message, { duration: 5000 });
+      }
+    } finally {
+      if (!silent) {
+        setSaving(false);
       }
     }
   };
@@ -267,6 +282,9 @@ export default function AdminAdvertisementPage() {
 
   const handleImportFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    
+    toast.info(t("adminAds.toast.importing", "Mengimpor {count} file...", { count: files.length }), { duration: 2000 });
+    
     try {
       const picked = Array.from(files).slice(0, 50); // safety limit
       const loaded = await Promise.all(
@@ -286,10 +304,10 @@ export default function AdminAdvertisementPage() {
         } catch {}
         return next;
       });
-      toast.success(t("adminAds.toast.imported", "Successfully imported advertisement media."));
+      toast.success(t("adminAds.toast.imported", "✅ Berhasil mengimpor {count} media iklan", { count: loaded.length }), { duration: 3000 });
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : t("adminAds.toast.importFailed", "Failed to import files.");
-      toast.error(error);
+      const error = e instanceof Error ? e.message : t("adminAds.toast.importFailed", "❌ Gagal mengimpor file");
+      toast.error(error, { duration: 5000 });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -310,6 +328,9 @@ export default function AdminAdvertisementPage() {
       
       if (!confirmed) return;
       
+      setDeleting(true);
+      toast.info(t("adminAds.toast.deleting", "Menghapus {count} iklan...", { count: selected.length }), { duration: 2000 });
+      
       const remaining = items.filter((it) => !toRemove.has(it.src));
       setItems(remaining);
       setSelected([]);
@@ -323,10 +344,12 @@ export default function AdminAdvertisementPage() {
         setCurrentPage(1);
       }
       
-      toast.success(t("adminAds.toast.deletedSelected", "Iklan terpilih berhasil dihapus."));
+      toast.success(t("adminAds.toast.deletedSelected", "✅ {count} iklan berhasil dihapus", { count: selected.length }), { duration: 3000 });
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : t("adminAds.toast.deleteFailed", "Failed to delete advertisements.");
-      toast.error(error);
+      const error = e instanceof Error ? e.message : t("adminAds.toast.deleteFailed", "❌ Gagal menghapus iklan");
+      toast.error(error, { duration: 5000 });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -341,7 +364,7 @@ export default function AdminAdvertisementPage() {
       const data = JSON.parse(text) as AdItem[];
       
       if (!Array.isArray(data)) {
-        toast.error(t("adminAds.toast.importJsonInvalid", "Format JSON tidak valid."));
+        toast.error(t("adminAds.toast.importJsonInvalid", "❌ Format JSON tidak valid"), { duration: 4000 });
         return;
       }
 
@@ -350,7 +373,7 @@ export default function AdminAdvertisementPage() {
         .map(({ src, type }) => ({ src, type, enabled: true }));
 
       if (imported.length === 0) {
-        toast.warn(t("adminAds.toast.importJsonEmpty", "Tidak ada iklan valid dalam file JSON."));
+        toast.warn(t("adminAds.toast.importJsonEmpty", "⚠️ Tidak ada iklan valid dalam file JSON"), { duration: 4000 });
         return;
       }
 
@@ -368,10 +391,10 @@ export default function AdminAdvertisementPage() {
         return next;
       });
 
-      toast.success(t("adminAds.toast.importJsonSuccess", "{count} iklan berhasil diimpor dari JSON.", { count: imported.length }));
+      toast.success(t("adminAds.toast.importJsonSuccess", "✅ Berhasil mengimpor {count} iklan dari JSON", { count: imported.length }), { duration: 3000 });
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : t("adminAds.toast.importJsonFailed", "Gagal mengimpor file JSON.");
-      toast.error(error);
+      const error = e instanceof Error ? e.message : t("adminAds.toast.importJsonFailed", "❌ Gagal mengimpor file JSON");
+      toast.error(error, { duration: 5000 });
     }
   };
 
@@ -386,11 +409,11 @@ export default function AdminAdvertisementPage() {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleImportJson} variant="outline" size="icon" title={t("common.import", "Import")} aria-label={t("common.import", "Import")}>
+            <Button onClick={handleImportJson} variant="outline" size="icon" title={t("common.import", "Import")} aria-label={t("common.import", "Import")} disabled={loading}>
               <Icon name="Upload" className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => void load()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")}>
-              <Icon name="RefreshCw" className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => void load()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")} disabled={loading}>
+              <Icon name="RefreshCw" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
             <input
               ref={importJsonInputRef}
@@ -410,8 +433,13 @@ export default function AdminAdvertisementPage() {
         <Separator />
         <CardContent className="space-y-4 pt-6">
           {loading && (
-            <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-              {t("state.loading", "Loading data...")}
+            <div className="flex items-center justify-center p-12 rounded-lg border bg-muted/30">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("state.loading", "Memuat data iklan...")}
+                </p>
+              </div>
             </div>
           )}
           {!!error && (
@@ -605,13 +633,31 @@ export default function AdminAdvertisementPage() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => save()} disabled={loading || !!error}>
-                <Icon name="Save" className="h-4 w-4 mr-2" />
-                {t("common.save", "Save")}
+              <Button onClick={() => save()} disabled={loading || saving || !!error}>
+                {saving ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {t("adminAds.actions.saving", "Menyimpan...")}
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Save" className="h-4 w-4 mr-2" />
+                    {t("common.save", "Save")}
+                  </>
+                )}
               </Button>
-              <Button onClick={deleteSelected} variant="destructive" disabled={loading || !!error || selected.length === 0}>
-                <Icon name="Trash2" className="h-4 w-4 mr-2" />
-                {t("common.delete", "Delete")}
+              <Button onClick={deleteSelected} variant="destructive" disabled={loading || deleting || !!error || selected.length === 0}>
+                {deleting ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {t("adminAds.actions.deleting", "Menghapus...")}
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Trash2" className="h-4 w-4 mr-2" />
+                    {t("common.delete", "Delete")}
+                  </>
+                )}
               </Button>
               <input
                 ref={fileInputRef}

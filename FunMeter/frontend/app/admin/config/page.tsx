@@ -125,16 +125,20 @@ export default function AdminConfigPage() {
 
   const loadConfig = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: "" }));
+    toast.info(t("adminConfig.toast.loading", "Memuat konfigurasi..."), { duration: 2000 });
+    
     try {
       const data = await request<DashboardData>("/admin/dashboard-data", { method: "GET" });
       const config = data?.config || { face_engine: {}, attendance: {} };
       const defaults = data?.config_defaults || { face_engine: {}, attendance: {} };
       setState({ loading: false, error: "", config, defaults });
+      toast.success(t("adminConfig.toast.loaded", "✅ Konfigurasi berhasil dimuat"), { duration: 2000 });
 
       // no-op: we don't need to update auth user here
     } catch (err: unknown) {
       const error = err as { message?: string };
       setState(prev => ({ ...prev, loading: false, error: error?.message || t("adminConfig.error.fetch", "Gagal memuat konfigurasi.") }));
+      toast.error(t("adminConfig.toast.loadError", "❌ Gagal memuat konfigurasi"), { duration: 4000 });
     }
   }, [t, user]);
 
@@ -187,16 +191,18 @@ export default function AdminConfigPage() {
     try {
       const payload = buildConfigPayload(scope);
       if (!payload) {
-        toast.info(t("adminConfig.toast.noChanges", "Tidak ada perubahan untuk disimpan."));
+        toast.info(t("adminConfig.toast.noChanges", "ℹ️ Tidak ada perubahan untuk disimpan"), { duration: 3000 });
         return;
       }
       setSaving(true);
+      toast.info(t("adminConfig.toast.saving", "Menyimpan konfigurasi..."), { duration: 2000 });
+      
       await request("/config", { method: "PUT", body: payload });
-      toast.success(t("adminConfig.toast.saved", "Konfigurasi disimpan."));
+      toast.success(t("adminConfig.toast.saved", "✅ Konfigurasi berhasil disimpan"), { duration: 3000 });
       await loadConfig();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error?.message || t("adminConfig.error.generic", "Gagal menyimpan konfigurasi."));
+      toast.error(error?.message || t("adminConfig.error.generic", "❌ Gagal menyimpan konfigurasi"), { duration: 5000 });
     } finally {
       setSaving(false);
     }
@@ -216,13 +222,15 @@ export default function AdminConfigPage() {
       cancelText: t("common.cancel", "Batal"),
     });
     if (!confirmed) return;
+    
     try {
+      toast.info(t("adminConfig.toast.resetting", "Mereset konfigurasi..."), { duration: 2000 });
       await request("/config/reset", { method: "POST", body: { scope } });
-      toast.success(t("adminConfig.toast.reset", "Konfigurasi direset."));
+      toast.success(t("adminConfig.toast.reset", "✅ Konfigurasi berhasil direset"), { duration: 3000 });
       await loadConfig();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error?.message || t("adminConfig.error.generic", "Gagal menyimpan konfigurasi."));
+      toast.error(error?.message || t("adminConfig.error.generic", "❌ Gagal mereset konfigurasi"), { duration: 5000 });
     }
   };
 
@@ -249,8 +257,13 @@ export default function AdminConfigPage() {
       )}
 
       {state.loading && (
-        <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-          {t("state.loading", "Memuat data config...")}
+        <div className="flex items-center justify-center p-12 rounded-lg border bg-muted/30">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-sm font-medium text-muted-foreground">
+              {t("state.loading", "Memuat data config...")}
+            </p>
+          </div>
         </div>
       )}
 
@@ -322,7 +335,16 @@ export default function AdminConfigPage() {
               </div>
 
               <div className="sm:col-span-2">
-                <Button type="submit" disabled={saving}>{t("adminConfig.actions.saveFace", "Simpan Face Engine")}</Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <>
+                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      {t("adminConfig.actions.saving", "Menyimpan...")}
+                    </>
+                  ) : (
+                    t("adminConfig.actions.saveFace", "Simpan Face Engine")
+                  )}
+                </Button>
               </div>
             </form>
           </CardContent>
@@ -365,7 +387,16 @@ export default function AdminConfigPage() {
               */}
 
               <div className="sm:col-span-2">
-                <Button type="submit" disabled={saving}>{t("adminConfig.actions.saveAttendance", "Simpan Absensi")}</Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <>
+                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      {t("adminConfig.actions.saving", "Menyimpan...")}
+                    </>
+                  ) : (
+                    t("adminConfig.actions.saveAttendance", "Simpan Absensi")
+                  )}
+                </Button>
               </div>
             </form>
           </CardContent>

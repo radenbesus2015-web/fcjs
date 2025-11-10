@@ -11,15 +11,12 @@ import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } fro
 import { fmtAttendanceWIB } from "@/lib/format";
 import * as Cam from "@/lib/cameraManager";
 
-
 interface AttendanceRecord {
   label: string;
   person_id?: string;
   ts: string;
   score: number;
 }
-
-//
 
 export default function AttendancePage() {
   const { t } = useI18n();
@@ -36,6 +33,7 @@ export default function AttendancePage() {
   const logMetaRef = useRef({ page: 1 });
   const [lastResults, setLastResults] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
   
   const [cameraActive, setCameraActive] = useState(false);
   // simplified state for this page (no realtime results shown)
@@ -138,6 +136,10 @@ export default function AttendancePage() {
       console.log("[CAMERA] Cannot start: videoRef is null");
       return;
     }
+    
+    setCameraLoading(true);
+    toast.info(t("attendance.toast.cameraStarting", "Memulai kamera..."), { duration: 2000 });
+    
     try {
       console.log("[CAMERA] Starting camera...");
       const video = videoRef.current;
@@ -211,17 +213,21 @@ export default function AttendancePage() {
       
       setCameraActive(true);
       fitCanvasToVideo();
-      console.log("[CAMERA] Camera started successfully");
+      toast.success(t("attendance.toast.cameraStarted", "✅ Kamera berhasil dimulai"), { duration: 3000 });
     } catch (error: any) {
       console.error("[CAMERA] Error starting camera:", error);
       setCameraActive(false);
       const errorMsg = error?.message || "Unknown error";
-      toast.error(t("attendance.toast.cameraError", "Gagal mengakses kamera: {error}", { error: errorMsg }));
+      toast.error(t("attendance.toast.cameraError", "❌ Gagal mengakses kamera: {error}", { error: errorMsg }), { duration: 5000 });
+    } finally {
+      setCameraLoading(false);
     }
   };
 
   const stopCamera = () => {
-    console.log("[CAMERA] Stopping camera...");
+    toast.info(t("attendance.toast.cameraStopping", "Menghentikan kamera..."), { duration: 1500 });
+    
+    
     const video = videoRef.current;
     if (video) {
       // Pause video first
@@ -234,6 +240,8 @@ export default function AttendancePage() {
     
     // Always set to false when stopping
     setCameraActive(false);
+    
+    toast.success(t("attendance.toast.cameraStopped", "✅ Kamera berhasil dihentikan"), { duration: 2000 });
     
     // Clear canvas and reset results
     const overlay = overlayRef.current;
@@ -652,10 +660,18 @@ export default function AttendancePage() {
             <Button
               onClick={cameraActive ? stopCamera : startCamera}
               variant={cameraActive ? "outline" : "default"}
+              disabled={cameraLoading}
             >
-              {cameraActive
-                ? t("attendance.actions.stopCamera", "Stop Camera")
-                : t("attendance.actions.startCamera", "Start Camera")}
+              {cameraLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  {t("attendance.actions.loading", "Memuat...")}
+                </>
+              ) : cameraActive ? (
+                t("attendance.actions.stopCamera", "Stop Camera")
+              ) : (
+                t("attendance.actions.startCamera", "Start Camera")
+              )}
             </Button>
           </div>
         </div>
