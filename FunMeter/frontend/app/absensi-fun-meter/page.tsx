@@ -205,14 +205,14 @@ export default function AttendanceFunMeterPage() {
   
   const mapExprLabel = (s: string): string => {
     const k = String(s || "").toLowerCase().trim();
-    if (["happiness", "happy", "senang"].includes(k)) return t("attendanceFunMeter.emotions.happy", "Senang");
-    if (["sadness", "sad", "sedih"].includes(k)) return t("attendanceFunMeter.emotions.sad", "Sedih");
-    if (["surprise", "surprised", "kaget"].includes(k)) return t("attendanceFunMeter.emotions.surprised", "Kaget");
-    if (["anger", "angry", "marah"].includes(k)) return t("attendanceFunMeter.emotions.angry", "Marah");
-    if (["fear", "fearful", "takut"].includes(k)) return t("attendanceFunMeter.emotions.fear", "Takut");
-    if (["disgust", "disgusted", "jijik"].includes(k)) return t("attendanceFunMeter.emotions.disgust", "Jijik");
-    if (["neutral", "biasa"].includes(k)) return t("attendanceFunMeter.emotions.neutral", "Biasa");
-    return t("attendanceFunMeter.emotions.neutral", "Biasa");
+    if (["happiness", "happy", "senang"].includes(k)) return "Senang";
+    if (["sadness", "sad", "sedih"].includes(k)) return "Sedih";
+    if (["surprise", "surprised", "kaget"].includes(k)) return "Kaget";
+    if (["anger", "angry", "marah"].includes(k)) return "Marah";
+    if (["fear", "fearful", "takut"].includes(k)) return "Takut";
+    if (["disgust", "disgusted", "jijik"].includes(k)) return "Jijik";
+    if (["neutral", "biasa"].includes(k)) return "Biasa";
+    return "Biasa";
   };
   
   const capitalizeFirstLetter = (str: string) => {
@@ -344,7 +344,7 @@ export default function AttendanceFunMeterPage() {
     ctx.textBaseline = "middle";
     
     // TOP name
-    const topText = capitalizeFirstLetter(name || t("attendanceFunMeter.labels.unknown", "Tidak Dikenal"));
+    const topText = capitalizeFirstLetter(name || "Unknown");
     const topW = Math.ceil(ctx.measureText(topText).width) + padX * 2;
     let topX = clamp(Math.round(x), 2, Math.round(hostRect.width - topW - 2));
     let topY = Math.round(y - th - gap);
@@ -419,7 +419,7 @@ export default function AttendanceFunMeterPage() {
       const exprRaw = (r.top?.label || r.expression || r.emotion || "Biasa").trim();
       const expr = mapExprLabel(exprRaw);
       const fused = fuseName([bx, by, bw, bh]);
-      const name = fused || r.label || r.name || t("attendanceFunMeter.labels.unknown", "Tidak Dikenal");
+      const name = fused || r.label || r.name || "Unknown";
       if (!fused) missingName = true;
       const color = EXP_COLORS[expr] || "#38bdf8";
       drawBoxWithLabels(x, y, w, h, name, expr, color);
