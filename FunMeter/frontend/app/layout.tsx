@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import dynamic from "next/dynamic";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -8,10 +9,21 @@ import { ConfirmDialogProvider } from "@/components/providers/ConfirmDialogProvi
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { GlobalConfirm } from "@/components/modals/GlobalConfirm";
-import { SettingsModal } from "@/components/modals/SettingsModal";
-import { LoginModal } from "@/components/modals/LoginModal";
 import { AppShell } from "@/components/layout/AppShell";
+
+// Lazy load modals untuk performa lebih baik (hanya dimuat saat dibutuhkan)
+const GlobalConfirm = dynamic(
+  () => import("@/components/modals/GlobalConfirm").then((mod) => ({ default: mod.GlobalConfirm })),
+  { ssr: false }
+);
+const SettingsModal = dynamic(
+  () => import("@/components/modals/SettingsModal").then((mod) => ({ default: mod.SettingsModal })),
+  { ssr: false }
+);
+const LoginModal = dynamic(
+  () => import("@/components/modals/LoginModal").then((mod) => ({ default: mod.LoginModal })),
+  { ssr: false }
+);
 
 const inter = Inter({
   variable: "--font-inter",

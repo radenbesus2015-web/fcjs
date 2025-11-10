@@ -4,6 +4,21 @@ const nextConfig: NextConfig = {
   // Disable strict mode to prevent double rendering in development
   reactStrictMode: false,
   
+  // Performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      'recharts',
+    ],
+  },
+  
   // Allow images from Supabase Storage and localhost backend
   images: {
     remotePatterns: [
@@ -21,17 +36,41 @@ const nextConfig: NextConfig = {
       },
     ],
     unoptimized: false,
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
   async headers() {
     return [
       {
-        // Apply these headers to all routes
+        // Cache static assets aggressively
+        source: '/assets/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cache API routes for 5 minutes
+        source: '/admin/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, stale-while-revalidate=60',
+          },
+        ],
+      },
+      {
+        // Cache pages for 1 hour, revalidate in background
         source: '/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
           },
         ],
       },

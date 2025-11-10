@@ -735,7 +735,6 @@ export default function AdminListMembersPage() {
                             height={64} 
                             className="h-16 w-16 rounded-md object-cover border" 
                             loading="lazy"
-                            unoptimized={photoUrl(row, "thumb").startsWith("http") && !photoUrl(row, "thumb").includes("?")}
                           />
                         ) : (
                           <div className="h-16 w-16 rounded-md bg-muted" />
@@ -851,7 +850,6 @@ export default function AdminListMembersPage() {
                         height={64} 
                         className="h-16 w-16 rounded-md object-cover border" 
                         loading="lazy"
-                        unoptimized={photoUrl(row).startsWith("http")}
                       />
                     ) : (
                       <div className="h-16 w-16 rounded-md bg-muted" />
@@ -1000,7 +998,6 @@ export default function AdminListMembersPage() {
                       height={128} 
                       className="h-32 w-32 rounded-md object-cover border" 
                       loading="lazy"
-                      unoptimized={photoUrl(editingItem, "medium").startsWith("http") && !photoUrl(editingItem, "medium").includes("?")}
                     />
                 ) : (
                   <div className="h-32 w-32 rounded-md bg-muted flex items-center justify-center">
