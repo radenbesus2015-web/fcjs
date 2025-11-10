@@ -278,13 +278,22 @@ async def update_advertisement(
             raise HTTPException(status_code=400, detail="Tidak ada field yang di-update")
         
         # Update di database
-        result = client.table("advertisements").update(update_dict).eq("id", ad_id).select().execute()
-        data = getattr(result, "data", []) or []
+        update_result = client.table("advertisements").update(update_dict).eq("id", ad_id).execute()
+        update_data = getattr(update_result, "data", []) or []
         
-        if not data:
+        if not update_data:
             raise HTTPException(status_code=404, detail="Advertisement not found")
         
-        advertisement = data[0]
+        # Get the updated record with all fields
+        get_result = client.table("advertisements").select("*").eq("id", ad_id).execute()
+        get_data = getattr(get_result, "data", []) or []
+        
+        if not get_data:
+            # Use update_data as fallback
+            advertisement = update_data[0]
+        else:
+            advertisement = get_data[0]
+        
         advertisement["src"] = get_public_url(advertisement["src"])
         
         return advertisement

@@ -18,6 +18,7 @@ import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
+import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
 
 interface AttendanceFunResult {
   // Attendance data
@@ -52,32 +53,45 @@ export default function AttendanceFunMeterPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const LS_KEY = "ads.enabled";
     const load = async () => {
       try {
-        // Prefer localStorage (managed by admin page)
-        const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
-        if (stored) {
-          const parsed = JSON.parse(stored) as { src: string; type: 'image' | 'video' }[];
-          if (Array.isArray(parsed) && parsed.length) {
-            if (!cancelled) setAdMediaList(parsed);
-            return;
-          }
-        }
-        // Else fetch static index to auto-discover assets
-        const res = await fetch('/assets/advertisements/index.json', { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          const images: string[] = Array.isArray(data?.images) ? data.images : [];
-          const videos: string[] = Array.isArray(data?.videos) ? data.videos : [];
-          const list: AdMedia[] = [
-            ...images.map((src: string) => ({ src, type: 'image' as const })),
-            ...videos.map((src: string) => ({ src, type: 'video' as const })),
-          ];
-          if (list.length && !cancelled) setAdMediaList(list);
+        // Load active advertisements from backend API
+        const data = await fetchActiveAdvertisements();
+        if (cancelled) return;
+        
+        // Convert backend Advertisement to AdMedia
+        const list: AdMedia[] = data
+          .filter((ad) => ad.enabled) // Only enabled ads
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)) // Sort by display_order
+          .map((ad) => ({
+            src: ad.src,
+            type: ad.type as 'image' | 'video',
+          }));
+        
+        if (list.length && !cancelled) {
+          setAdMediaList(list);
+        } else if (!cancelled) {
+          // Fallback to default ads if no active ads found
+          setAdMediaList([
+            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+          ]);
         }
       } catch (e) {
-        console.warn('[ADS] Failed to load ads list, using defaults', e);
+        console.warn('[ADS] Failed to load ads from backend, using defaults', e);
+        if (!cancelled) {
+          // Fallback to default ads on error
+          setAdMediaList([
+            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
+            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
+            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
+            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
+            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
+          ]);
+        }
       }
     };
     load();
