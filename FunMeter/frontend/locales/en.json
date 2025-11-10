@@ -507,7 +507,9 @@
     "cancel": "Cancel",
     "clear": "Clear",
     "delete": "Delete",
-    "view": "View"
+    "view": "View",
+    "idLabel": "ID:",
+    "separator": "•"
   },
   "adminDashboard": {
     "state": {

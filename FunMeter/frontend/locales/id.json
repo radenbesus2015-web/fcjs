@@ -778,7 +778,9 @@
     "delete": "Hapus",
     "save": "Simpan",
     "reload": "Muat Ulang",
-    "import": "Import"
+    "import": "Import",
+    "idLabel": "ID:",
+    "separator": "•"
   },
   "aside": {
     "brand": {

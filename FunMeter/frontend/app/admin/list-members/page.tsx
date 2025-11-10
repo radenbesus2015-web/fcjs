@@ -10,6 +10,7 @@ import { request, resolveApi } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
+import Image from "next/image";
 
 interface FaceItem {
   id: string | number;
@@ -534,11 +535,45 @@ export default function AdminListMembersPage() {
     fetchMembers();
   }, []);
 
-  const photoUrl = (row: FaceItem): string => {
+  const photoUrl = (row: FaceItem, size?: "thumb" | "medium" | "large"): string => {
     const p = row.photo_url || row.photo_path || "";
     if (!p) return "";
     const s = String(p).replace(/\\/g, "/");
-    return /^https?:\/\//i.test(s) ? s : resolveApi(s.replace(/^\/+/, ""));
+    const isExternal = /^https?:\/\//i.test(s);
+    let url = isExternal ? s : resolveApi(s.replace(/^\/+/, ""));
+    
+    // Add query parameter for image compression/resize
+    // Only add if it's not an external URL or if it's our API
+    if (!isExternal || url.includes(resolveApi(""))) {
+      try {
+        const urlObj = new URL(url);
+        // Add size parameter for compression (backend can use this to resize)
+        if (size === "thumb") {
+          urlObj.searchParams.set("w", "128");
+          urlObj.searchParams.set("q", "80");
+        } else if (size === "medium") {
+          urlObj.searchParams.set("w", "256");
+          urlObj.searchParams.set("q", "85");
+        } else {
+          // Default: optimize for display size
+          urlObj.searchParams.set("w", "512");
+          urlObj.searchParams.set("q", "85");
+        }
+        url = urlObj.toString();
+      } catch {
+        // If URL parsing fails, append query params manually
+        const separator = url.includes("?") ? "&" : "?";
+        if (size === "thumb") {
+          url = `${url}${separator}w=128&q=80`;
+        } else if (size === "medium") {
+          url = `${url}${separator}w=256&q=85`;
+        } else {
+          url = `${url}${separator}w=512&q=85`;
+        }
+      }
+    }
+    
+    return url;
   };
   const rowTs = (row: FaceItem): string => {
     const s = row.ts || row.time || row.timestamp || row.created_at || row.date || "";
@@ -692,8 +727,16 @@ export default function AdminListMembersPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        {photoUrl(row) ? (
-                          <img src={photoUrl(row)} alt={row.label} className="h-16 w-16 rounded-md object-cover border" />
+                        {photoUrl(row, "thumb") ? (
+                          <Image 
+                            src={photoUrl(row, "thumb")} 
+                            alt={row.label} 
+                            width={64} 
+                            height={64} 
+                            className="h-16 w-16 rounded-md object-cover border" 
+                            loading="lazy"
+                            unoptimized={photoUrl(row, "thumb").startsWith("http") && !photoUrl(row, "thumb").includes("?")}
+                          />
                         ) : (
                           <div className="h-16 w-16 rounded-md bg-muted" />
                         )}
@@ -795,13 +838,21 @@ export default function AdminListMembersPage() {
                   />
                   <div className="min-w-0">
                     <div className="font-medium truncate">{row.label}</div>
-                    <div className="text-xs text-muted-foreground truncate">ID: {String(row.id)} • {rowTs(row)}</div>
+                    <div className="text-xs text-muted-foreground truncate">{t("common.idLabel", "ID:")} {String(row.id)} {t("common.separator", "•")} {rowTs(row)}</div>
                   </div>
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     {photoUrl(row) ? (
-                      <img src={photoUrl(row)} alt={row.label} className="h-16 w-16 rounded-md object-cover border" />
+                      <Image 
+                        src={photoUrl(row)} 
+                        alt={row.label} 
+                        width={64} 
+                        height={64} 
+                        className="h-16 w-16 rounded-md object-cover border" 
+                        loading="lazy"
+                        unoptimized={photoUrl(row).startsWith("http")}
+                      />
                     ) : (
                       <div className="h-16 w-16 rounded-md bg-muted" />
                     )}
@@ -941,8 +992,16 @@ export default function AdminListMembersPage() {
                 
               {/* Current Photo Preview */}
                 <div className="flex items-center gap-4 mb-4">
-                  {photoUrl(editingItem) ? (
-                    <img src={photoUrl(editingItem)} alt={editingItem.label} className="h-32 w-32 rounded-md object-cover border" />
+                  {photoUrl(editingItem, "medium") ? (
+                    <Image 
+                      src={photoUrl(editingItem, "medium")} 
+                      alt={editingItem.label} 
+                      width={128} 
+                      height={128} 
+                      className="h-32 w-32 rounded-md object-cover border" 
+                      loading="lazy"
+                      unoptimized={photoUrl(editingItem, "medium").startsWith("http") && !photoUrl(editingItem, "medium").includes("?")}
+                    />
                 ) : (
                   <div className="h-32 w-32 rounded-md bg-muted flex items-center justify-center">
                     <Icon name="User" className="h-12 w-12 text-muted-foreground" />
@@ -1136,10 +1195,14 @@ export default function AdminListMembersPage() {
                         }`}
                       >
                         {/* Preview */}
-                        <img 
+                        <Image 
                           src={item.previewUrl} 
                           alt={item.name}
+                          width={64}
+                          height={64}
                           className="w-16 h-16 object-cover rounded border"
+                          loading="lazy"
+                          unoptimized={item.previewUrl.startsWith("blob:")}
                         />
 
                         {/* Label Input */}
