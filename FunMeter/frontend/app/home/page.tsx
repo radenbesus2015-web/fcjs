@@ -615,12 +615,13 @@ export default function HomePage() {
     };
   }, [ensureSnapSize]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - camera will NOT auto-start, must be started manually
+  // This ensures camera stops when navigating away and stays off on mount
   useEffect(() => {
-    startCamera();
     return () => {
       stopCamera();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Setup frame sending intervals

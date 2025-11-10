@@ -50,6 +50,7 @@ export default function AttendancePage() {
   });
   const [perPage, setPerPage] = useState<number>(10);
   const [order, setOrder] = useState<"asc" | "desc">("desc");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Settings
   type SettingBinding = { model: number; setModel: (v: number) => void };
@@ -460,7 +461,7 @@ export default function AttendancePage() {
 
   // Fetch attendance log
   type LogResponse = { items: AttendanceRecord[]; meta: typeof logMeta };
-  const refreshLog = React.useCallback(async (page = 1) => {
+  const refreshLog = React.useCallback(async (page = 1, showToast = false) => {
     // Cancel previous request if exists
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -469,6 +470,9 @@ export default function AttendancePage() {
     // Create new AbortController
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
+    
+    // Set loading state
+    setIsRefreshing(true);
     
     try {
       const response = await request<LogResponse>(`/attendance-log?page=${page}&per_page=${perPage}&order=${order}`, {
@@ -495,13 +499,27 @@ export default function AttendancePage() {
       setLogMeta(computed);
       // Update ref for WebSocket handler
       logMetaRef.current = { page: pageSafe };
+      
+      // Show success notification after refresh completes (only for manual refresh)
+      if (showToast) {
+        toast.success(t("attendance.toast.refreshSuccess", "Data absensi berhasil diperbarui"), { duration: 2000 });
+      }
     } catch (error: unknown) {
       // Ignore errors if request was aborted or component unmounted
       const isAborted = error && typeof error === 'object' && ('name' in error) && error.name === 'AbortError';
       if (isAborted || abortController.signal.aborted || !isMountedRef.current) {
+        // Clear loading state even on abort
+        if (isMountedRef.current) {
+          setIsRefreshing(false);
+        }
         return;
       }
       toast.error(t("attendance.toast.fetchError", "Gagal memuat data absensi"));
+    } finally {
+      // Clear loading state
+      if (isMountedRef.current) {
+        setIsRefreshing(false);
+      }
     }
   }, [order, perPage, t]);
 
@@ -520,7 +538,7 @@ export default function AttendancePage() {
     void refreshLog(1);
   }, [refreshLog, perPage, order]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount and load camera state
   useEffect(() => {
     isMountedRef.current = true;
     
@@ -533,6 +551,9 @@ export default function AttendancePage() {
       ctxRef.current = overlay.getContext("2d");
       fitCanvasToVideo();
     }
+    
+    // Camera will NOT auto-start - user must click button to start
+    // This ensures camera stops when navigating away and stays off on mount
     
     const onResize = () => {
       if (!isMountedRef.current) return;
@@ -562,6 +583,9 @@ export default function AttendancePage() {
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
+      
+      // Reset loading state
+      setIsRefreshing(false);
       
       // Clean up event listeners
       window.removeEventListener("resize", onResize);
@@ -644,12 +668,14 @@ export default function AttendancePage() {
               <div className="text-lg font-semibold">{t("attendance.sections.log.subtitle", "Riwayat kedatangan")}</div>
             </div>
             <Button 
-              onClick={() => refreshLog()} 
+              onClick={() => refreshLog(logMeta.page, true)} 
               size="sm" 
               variant="outline"
               className="aspect-square p-2"
+              title={t("attendance.actions.refresh", "Refresh")}
+              disabled={isRefreshing}
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
