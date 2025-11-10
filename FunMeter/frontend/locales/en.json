@@ -524,8 +524,11 @@
       "apiKeyRotated": "API key updated."
     },
     "confirm": {
+      "reloadServerTitle": "Reload server?",
       "reloadServer": "Reloading the server will reapply configuration. Continue?",
-      "rotateKey": "Generate a new API key for your account? Update your Authorization header afterwards."
+      "reloadAction": "Reload",
+      "rotateKey": "Generate a new API key for your account? Update your Authorization header afterwards.",
+      "rotateKeyTitle": "Rotate API key?"
     },
     "breadcrumb": "Admin Console",
     "greeting": "Hello, {name}",
@@ -535,6 +538,7 @@
       "reloadModel": "Reload Model",
       "reloadServer": "Reload Server",
       "rotateKey": "Rotate API Key",
+      "rotateShort": "Rotate",
       "processing": "Processing…"
     },
     "stats": {
@@ -553,11 +557,13 @@
     },
     "apiKey": {
       "title": "Your API Key",
+      "subtitle": "Personal credentials",
       "hint": "Send via Authorization header: Bearer <API_KEY>",
       "empty": "No API key yet",
       "show": "Show",
       "hide": "Hide",
       "copy": "Copy API Key",
+      "copyShort": "Copy",
       "copying": "Copying…",
       "copied": "API key copied to clipboard.",
       "notAvailable": "API key unavailable.",
@@ -568,11 +574,12 @@
       "viewJson": "View JSON",
       "jsonTitle": "Model Summary (Raw)",
       "backendLabel": "Backend",
-      "unknown": "unknown",
-      "backendMeta": "Backend ID {backendId} • target {targetId}",
+      "unknown": "UNKNOWN",
+      "backendMeta": "Backend {backendId} • target {targetId}",
       "emotionLabel": "Emotion Model",
       "none": "None",
       "emotionCount": "Labels: {count}",
+      "noEmotionLabels": "No emotion labels",
       "registeredLabels": "Registered Labels",
       "noLabels": "No labels"
     }
@@ -964,9 +971,15 @@
       "noImage": "No image.",
       "loadingImage": "Loading image...",
       "cameraReady": "Camera ready.",
+      "cameraActive": "Camera active",
+      "cameraStopped": "Camera stopped",
+      "cameraDenied": "Camera access denied",
+      "wsConnected": "WS connected",
+      "wsDisconnected": "WS disconnected",
       "detecting": "Detecting...",
       "faces": "Faces: {count}",
       "faceBadge": "{count} face(s)",
+      "noFace": "No face detected",
       "photoCaptured": "Photo captured.",
       "uploading": "Uploading...",
       "registered": "Registered: {label}",
@@ -974,6 +987,7 @@
       "replacing": "Replacing face data...",
       "duplicate": "Face already registered.",
       "processing": "Processing...",
+      "processingCrop": "Processing photo...",
       "failure": "An error occurred.",
       "error": "Error.",
       "errorGeneric": "Error"
@@ -984,12 +998,18 @@
       "failure": "An error occurred.",
       "loadedFromFile": "Image loaded from file.",
       "cameraActive": "Camera activated. Ready to capture.",
+      "cameraError": "Failed to access camera",
       "captureSuccess": "Photo captured successfully.",
       "labelRequired": "Label is required.",
+      "nameRequired": "Name is required",
       "sourceRequired": "Select an image or capture a photo first.",
+      "noImage": "No image from camera or upload",
       "registerSuccess": "Registered: {label}",
+      "registerError": "Registration failed: {error}",
       "updateSuccess": "Face updated: {label}",
-      "labelMustMatch": "Face is registered as {label}. Use that label to update."
+      "labelMustMatch": "Face is registered as {label}. Use that label to update.",
+      "wsConnected": "Connected to WebSocket server",
+      "wsDisconnected": "WebSocket connection lost"
     },
     "confirm": {
       "replaceTitle": "Replace photo?",

@@ -404,8 +404,11 @@
       "fetchError": "Gagal memuat data dashboard"
     },
     "confirm": {
+      "reloadServerTitle": "Muat ulang server?",
       "reloadServer": "Memuat ulang server akan menerapkan ulang konfigurasi. Lanjutkan?",
-      "rotateKey": "Generate API key baru untuk akun kamu? Kamu harus memperbarui Authorization header setelah ini."
+      "reloadAction": "Muat ulang",
+      "rotateKey": "Generate API key baru untuk akun kamu? Kamu harus memperbarui Authorization header setelah ini.",
+      "rotateKeyTitle": "Putar API key?"
     },
     "breadcrumb": "Admin Console",
     "greeting": "Halo, {name}",
@@ -416,6 +419,7 @@
       "reloadModel": "Muat Ulang Model",
       "reloadServer": "Muat Ulang Server",
       "rotateKey": "Putar API Key",
+      "rotateShort": "Putar",
       "processing": "Memproses…",
       "refresh": "Segarkan",
       "viewAll": "Lihat Semua"
@@ -460,11 +464,13 @@
     },
     "apiKey": {
       "title": "API Key Kamu",
+      "subtitle": "Kredensial pribadi",
       "hint": "Kirim lewat header Authorization: Bearer <API_KEY>",
       "empty": "Belum ada API key",
       "show": "Tampilkan",
       "hide": "Sembunyikan",
-      "copy": "Copy API Key",
+      "copy": "Salin API Key",
+      "copyShort": "Salin",
       "copying": "Menyalin…",
       "copied": "API key disalin ke clipboard.",
       "notAvailable": "API key tidak tersedia.",
@@ -475,11 +481,12 @@
       "viewJson": "Lihat JSON",
       "jsonTitle": "Model Summary (Raw)",
       "backendLabel": "Backend",
-      "unknown": "unknown",
-      "backendMeta": "ID backend {backendId} • target {targetId}",
+      "unknown": "UNKNOWN",
+      "backendMeta": "Backend {backendId} • target {targetId}",
       "emotionLabel": "Emotion Model",
-      "none": "Tidak ada",
+      "none": "None",
       "emotionCount": "Labels: {count}",
+      "noEmotionLabels": "Tidak ada label emosi",
       "registeredLabels": "Registered Labels",
       "noLabels": "Tidak ada label"
     }
@@ -1004,9 +1011,15 @@
       "noImage": "Tidak ada gambar.",
       "loadingImage": "Memuat gambar...",
       "cameraReady": "Kamera siap.",
+      "cameraActive": "Kamera aktif",
+      "cameraStopped": "Kamera dihentikan",
+      "cameraDenied": "Akses kamera ditolak",
+      "wsConnected": "WS terhubung",
+      "wsDisconnected": "WS terputus",
       "detecting": "Mendeteksi...",
       "faces": "Jumlah wajah: {count}",
       "faceBadge": "{count} wajah",
+      "noFace": "Tidak ada wajah terdeteksi",
       "photoCaptured": "Foto diambil.",
       "uploading": "Mengunggah...",
       "registered": "Terdaftar: {label}",
@@ -1014,6 +1027,7 @@
       "replacing": "Mengganti data wajah...",
       "duplicate": "Wajah sudah terdaftar.",
       "processing": "Memproses...",
+      "processingCrop": "Memproses foto...",
       "failure": "Terjadi kesalahan.",
       "error": "Kesalahan.",
       "errorGeneric": "Kesalahan"
@@ -1024,12 +1038,18 @@
       "failure": "Terjadi kesalahan.",
       "loadedFromFile": "Gambar berhasil dimuat dari file.",
       "cameraActive": "Kamera aktif. Siap untuk mengambil gambar.",
+      "cameraError": "Gagal mengakses kamera",
       "captureSuccess": "Foto berhasil diambil.",
       "labelRequired": "Label wajib diisi.",
+      "nameRequired": "Nama harus diisi",
       "sourceRequired": "Pilih gambar atau ambil foto terlebih dahulu.",
+      "noImage": "Tidak ada gambar dari kamera atau upload",
       "registerSuccess": "Terdaftar: {label}",
+      "registerError": "Registrasi gagal: {error}",
       "updateSuccess": "Wajah diperbarui: {label}",
-      "labelMustMatch": "Wajah terdaftar sebagai {label}. Gunakan label tersebut untuk memperbarui."
+      "labelMustMatch": "Wajah terdaftar sebagai {label}. Gunakan label tersebut untuk memperbarui.",
+      "wsConnected": "Terhubung ke server WebSocket",
+      "wsDisconnected": "Koneksi WebSocket terputus"
     },
     "confirm": {
       "replaceTitle": "Ganti foto?",

@@ -510,6 +510,8 @@ export default function AttendanceFunMeterPage() {
 
   // Camera functions (direct implementation like Vue original)
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const cameraActiveRef = useRef(false);
   
   // Simple ad slideshow state
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
@@ -571,6 +573,7 @@ export default function AttendanceFunMeterPage() {
       
       video.srcObject = mediaStream;
       setStream(mediaStream);
+      streamRef.current = mediaStream;
       
       // Wait for video to load
       await new Promise<void>((resolve) => {
@@ -584,6 +587,7 @@ export default function AttendanceFunMeterPage() {
       console.log("Camera started successfully"); // DEBUG
       console.log("Video dimensions:", video.videoWidth, "x", video.videoHeight); // DEBUG
       setCameraActive(true);
+      cameraActiveRef.current = true;
       setStatusText("Camera active");
       
       // Smart video fit: ensure responsive and compatible with various cameras
@@ -619,9 +623,11 @@ export default function AttendanceFunMeterPage() {
   };
 
   const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+    const currentStream = streamRef.current || stream;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
       setStream(null);
+      streamRef.current = null;
     }
     
     const video = videoRef.current;
@@ -630,6 +636,7 @@ export default function AttendanceFunMeterPage() {
     }
     
     setCameraActive(false);
+    cameraActiveRef.current = false;
     setStatusText("Camera stopped");
   };
 
@@ -763,14 +770,58 @@ export default function AttendanceFunMeterPage() {
     };
   }, [alignOverlay]);
 
-  // Cleanup camera stream on unmount
+  // Auto-start camera on mount and keep it active
   useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+    let isMounted = true;
+    
+    // Auto-start camera when component mounts
+    const initCamera = async () => {
+      if (!cameraActiveRef.current && videoRef.current && isMounted) {
+        await startCamera();
       }
     };
-  }, [stream]);
+    initCamera();
+    
+    // Handle visibility change - keep camera active when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !cameraActiveRef.current && videoRef.current && isMounted) {
+        // Restart camera if it was stopped while tab was hidden
+        console.log("[CAMERA] Tab visible again, restarting camera");
+        startCamera();
+      }
+    };
+    
+    // Handle pagehide - only stop camera when actually leaving the page
+    const handlePageHide = () => {
+      const currentStream = streamRef.current;
+      if (currentStream) {
+        console.log("[CAMERA] Page hiding, stopping camera");
+        currentStream.getTracks().forEach(track => track.stop());
+        setStream(null);
+        streamRef.current = null;
+        setCameraActive(false);
+        cameraActiveRef.current = false;
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    
+    return () => {
+      isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      // Only stop camera on unmount (when navigating away from this page)
+      const currentStream = streamRef.current;
+      if (currentStream) {
+        console.log("[CAMERA] Component unmounting, stopping camera");
+        currentStream.getTracks().forEach(track => track.stop());
+        setStream(null);
+        streamRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run on mount/unmount
 
   // Setup fullscreen change listener
   useEffect(() => {

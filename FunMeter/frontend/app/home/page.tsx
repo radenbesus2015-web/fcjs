@@ -563,6 +563,7 @@ export default function HomePage() {
   // Start camera
   const startCamera = async () => {
     try {
+      console.log("[CAMERA] Starting camera...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
@@ -574,10 +575,11 @@ export default function HomePage() {
         // Samakan perilaku dengan halaman absensi: gunakan cover agar transform hitbox akurat
         videoRef.current.style.objectFit = 'cover';
         videoRef.current.style.objectPosition = 'center center';
+        console.log("[CAMERA] Camera started successfully");
       }
     } catch (err) {
       const msg = (err as { message?: string })?.message || "-";
-      console.error("Camera error:", msg);
+      console.error("[CAMERA] Camera error:", msg);
     }
   };
 
@@ -585,6 +587,7 @@ export default function HomePage() {
   const stopCamera = () => {
     const s = streamRef.current;
     if (s) {
+      console.log("[CAMERA] Stopping camera");
       s.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
@@ -615,14 +618,44 @@ export default function HomePage() {
     };
   }, [ensureSnapSize]);
 
-  // Cleanup on unmount - camera will NOT auto-start, must be started manually
-  // This ensures camera stops when navigating away and stays off on mount
+  // Auto-start camera on mount and keep it active
   useEffect(() => {
+    let isMounted = true;
+    
+    // Auto-start camera when component mounts
+    const initCamera = async () => {
+      if (videoRef.current && !streamRef.current && isMounted) {
+        await startCamera();
+      }
+    };
+    initCamera();
+    
+    // Handle visibility change - keep camera active when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !streamRef.current && videoRef.current && isMounted) {
+        // Restart camera if it was stopped while tab was hidden
+        console.log("[CAMERA] Tab visible again, restarting camera");
+        startCamera();
+      }
+    };
+    
+    // Handle pagehide - only stop camera when actually leaving the page
+    const handlePageHide = () => {
+      stopCamera();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    
     return () => {
+      isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      // Only stop camera on unmount (when navigating away from this page)
       stopCamera();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Empty deps - only run on mount/unmount
   
   // Setup frame sending intervals
   useEffect(() => {
