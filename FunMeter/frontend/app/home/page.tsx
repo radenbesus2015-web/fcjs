@@ -206,7 +206,7 @@ export default function HomePage() {
         for (const info of markedInfo) {
           const label = info.label || "";
           const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
-          const message = info.message || `✅ Absen berhasil: ${label}${score}`;
+          const message = info.message || t("home.toast.attendanceSuccess", "✅ Absen berhasil: {label}{score}", { label, score });
           if (label) {
             console.log("[ATTENDANCE] Showing toast for:", label);
             toast.success(message, { duration: 5000 });
@@ -216,7 +216,7 @@ export default function HomePage() {
         if (!markedInfo.length && marked.length > 0) {
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            toast.success(`✅ Absen berhasil: ${label}`, { duration: 5000 });
+            toast.success(t("home.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label }), { duration: 5000 });
           }
         }
         
@@ -239,14 +239,14 @@ export default function HomePage() {
   
   const mapExprLabel = (s: string): string => {
     const k = String(s || "").toLowerCase().trim();
-    if (["happiness", "happy", "senang"].includes(k)) return "Senang";
-    if (["sadness", "sad", "sedih"].includes(k)) return "Sedih";
-    if (["surprise", "surprised", "kaget"].includes(k)) return "Kaget";
-    if (["anger", "angry", "marah"].includes(k)) return "Marah";
-    if (["fear", "fearful", "takut"].includes(k)) return "Takut";
-    if (["disgust", "disgusted", "jijik"].includes(k)) return "Jijik";
-    if (["neutral", "biasa"].includes(k)) return "Biasa";
-    return "Biasa";
+    if (["happiness", "happy", "senang"].includes(k)) return t("home.emotions.happy", "Senang");
+    if (["sadness", "sad", "sedih"].includes(k)) return t("home.emotions.sad", "Sedih");
+    if (["surprise", "surprised", "kaget"].includes(k)) return t("home.emotions.surprised", "Kaget");
+    if (["anger", "angry", "marah"].includes(k)) return t("home.emotions.angry", "Marah");
+    if (["fear", "fearful", "takut"].includes(k)) return t("home.emotions.fear", "Takut");
+    if (["disgust", "disgusted", "jijik"].includes(k)) return t("home.emotions.disgust", "Jijik");
+    if (["neutral", "biasa"].includes(k)) return t("home.emotions.neutral", "Biasa");
+    return t("home.emotions.neutral", "Biasa");
   };
   
   const capitalizeFirstLetter = (str: string) => {
@@ -396,7 +396,7 @@ export default function HomePage() {
     ctx.textBaseline = "middle";
     
     // TOP name
-    const topText = capitalizeFirstLetter(name || "Unknown");
+    const topText = capitalizeFirstLetter(name || t("home.labels.unknown", "Tidak Dikenal"));
     const topW = Math.ceil(ctx.measureText(topText).width) + padX * 2;
     const topX = clamp(Math.round(x), 2, Math.round(hostRect.width - topW - 2));
     let topY = Math.round(y - th - gap);
@@ -471,7 +471,7 @@ export default function HomePage() {
       const exprRaw = (r.top?.label || r.expression || r.emotion || "Biasa").trim();
       const expr = mapExprLabel(exprRaw);
       const fused = fuseName([bx, by, bw, bh]);
-      const name = fused || r.label || r.name || "Unknown";
+      const name = fused || r.label || r.name || t("home.labels.unknown", "Tidak Dikenal");
       if (!fused) missingName = true;
       const color = EXP_COLORS[expr] || "#38bdf8";
       drawBoxWithLabels(x, y, w, h, name, expr, color);

@@ -379,7 +379,7 @@ export default function AdminAdvertisementPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex sm:flex-row sm:justify-between sm:items-start gap-2">
-          <div>
+          <div className="space-y-1.5">
             <CardTitle>{t("adminAds.title", "Manage Advertisements (Attendance Fun Meter)")}</CardTitle>
             <CardDescription>
               {t("adminAds.subtitle", "Configure which advertisements appear on the Attendance Fun Meter page.")}
@@ -480,9 +480,22 @@ export default function AdminAdvertisementPage() {
                       <div className="w-28 h-16 bg-muted flex items-center justify-center overflow-hidden rounded">
                         {it.type === "image" ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={it.src} alt="Ad" className="w-full h-full object-contain" draggable={false} />
+                          <img 
+                            src={it.src} 
+                            alt="Ad preview" 
+                            className="w-full h-full object-cover" 
+                            draggable={false}
+                            loading="lazy"
+                            decoding="async"
+                          />
                         ) : (
-                          <video src={it.src} className="w-full h-full object-contain" muted draggable={false} />
+                          <video 
+                            src={it.src} 
+                            className="w-full h-full object-cover" 
+                            muted 
+                            draggable={false}
+                            preload="metadata"
+                          />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -542,7 +555,7 @@ export default function AdminAdvertisementPage() {
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <span className="px-3 py-1 rounded-md bg-gray-100 text-foreground text-sm">
+                    <span className="px-3 py-1 rounded-md bg-muted text-foreground text-sm">
                       {currentPage} / {totalPages}
                     </span>
                     <Button

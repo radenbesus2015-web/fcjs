@@ -197,8 +197,8 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
         <Button
           variant="ghost"
           className={cn(
-            "mb-2 w-full transition-all duration-300 ease-in-out",
-            isOpen ? "justify-start" : "justify-center px-0"
+            "mb-2 w-full transition-all duration-300 ease-in-out flex",
+            isOpen ? "justify-start" : "justify-center items-center px-0"
           )}
           onClick={openSettingsModal}
           aria-label={ft("actions.openSettings", "Buka Pengaturan")}
@@ -244,15 +244,15 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "w-full transition-all duration-300 ease-in-out",
-                isOpen ? "justify-start" : "justify-center px-0"
+                "w-full transition-all duration-300 ease-in-out flex",
+                isOpen ? "justify-start" : "justify-center items-center px-0"
               )}
               onClick={handleLogoutClick}
               aria-label={t("avatar.menu.logout", "Sign out")}
               title={t("avatar.menu.logout", "Sign out")}
             >
               <Icon name="LogOut" className={cn(
-                "transition-all duration-300 ease-in-out",
+                "transition-all duration-300 ease-in-out flex-shrink-0",
                 isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
               )} />
               <span
@@ -271,15 +271,15 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
             variant="ghost"
             size="sm"
             className={cn(
-              "w-full transition-all duration-300 ease-in-out",
-              isOpen ? "justify-start" : "justify-center px-0"
+              "w-full transition-all duration-300 ease-in-out flex",
+              isOpen ? "justify-start" : "justify-center items-center px-0"
             )}
             onClick={() => openModal()}
             aria-label={t("avatar.menu.login", "Sign in")}
             title={t("avatar.menu.login", "Sign in")}
           >
             <Icon name="LogIn" className={cn(
-            "transition-all duration-300 ease-in-out",
+            "transition-all duration-300 ease-in-out flex-shrink-0",
             isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
           )} />
             <span
@@ -333,8 +333,9 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
         onClick={handleClick}
         className={cn(
           "group flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
-          "hover:bg-sidebar-accent hover:text-black",
-          isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+          isActive 
+            ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           collapsed ? "justify-center px-0 gap-0" : "gap-2"
         )}
       >
@@ -342,8 +343,8 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
           "flex items-center justify-center rounded-lg transition-all duration-300 ease-in-out flex-shrink-0",
           collapsed ? "h-10 w-10" : "h-8 w-8",
           isActive 
-            ? "bg-orange-600 text-white" 
-            : "bg-transparent group-hover:bg-orange-200 dark:group-hover:bg-orange-600 dark:group-hover:text-white"
+            ? "bg-orange-500 text-white" 
+            : "bg-transparent group-hover:bg-orange-500 group-hover:text-white"
         )}>
           <Icon name={item.icon} className={cn("transition-all flex-shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4") } />
         </div>
@@ -366,8 +367,9 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
       onClick={handleClick}
       className={cn(
         "group flex items-center rounded-lg px-2 py-2 text-sm transition-all duration-300 ease-in-out",
-        "hover:bg-sidebar-accent hover:text-black",
-        isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+        isActive 
+          ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+          : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         collapsed ? "justify-center px-0 gap-0" : "gap-2"
       )}
     >
@@ -376,7 +378,7 @@ function NavLink({ item, isActive, t, collapsed }: NavLinkProps) {
         collapsed ? "h-10 w-10" : "h-8 w-8",
         isActive 
           ? "bg-orange-500 text-white" 
-          : "bg-transparent group-hover:bg-orange-200 dark:group-hover:bg-orange-600 dark:group-hover:text-white"
+          : "bg-transparent group-hover:bg-orange-500 group-hover:text-white"
       )}>
         <Icon name={item.icon} className={cn("transition-all flex-shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4") } />
       </div>

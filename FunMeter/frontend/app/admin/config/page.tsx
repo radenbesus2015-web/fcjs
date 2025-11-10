@@ -258,7 +258,7 @@ export default function AdminConfigPage() {
       {!state.loading && (
         <Card>
           <CardHeader className="flex sm:flex-row sm:justify-between">
-            <div>
+            <div className="space-y-1.5">
               <CardTitle>{t("adminConfig.sections.faceEngine.title", "Face Engine")}</CardTitle>
               <CardDescription>
                 {t("adminConfig.sections.faceEngine.subtitle", "Atur interval WS dan ambang deteksi YuNet.")}
@@ -332,8 +332,11 @@ export default function AdminConfigPage() {
       {/* Attendance Section */}
       {!state.loading && (
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-1.5">
             <CardTitle>{t("adminConfig.sections.attendance.title", "Absensi")}</CardTitle>
+            <CardDescription>
+              {t("adminConfig.sections.attendance.subtitle", "Konfigurasi cooldown dan threshold absensi")}
+            </CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="p-6">
@@ -371,19 +374,24 @@ export default function AdminConfigPage() {
 
       {/* JSON Modal */}
       <Dialog open={jsonModal.open} onOpenChange={(open) => { if (!open) setJsonModal(prev => ({ ...prev, open: false })); else setJsonModal(prev => ({ ...prev, open: true })); }}>
-        <DialogContent hideOverlay className="max-w-3xl bg-background" onEscapeKeyDown={() => setJsonModal(prev => ({ ...prev, open: false }))} onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            setJsonModal(prev => ({ ...prev, open: false }));
-          }
-        }}>
+        <DialogContent 
+          hideOverlay 
+          className="max-w-3xl max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" 
+          onEscapeKeyDown={() => setJsonModal(prev => ({ ...prev, open: false }))} 
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              setJsonModal(prev => ({ ...prev, open: false }));
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{jsonModal.title}</DialogTitle>
             <DialogDescription>
               {t("adminConfig.json.hint", "Dump data mentah untuk debugging")}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-auto rounded-md bg-muted p-4">
+          <div className="max-h-[50vh] overflow-auto rounded-lg bg-muted p-4">
             <pre className="text-xs leading-relaxed">{jsonModal.content}</pre>
           </div>
         </DialogContent>

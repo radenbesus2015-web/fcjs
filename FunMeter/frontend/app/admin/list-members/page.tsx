@@ -586,7 +586,7 @@ export default function AdminListMembersPage() {
   return (
     <div className="space-y-6">
       {/* DIV 1: CRUD Operations - Header, Search, Filters, Actions */}
-      <div className="space-y-4 p-6 border rounded-lg bg-white">
+      <div className="space-y-4 p-6 border rounded-lg bg-card">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -727,15 +727,13 @@ export default function AdminListMembersPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        {photoUrl(row, "thumb") ? (
-                          <Image 
-                            src={photoUrl(row, "thumb")} 
+                        {photoUrl(row) ? (
+                          <img 
+                            src={photoUrl(row)} 
                             alt={row.label} 
-                            width={64} 
-                            height={64} 
                             className="h-16 w-16 rounded-md object-cover border" 
                             loading="lazy"
-                            unoptimized={photoUrl(row, "thumb").startsWith("http") && !photoUrl(row, "thumb").includes("?")}
+                            decoding="async"
                           />
                         ) : (
                           <div className="h-16 w-16 rounded-md bg-muted" />
@@ -844,14 +842,12 @@ export default function AdminListMembersPage() {
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     {photoUrl(row) ? (
-                      <Image 
+                      <img 
                         src={photoUrl(row)} 
                         alt={row.label} 
-                        width={64} 
-                        height={64} 
                         className="h-16 w-16 rounded-md object-cover border" 
                         loading="lazy"
-                        unoptimized={photoUrl(row).startsWith("http")}
+                        decoding="async"
                       />
                     ) : (
                       <div className="h-16 w-16 rounded-md bg-muted" />
@@ -992,15 +988,13 @@ export default function AdminListMembersPage() {
                 
               {/* Current Photo Preview */}
                 <div className="flex items-center gap-4 mb-4">
-                  {photoUrl(editingItem, "medium") ? (
-                    <Image 
-                      src={photoUrl(editingItem, "medium")} 
+                  {photoUrl(editingItem) ? (
+                    <img 
+                      src={photoUrl(editingItem)} 
                       alt={editingItem.label} 
-                      width={128} 
-                      height={128} 
                       className="h-32 w-32 rounded-md object-cover border" 
                       loading="lazy"
-                      unoptimized={photoUrl(editingItem, "medium").startsWith("http") && !photoUrl(editingItem, "medium").includes("?")}
+                      decoding="async"
                     />
                 ) : (
                   <div className="h-32 w-32 rounded-md bg-muted flex items-center justify-center">
@@ -1202,7 +1196,7 @@ export default function AdminListMembersPage() {
                           height={64}
                           className="w-16 h-16 object-cover rounded border"
                           loading="lazy"
-                          unoptimized={item.previewUrl.startsWith("blob:")}
+                          decoding="async"
                         />
 
                         {/* Label Input */}

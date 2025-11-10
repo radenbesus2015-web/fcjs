@@ -53,3 +53,32 @@ export function formatScore(score: number | string | null | undefined): string {
   if (score == null || Number.isNaN(Number(score))) return '-';
   return Number(score).toFixed(3);
 }
+
+// Multilingual date formatter with format: Weekday, dd/mmm/yyyy HH:mm
+export function fmtAttendanceMultilingual(iso: string | null | undefined, locale: string = 'id-ID'): string {
+  try {
+    const s = normalizeISOToWIB(iso);
+    if (!s) return '-';
+    const d = new Date(s);
+    
+    // Format: Weekday, dd/mmm/yyyy HH:mm (e.g., "Senin, 10/Nov/2025 08.45" or "Mon, 10/Nov/2025 08.45")
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      timeZone: 'Asia/Jakarta',
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    };
+    
+    const formatter = new Intl.DateTimeFormat(locale, dateOptions);
+    const parts = formatter.formatToParts(d);
+    const get = (t: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === t)?.value || '';
+    
+    return `${get('weekday')}, ${get('day')}/${get('month')}/${get('year')} ${get('hour')}.${get('minute')}`;
+  } catch (err) {
+    return String(iso);
+  }
+}
