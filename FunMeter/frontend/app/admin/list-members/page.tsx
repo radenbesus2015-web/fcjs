@@ -551,7 +551,7 @@ export default function AdminListMembersPage() {
   return (
     <div className="space-y-6">
       {/* DIV 1: CRUD Operations - Header, Search, Filters, Actions */}
-      <div className="space-y-4 p-6 border rounded-lg bg-white">
+      <div className="space-y-4 p-6 border rounded-lg bg-card">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -693,7 +693,13 @@ export default function AdminListMembersPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         {photoUrl(row) ? (
-                          <img src={photoUrl(row)} alt={row.label} className="h-16 w-16 rounded-md object-cover border" />
+                          <img 
+                            src={photoUrl(row)} 
+                            alt={row.label} 
+                            className="h-16 w-16 rounded-md object-cover border" 
+                            loading="lazy"
+                            decoding="async"
+                          />
                         ) : (
                           <div className="h-16 w-16 rounded-md bg-muted" />
                         )}
@@ -801,7 +807,13 @@ export default function AdminListMembersPage() {
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     {photoUrl(row) ? (
-                      <img src={photoUrl(row)} alt={row.label} className="h-16 w-16 rounded-md object-cover border" />
+                      <img 
+                        src={photoUrl(row)} 
+                        alt={row.label} 
+                        className="h-16 w-16 rounded-md object-cover border" 
+                        loading="lazy"
+                        decoding="async"
+                      />
                     ) : (
                       <div className="h-16 w-16 rounded-md bg-muted" />
                     )}
@@ -942,7 +954,13 @@ export default function AdminListMembersPage() {
               {/* Current Photo Preview */}
                 <div className="flex items-center gap-4 mb-4">
                   {photoUrl(editingItem) ? (
-                    <img src={photoUrl(editingItem)} alt={editingItem.label} className="h-32 w-32 rounded-md object-cover border" />
+                    <img 
+                      src={photoUrl(editingItem)} 
+                      alt={editingItem.label} 
+                      className="h-32 w-32 rounded-md object-cover border" 
+                      loading="lazy"
+                      decoding="async"
+                    />
                 ) : (
                   <div className="h-32 w-32 rounded-md bg-muted flex items-center justify-center">
                     <Icon name="User" className="h-12 w-12 text-muted-foreground" />
@@ -1140,6 +1158,8 @@ export default function AdminListMembersPage() {
                           src={item.previewUrl} 
                           alt={item.name}
                           className="w-16 h-16 object-cover rounded border"
+                          loading="lazy"
+                          decoding="async"
                         />
 
                         {/* Label Input */}

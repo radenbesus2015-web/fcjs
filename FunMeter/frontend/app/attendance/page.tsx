@@ -727,7 +727,7 @@ export default function AttendancePage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="px-3 py-1 rounded-md bg-gray-100 text-foreground">{logMeta.page}</span>
+              <span className="px-3 py-1 rounded-md bg-muted text-foreground">{logMeta.page}</span>
               <Button
                 variant="outline"
                 size="sm"

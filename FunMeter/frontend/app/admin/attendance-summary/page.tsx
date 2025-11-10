@@ -300,7 +300,7 @@ export default function AdminAttendanceSummaryPage() {
                   { key: 'unique_people', label: ft('stats.uniquePeople', 'People involved'), value: totals.unique_people },
                 ].map((stat) => (
                   <Card key={stat.key} className="border border-border">
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-3 pt-6">
                       <CardDescription className="text-sm text-muted-foreground">{stat.label}</CardDescription>
                       <CardTitle className={"text-3xl font-bold"}>{stat.value ?? 0}</CardTitle>
                     </CardHeader>
@@ -311,10 +311,10 @@ export default function AdminAttendanceSummaryPage() {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
                 {/* Status Table */}
                 <Card className="border border-border">
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle>{ft("table.title", "Attendance Status")}</CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0">
+                  <CardContent className="px-6 pb-6 pt-0">
                     <div className="h-[300px] overflow-auto">
                       <Table>
                         <TableHeader>
@@ -345,13 +345,13 @@ export default function AdminAttendanceSummaryPage() {
 
                 {/* Monthly Overview Chart */}
                 <Card className="border border-border">
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle>{ft("chart.title", "Monthly Overview")}</CardTitle>
                     <CardDescription>
                       {ft("chart.subtitle", "Status distribution per month for the selected range.")}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="px-6 pb-6">
                     {monthlyChartData.length ? (
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -406,13 +406,13 @@ export default function AdminAttendanceSummaryPage() {
               <div className="grid gap-6 lg:grid-cols-2">
                 {/* Most Late */}
                 <Card className="border border-border">
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle>{ft("leaders.lateTitle", "Most Late")}</CardTitle>
                     <CardDescription>
                       {ft("leaders.lateSubtitle", "People with the largest accumulated late minutes.")}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="p-0">
+                  <CardContent className="px-6 pb-6 pt-0">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -455,13 +455,13 @@ export default function AdminAttendanceSummaryPage() {
 
                 {/* Most Present */}
                 <Card className="border border-border">
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle>{ft("leaders.presentTitle", "Most Present")}</CardTitle>
                     <CardDescription>
                       {ft("leaders.presentSubtitle", "People with the highest number of present days.")}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="p-0">
+                  <CardContent className="px-6 pb-6 pt-0">
                     <Table>
                       <TableHeader>
                         <TableRow>

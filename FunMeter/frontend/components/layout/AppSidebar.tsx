@@ -197,8 +197,8 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
         <Button
           variant="ghost"
           className={cn(
-            "mb-2 w-full transition-all duration-300 ease-in-out",
-            isOpen ? "justify-start" : "justify-center px-0"
+            "mb-2 w-full transition-all duration-300 ease-in-out flex",
+            isOpen ? "justify-start" : "justify-center items-center px-0"
           )}
           onClick={openSettingsModal}
           aria-label={ft("actions.openSettings", "Buka Pengaturan")}
@@ -244,15 +244,15 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "w-full transition-all duration-300 ease-in-out",
-                isOpen ? "justify-start" : "justify-center px-0"
+                "w-full transition-all duration-300 ease-in-out flex",
+                isOpen ? "justify-start" : "justify-center items-center px-0"
               )}
               onClick={handleLogoutClick}
               aria-label={t("avatar.menu.logout", "Sign out")}
               title={t("avatar.menu.logout", "Sign out")}
             >
               <Icon name="LogOut" className={cn(
-                "transition-all duration-300 ease-in-out",
+                "transition-all duration-300 ease-in-out flex-shrink-0",
                 isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
               )} />
               <span
@@ -271,15 +271,15 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
             variant="ghost"
             size="sm"
             className={cn(
-              "w-full transition-all duration-300 ease-in-out",
-              isOpen ? "justify-start" : "justify-center px-0"
+              "w-full transition-all duration-300 ease-in-out flex",
+              isOpen ? "justify-start" : "justify-center items-center px-0"
             )}
             onClick={() => openModal()}
             aria-label={t("avatar.menu.login", "Sign in")}
             title={t("avatar.menu.login", "Sign in")}
           >
             <Icon name="LogIn" className={cn(
-            "transition-all duration-300 ease-in-out",
+            "transition-all duration-300 ease-in-out flex-shrink-0",
             isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
           )} />
             <span

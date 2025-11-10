@@ -388,16 +388,19 @@ export default function AdminUsersPage() {
                               size="sm"
                               disabled={rotatingUser === userItem.username}
                               onClick={() => rotateApiKey(userItem)}
+                              className="gap-2"
                             >
-                              <Icon name="Key" className="h-4 w-4" />
-                              {rotatingUser === userItem.username
-                                ? t("adminUsers.actions.processing", "Memproses…")
-                                : t("adminUsers.actions.rotateKey", "Putar API Key")}
+                              <Icon name="Key" className="h-4 w-4 flex-shrink-0" />
+                              <span className="hidden sm:inline">
+                                {rotatingUser === userItem.username
+                                  ? t("adminUsers.actions.processing", "Memproses…")
+                                  : t("adminUsers.actions.rotateKey", "Putar API Key")}
+                              </span>
                             </Button>
                             
-                            <Button variant="outline" size="sm" onClick={() => openPasswordModal(userItem)}>
-                              <Icon name="Lock" className="h-4 w-4" />
-                              {t("adminUsers.actions.setPassword", "Setel Password")}
+                            <Button variant="outline" size="sm" onClick={() => openPasswordModal(userItem)} className="gap-2">
+                              <Icon name="Lock" className="h-4 w-4 flex-shrink-0" />
+                              <span className="hidden sm:inline">{t("adminUsers.actions.setPassword", "Setel Password")}</span>
                             </Button>
 
                             {!userItem.is_current && (
@@ -407,16 +410,17 @@ export default function AdminUsersPage() {
                                     variant="destructive"
                                     size="sm"
                                     onClick={() => demoteUser(userItem)}
+                                    className="gap-2"
                                   >
-                                    <Icon name="Crown" className="h-4 w-4" />
-                                    {t("adminUsers.actions.demote", "Turunkan")}
+                                    <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
+                                    <span className="hidden sm:inline">{t("adminUsers.actions.demote", "Turunkan")}</span>
                                   </Button>
                                 )}
                                 
                                 {!userItem.is_owner && state.currentUser?.is_owner && !userItem.is_admin && (
-                                  <Button size="sm" onClick={() => promoteUser(userItem)}>
-                                    <Icon name="Crown" className="h-4 w-4" />
-                                    {t("adminUsers.actions.promote", "Naikkan")}
+                                  <Button size="sm" onClick={() => promoteUser(userItem)} className="gap-2">
+                                    <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
+                                    <span className="hidden sm:inline">{t("adminUsers.actions.promote", "Naikkan")}</span>
                                   </Button>
                                 )}
                                 
@@ -425,9 +429,10 @@ export default function AdminUsersPage() {
                                   size="sm"
                                   disabled={userItem.is_owner || (userItem.is_admin && !state.currentUser?.is_owner)}
                                   onClick={() => deleteUser(userItem)}
+                                  className="gap-2"
                                 >
-                                  <Icon name="Trash" className="h-4 w-4" />
-                                  {t("adminUsers.actions.delete", "Hapus")}
+                                  <Icon name="Trash" className="h-4 w-4 flex-shrink-0" />
+                                  <span className="hidden sm:inline">{t("adminUsers.actions.delete", "Hapus")}</span>
                                 </Button>
                               </>
                             )}

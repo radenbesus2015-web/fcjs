@@ -433,9 +433,9 @@ export default function FunMeterPage() {
       surprised: "bg-yellow-100 text-yellow-800",
       fear: "bg-purple-100 text-purple-800",
       disgust: "bg-orange-100 text-orange-800",
-      neutral: "bg-gray-100 text-gray-800",
+      neutral: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
     };
-    return colors[emotion] || "bg-gray-100 text-gray-800";
+    return colors[emotion] || "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
   };
 
   return (

@@ -292,9 +292,9 @@ export default function AdminAttendancePage() {
       case "mixed":
         return <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.mixed", "Terlambat & Pulang Awal")}</span>;
       case "off":
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.off", "Libur")}</span>;
+        return <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.off", "Libur")}</span>;
       default:
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">{key}</span>;
+        return <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">{key}</span>;
     }
   };
 
@@ -336,7 +336,7 @@ export default function AdminAttendancePage() {
           <Button variant="outline" size="sm" onClick={() => goTo(currentPage - 1)} disabled={currentPage <= 1}>
             <Icon name="ChevronLeft" className="h-4 w-4" />
           </Button>
-          <span className="px-3 py-1 rounded-md bg-gray-100 text-sm">{currentPage}</span>
+          <span className="px-3 py-1 rounded-md bg-muted text-foreground text-sm">{currentPage}</span>
           <Button variant="outline" size="sm" onClick={() => goTo(currentPage + 1)} disabled={currentPage >= totalPages}>
             <Icon name="ChevronRight" className="h-4 w-4" />
           </Button>
@@ -578,7 +578,7 @@ export default function AdminAttendancePage() {
 
       {/* View Modal */}
       <Dialog open={showViewModal && !!selectedLog} onOpenChange={(open)=> !open && setShowViewModal(false)}>
-        <DialogContent hideOverlay className="max-w-md bg-background" onEscapeKeyDown={() => setShowViewModal(false)} onKeyDown={(e) => {
+        <DialogContent hideOverlay className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" onEscapeKeyDown={() => setShowViewModal(false)} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             setShowViewModal(false);
@@ -626,7 +626,7 @@ export default function AdminAttendancePage() {
 
       {/* Schedule Modal */}
       <Dialog open={showScheduleModal && !!selectedLog} onOpenChange={(open)=> !open && setShowScheduleModal(false)}>
-        <DialogContent hideOverlay className="max-w-lg bg-background" onEscapeKeyDown={() => setShowScheduleModal(false)} onKeyDown={(e) => {
+        <DialogContent hideOverlay className="max-w-lg max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" onEscapeKeyDown={() => setShowScheduleModal(false)} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             toast.success(t("adminAttendance.schedule.saved", "Schedule berhasil disimpan"));
@@ -684,7 +684,7 @@ export default function AdminAttendancePage() {
 
       {/* Delete Confirmation Modal */}
       <Dialog open={showDeleteConfirm && !!selectedLog} onOpenChange={(open)=> !open && setShowDeleteConfirm(false)}>
-        <DialogContent hideOverlay className="max-w-md bg-background" onEscapeKeyDown={() => setShowDeleteConfirm(false)} onKeyDown={(e) => {
+        <DialogContent hideOverlay className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" onEscapeKeyDown={() => setShowDeleteConfirm(false)} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDelete();
@@ -718,7 +718,7 @@ export default function AdminAttendancePage() {
 
       {/* Date Range Picker Modal */}
       <Dialog open={showDatePicker} onOpenChange={(open)=> !open && setShowDatePicker(false)}>
-        <DialogContent hideOverlay className="max-w-md bg-background" onEscapeKeyDown={() => setShowDatePicker(false)} onKeyDown={(e) => {
+        <DialogContent hideOverlay className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" onEscapeKeyDown={() => setShowDatePicker(false)} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             setCurrentPage(1);

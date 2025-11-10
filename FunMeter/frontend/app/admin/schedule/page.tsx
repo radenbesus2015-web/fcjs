@@ -485,7 +485,7 @@ export default function AdminSchedulePage() {
             </div>
       {/* Modals */}
       <Dialog open={modalView.open} onOpenChange={(open) => !open && setModalView({ open: false, ov: null })}>
-        <DialogContent className="max-w-lg" hideOverlay onEscapeKeyDown={() => setModalView({ open: false, ov: null })}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-auto rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalView({ open: false, ov: null })}>
           <DialogHeader>
             <DialogTitle>{t("adminSchedule.modals.view.title", "View Override")}</DialogTitle>
           </DialogHeader>
@@ -506,7 +506,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalEdit.open} onOpenChange={(open) => !open ? setModalEdit({ open: false, ov: null }) : null}>
-        <DialogContent className="max-w-3xl bg-background" hideOverlay onEscapeKeyDown={() => setModalEdit({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalEdit({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             saveEdit();
@@ -579,7 +579,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalDeleteOv.open} onOpenChange={(open) => !open && setModalDeleteOv({ open: false, ov: null })}>
-        <DialogContent className="max-w-md bg-background" hideOverlay onEscapeKeyDown={() => setModalDeleteOv({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteOv({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDeleteOverride();
@@ -599,7 +599,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalDeleteLog.open} onOpenChange={(open) => !open && setModalDeleteLog({ open: false, ov: null })}>
-        <DialogContent className="max-w-md bg-background" hideOverlay onEscapeKeyDown={() => setModalDeleteLog({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteLog({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDeleteLog();
@@ -662,7 +662,11 @@ export default function AdminSchedulePage() {
                       </div>
                     </td>
                     <td className="p-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${ov.enabled ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"}`}>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        ov.enabled 
+                          ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" 
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                      }`}>
                         {ov.enabled ? t("adminSchedule.common.onLabel", "Hari Masuk") : t("adminSchedule.common.offLabel", "Hari Libur")}
                       </span>
                     </td>
@@ -741,7 +745,11 @@ export default function AdminSchedulePage() {
                     <div className="font-medium">{t(`adminSchedule.week.${d}`, d)}</div>
                     <div className="text-xs text-muted-foreground">{hours}</div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${r?.enabled ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"}`}>{badge}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    r?.enabled 
+                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" 
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  }`}>{badge}</span>
                 </button>
               );
             })}
