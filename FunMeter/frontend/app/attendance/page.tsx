@@ -85,7 +85,7 @@ export default function AttendancePage() {
         for (const info of markedInfo) {
           const label = info.label || "";
           const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
-          const message = info.message || `✅ Absen berhasil: ${label}${score}`;
+          const message = info.message || t("attendance.toast.attendanceSuccess", "✅ Absen berhasil: {label}{score}", { label, score });
           if (label) {
             console.log("[ATTENDANCE] Showing success toast for:", label);
             toast.success(message, { duration: 5000 });
@@ -96,7 +96,7 @@ export default function AttendancePage() {
         if (!markedInfo.length && marked.length > 0) {
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing success toast for (fallback):", label);
-            toast.success(`✅ Absen berhasil: ${label}`, { duration: 5000 });
+            toast.success(t("attendance.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label }), { duration: 5000 });
           }
         }
         
@@ -104,7 +104,9 @@ export default function AttendancePage() {
         for (const block of blocked) {
           if (block.message) {
             console.log("[ATTENDANCE] Blocked:", block.message);
-            toast.info(block.message, { duration: 4000 });
+            // Use message from server if provided, otherwise use default translation
+            const blockMessage = block.message || t("attendance.toast.attendanceBlocked", "Absensi diblokir");
+            toast.info(blockMessage, { duration: 4000 });
           }
         }
         

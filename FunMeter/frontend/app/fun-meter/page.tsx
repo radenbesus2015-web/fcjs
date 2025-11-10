@@ -166,16 +166,16 @@ export default function FunMeterPage() {
   
   const mapExprLabel = (s: string): string => {
     const k = String(s || "").toLowerCase().trim();
-    if (["happiness", "happy", "senang"].includes(k)) return "Senang";
-    if (["sadness", "sad", "sedih"].includes(k)) return "Sedih";
-    if (["surprise", "surprised", "kaget"].includes(k)) return "Kaget";
-    if (["anger", "angry", "marah"].includes(k)) return "Marah";
-    if (["fear", "fearful", "takut"].includes(k)) return "Takut";
-    if (["disgust", "disgusted", "jijik"].includes(k)) return "Jijik";
-    if (["neutral", "biasa"].includes(k)) return "Biasa";
+    if (["happiness", "happy", "senang"].includes(k)) return t("funMeter.emotions.happy", "Senang");
+    if (["sadness", "sad", "sedih"].includes(k)) return t("funMeter.emotions.sad", "Sedih");
+    if (["surprise", "surprised", "kaget"].includes(k)) return t("funMeter.emotions.surprised", "Kaget");
+    if (["anger", "angry", "marah"].includes(k)) return t("funMeter.emotions.angry", "Marah");
+    if (["fear", "fearful", "takut"].includes(k)) return t("funMeter.emotions.fear", "Takut");
+    if (["disgust", "disgusted", "jijik"].includes(k)) return t("funMeter.emotions.disgust", "Jijik");
+    if (["neutral", "biasa"].includes(k)) return t("funMeter.emotions.neutral", "Biasa");
     
     // Fallback: capitalize first letter untuk emotion tidak dikenal
-    return k ? k.charAt(0).toUpperCase() + k.slice(1) : "Biasa";
+    return k ? k.charAt(0).toUpperCase() + k.slice(1) : t("funMeter.emotions.neutral", "Biasa");
   };
 
   const getLetterboxTransform = () => {
