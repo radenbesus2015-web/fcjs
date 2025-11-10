@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
 
   const maskedApiKey = useMemo(() => {
     const key = currentUser?.api_key || "";
-    if (!key) return t("adminDashboard.apiKey.empty", "Belum ada API key");
+    if (!key) return t("adminDashboard.apiKey.empty", "No API key yet");
     if (showApiKey) return key;
     if (key.length <= 4) return "•".repeat(Math.max(4, key.length));
     const tail = key.slice(-4);
@@ -88,7 +88,7 @@ export default function AdminDashboardPage() {
       if (!data.current_user) setShowApiKey(false);
     } catch (err: unknown) {
       console.error(err);
-      setError(t("adminDashboard.error.generic", "Gagal memuat dashboard."));
+      setError(t("adminDashboard.error.generic", "Failed to load dashboard."));
     } finally {
       setLoading(false);
     }
@@ -101,44 +101,44 @@ export default function AdminDashboardPage() {
   async function reloadModel() {
     try {
       await request("/admin/actions/reload-model", { method: "POST", body: {} });
-      toast.success(t("adminDashboard.toast.modelReloaded", "Model berhasil dimuat ulang."));
+      toast.success(t("adminDashboard.toast.modelReloaded", "Model reloaded successfully."));
       await loadDashboard();
     } catch (err: unknown) {
       console.error(err);
-      toast.error(t("adminDashboard.error.generic", "Gagal memuat dashboard."));
+      toast.error(t("adminDashboard.error.generic", "Failed to load dashboard."));
     }
   }
 
   async function reloadServer() {
     const ok = await confirm({
-      title: t("adminDashboard.confirm.reloadServerTitle", "Muat ulang server?"),
-      description: t("adminDashboard.confirm.reloadServer", "Memuat ulang server akan menerapkan ulang konfigurasi. Lanjutkan?"),
-      confirmText: t("adminDashboard.confirm.reloadAction", "Muat ulang"),
-      cancelText: t("common.cancel", "Batal"),
+      title: t("adminDashboard.confirm.reloadServerTitle", "Reload server?"),
+      description: t("adminDashboard.confirm.reloadServer", "Reloading the server will reapply configuration. Continue?"),
+      confirmText: t("adminDashboard.confirm.reloadAction", "Reload"),
+      cancelText: t("common.cancel", "Cancel"),
     });
     if (!ok) return;
     try {
       await request("/admin/actions/reload-server", { method: "POST", body: {} });
-      toast.success(t("adminDashboard.toast.serverReloaded", "Server dimuat ulang."));
+      toast.success(t("adminDashboard.toast.serverReloaded", "Server reloaded."));
       await loadDashboard();
     } catch (err: unknown) {
       console.error(err);
-      toast.error(t("adminDashboard.error.generic", "Gagal memuat dashboard."));
+      toast.error(t("adminDashboard.error.generic", "Failed to load dashboard."));
     }
   }
 
   async function copyApiKey() {
     const key = currentUser?.api_key || "";
     if (!key) {
-      toast.error(t("adminDashboard.apiKey.notAvailable", "API key tidak tersedia."));
+      toast.error(t("adminDashboard.apiKey.notAvailable", "API key unavailable."));
       return;
     }
     setCopying(true);
     try {
       await navigator.clipboard.writeText(key);
-      toast.success(t("adminDashboard.apiKey.copied", "API key disalin ke clipboard."));
+      toast.success(t("adminDashboard.apiKey.copied", "API key copied to clipboard."));
     } catch {
-      toast.error(t("adminDashboard.apiKey.copyError", "Gagal menyalin API key."));
+      toast.error(t("adminDashboard.apiKey.copyError", "Failed to copy API key."));
     } finally {
       setCopying(false);
     }
@@ -147,23 +147,23 @@ export default function AdminDashboardPage() {
   async function rotateApiKey() {
     if (!currentUser?.id) return;
     const ok = await confirm({
-      title: t("confirm.rotateKeyTitle", "Putar API key?"),
-      description: t("confirm.rotateKey", "Generate API key baru untuk akun kamu? Kamu harus memperbarui token header setelah ini."),
-      confirmText: t("confirm.rotateAction", "Generate"),
-      cancelText: t("common.cancel", "Batal"),
+      title: t("adminDashboard.confirm.rotateKeyTitle", "Rotate API key?"),
+      description: t("adminDashboard.confirm.rotateKey", "Generate a new API key for your account? Update your Authorization header afterwards."),
+      confirmText: t("adminDashboard.actions.rotateKey", "Rotate API Key"),
+      cancelText: t("common.cancel", "Cancel"),
     });
     if (!ok) return;
     setRotating(true);
     try {
       const data = await request<{ user?: CurrentUser }>(`/admin/users/${encodeURIComponent(currentUser.id)}/api-key`, { method: "POST", body: {} });
-      toast.success(t("adminDashboard.toast.apiKeyRotated", "API key diperbarui."));
+      toast.success(t("adminDashboard.toast.apiKeyRotated", "API key updated."));
       await loadDashboard();
       if (data?.user?.api_key) {
         try { localStorage.setItem("fm_token", data.user.api_key); } catch {}
       }
     } catch (err: unknown) {
       console.error(err);
-      toast.error(t("adminDashboard.error.rotateKey", "Gagal memutar API key."));
+      toast.error(t("adminDashboard.error.rotateKey", "Failed to rotate API key."));
     } finally {
       setRotating(false);
     }
@@ -173,7 +173,7 @@ export default function AdminDashboardPage() {
     return (
       <Card>
         <CardContent className="py-12 text-center text-sm text-muted-foreground">
-          {t("adminDashboard.state.loading", "Memuat dashboard…")}
+          {t("adminDashboard.state.loading", "Loading dashboard…")}
         </CardContent>
       </Card>
     );
@@ -233,7 +233,7 @@ export default function AdminDashboardPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               {t("adminDashboard.apiKey.title", "YOUR API KEY")}
             </p>
-            <CardTitle className="text-base">{t("adminDashboard.apiKey.subtitle", "Kredensial pribadi")}</CardTitle>
+            <CardTitle className="text-base">{t("adminDashboard.apiKey.subtitle", "Personal credentials")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="space-y-2 w-full sm:w-auto">
@@ -241,7 +241,7 @@ export default function AdminDashboardPage() {
               <div className="flex flex-wrap sm:flex-nowrap gap-2">
                 <Input value={maskedApiKey} readOnly className="font-mono font-semibold tracking-wide" />
                 <Button variant="outline" size="sm" onClick={() => setShowApiKey(v => !v)}>
-                  {showApiKey ? t("adminDashboard.apiKey.hide", "Sembunyikan") : t("adminDashboard.apiKey.show", "Tampilkan")}
+                  {showApiKey ? t("adminDashboard.apiKey.hide", "Hide") : t("adminDashboard.apiKey.show", "Show")}
                 </Button>
                 <Button
                   variant="outline"
@@ -249,14 +249,14 @@ export default function AdminDashboardPage() {
                   className="whitespace-nowrap"
                   disabled={copying}
                   onClick={copyApiKey}
-                  aria-label={t("adminDashboard.apiKey.copy", "Salin API Key")}
+                  aria-label={t("adminDashboard.apiKey.copy", "Copy API Key")}
                 >
                   {copying ? (
-                    t("adminDashboard.apiKey.copying", "Menyalin…")
+                    t("adminDashboard.apiKey.copying", "Copying…")
                   ) : (
                     <>
-                      <span className="sm:hidden">{t("adminDashboard.apiKey.copyShort", "Salin")}</span>
-                      <span className="hidden sm:inline">{t("adminDashboard.apiKey.copy", "Salin API Key")}</span>
+                      <span className="sm:hidden">{t("adminDashboard.apiKey.copyShort", "Copy")}</span>
+                      <span className="hidden sm:inline">{t("adminDashboard.apiKey.copy", "Copy API Key")}</span>
                     </>
                   )}
                 </Button>
@@ -265,14 +265,14 @@ export default function AdminDashboardPage() {
                   className="whitespace-nowrap"
                   disabled={rotating}
                   onClick={rotateApiKey}
-                  aria-label={t("adminDashboard.actions.rotateKey", "Putar API Key")}
+                  aria-label={t("adminDashboard.actions.rotateKey", "Rotate API Key")}
                 >
                   {rotating ? (
-                    t("adminDashboard.actions.processing", "Memproses…")
+                    t("adminDashboard.actions.processing", "Processing…")
                   ) : (
                     <>
-                      <span className="sm:hidden">{t("adminDashboard.actions.rotateShort", "Putar")}</span>
-                      <span className="hidden sm:inline">{t("adminDashboard.actions.rotateKey", "Putar API Key")}</span>
+                      <span className="sm:hidden">{t("adminDashboard.actions.rotateShort", "Rotate")}</span>
+                      <span className="hidden sm:inline">{t("adminDashboard.actions.rotateKey", "Rotate API Key")}</span>
                     </>
                   )}
                 </Button>
@@ -308,7 +308,7 @@ export default function AdminDashboardPage() {
                   <Badge key={lbl}>{lbl}</Badge>
                 ))
               ) : (
-                <Badge>{t("adminDashboard.model.noEmotionLabels", "Tidak ada label emosi")}</Badge>
+                <Badge>{t("adminDashboard.model.noEmotionLabels", "No emotion labels")}</Badge>
               )}
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function AdminDashboardPage() {
                   <Badge key={label}>{label}</Badge>
                 ))
               ) : (
-                <Badge>{t("adminDashboard.model.noLabels", "Tidak ada label")}</Badge>
+                <Badge>{t("adminDashboard.model.noLabels", "No labels")}</Badge>
               )}
             </div>
           </div>

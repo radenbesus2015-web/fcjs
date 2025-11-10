@@ -162,10 +162,12 @@ export function HeaderBar({ hidden = false, onHeightChange }: HeaderBarProps) {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/"
-            className="hidden sm:inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex items-center gap-2 rounded-md border px-2 md:px-2.5 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
+            title={t("header.actions.live", "Langsung")}
+            aria-label={t("header.actions.live", "Langsung")}
           >
-            <Icon name="Radio" className="h-4 w-4" />
-            <span>{t("header.actions.live", "Langsung")}</span>
+            <Icon name="Radio" className="h-4 w-4 shrink-0" />
+            <span className="hidden md:inline">{t("header.actions.live", "Langsung")}</span>
           </Link>
         </div>
       </div>
