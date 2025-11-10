@@ -11,11 +11,24 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/lib/toast";
 import { Icon } from "@/components/common/Icon";
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { 
+  fetchAllAdvertisements, 
+  uploadAdvertisement, 
+  updateAdvertisement, 
+  deleteAdvertisement, 
+  reorderAdvertisements,
+  type Advertisement 
+} from "@/lib/supabase-advertisements";
 
 type AdType = "image" | "video";
-interface AdItem { src: string; type: AdType; enabled?: boolean }
+interface AdItem extends Advertisement {
+  src: string;
+  type: AdType;
+  enabled: boolean;
+  display_order: number;
+}
 
-const LS_KEY = "ads.enabled";
+// LS_KEY removed - now using backend API
 
 export default function AdminAdvertisementPage() {
   const { t } = useI18n();
@@ -75,40 +88,33 @@ export default function AdminAdvertisementPage() {
     prevPositionsRef.current = currentPositions;
   }, [items, startIndex, endIndex]);
 
-  // Load available media from static index + merge with local enabled config
+  // Load advertisements from backend API
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
     
     try {
-      const res = await fetch("/assets/advertisements/index.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to load advertisements list.");
-      const data = await res.json();
-      const images: string[] = Array.isArray(data?.images) ? data.images : [];
-      const videos: string[] = Array.isArray(data?.videos) ? data.videos : [];
-      const discovered: AdItem[] = [
-        ...images.map((src) => ({ src, type: "image" as const, enabled: true })),
-        ...videos.map((src) => ({ src, type: "video" as const, enabled: true })),
-      ];
-      let enabled: AdItem[] = [];
-      try {
-        const raw = localStorage.getItem(LS_KEY);
-        if (raw) enabled = JSON.parse(raw) as AdItem[];
-      } catch {}
-      // If there is an existing enabled list, preserve order and set non-listed as disabled
-      const merged: AdItem[] = enabled.length
-        ? (() => {
-            const enabledSet = new Set(enabled.map((e) => e.src));
-            const ordered = [
-              ...enabled.filter((e) => discovered.some((d) => d.src === e.src)),
-              ...discovered.filter((d) => !enabledSet.has(d.src)),
-            ];
-            return ordered.map((it) => ({ ...it, enabled: enabledSet.has(it.src) }));
-          })()
-        : discovered;
-      setItems(merged);
-      toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: merged.length }), { duration: 3000 });
+      const data = await fetchAllAdvertisements();
+      // Convert backend Advertisement to AdItem
+      const items: AdItem[] = data.map((ad: Advertisement) => ({
+        id: ad.id,
+        src: ad.src,
+        type: ad.type as AdType,
+        enabled: ad.enabled,
+        display_order: ad.display_order,
+        file_name: ad.file_name,
+        file_size: ad.file_size,
+        mime_type: ad.mime_type,
+        title: ad.title,
+        description: ad.description,
+        created_at: ad.created_at,
+        updated_at: ad.updated_at,
+      }));
+      // Sort by display_order
+      items.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+      setItems(items);
+      toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Failed to load advertisements list.";
       setError(error);
@@ -120,31 +126,31 @@ export default function AdminAdvertisementPage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const save = (silent?: boolean) => {
+  const save = async (silent?: boolean) => {
     try {
       if (!silent) {
         setSaving(true);
         toast.info(t("adminAds.toast.saving", "Menyimpan iklan..."), { duration: 2000 });
       }
       
-      const enabled = items.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
-      const jsonStr = JSON.stringify(enabled);
-      localStorage.setItem(LS_KEY, jsonStr);
-      // Verify save by reading back
-      const verify = localStorage.getItem(LS_KEY);
-      if (verify !== jsonStr) {
-        throw new Error("Save verification failed");
-      }
+      // Update enabled status and display_order for all items
+      await Promise.all(
+        items.map((item, index) => 
+          updateAdvertisement(item.id, {
+            enabled: item.enabled,
+            display_order: index,
+          })
+        )
+      );
+      
       if (!silent) {
         const message = t("adminAds.toast.saved", "✅ Iklan berhasil disimpan. Halaman attendance akan menggunakan daftar ini setelah refresh.");
-        console.log("[ADMIN_ADS] Showing success toast:", message);
         toast.success(message, { duration: 3000 });
       }
     } catch (e: unknown) {
       console.error("[ADMIN_ADS] Save error:", e);
       if (!silent) {
         const message = e instanceof Error ? e.message : t("adminAds.toast.saveFailed", "❌ Gagal menyimpan iklan.");
-        console.log("[ADMIN_ADS] Showing error toast:", message);
         toast.error(message, { duration: 5000 });
       }
     } finally {
@@ -154,8 +160,10 @@ export default function AdminAdvertisementPage() {
     }
   };
 
-  const move = (idx: number, dir: -1 | 1) => {
+  const move = async (idx: number, dir: -1 | 1) => {
     let targetIndex: number | null = null;
+    let newItems: AdItem[] = [];
+    
     setItems((prev) => {
       const next = [...prev];
       const j = idx + dir;
@@ -164,10 +172,25 @@ export default function AdminAdvertisementPage() {
       next[idx] = next[j];
       next[j] = tmp;
       targetIndex = j;
+      newItems = next;
       return next;
     });
-    if (targetIndex !== null) {
+    
+    if (targetIndex !== null && newItems.length > 0) {
       setArrowAnimation({ index: targetIndex, direction: dir });
+      
+      // Update display_order di backend
+      try {
+        const orders = newItems.map((item, index) => ({
+          id: item.id,
+          display_order: index,
+        }));
+        await reorderAdvertisements(orders);
+      } catch (e) {
+        console.error("[ADMIN_ADS] Failed to reorder:", e);
+        // Reload untuk sync dengan backend
+        void load();
+      }
     }
   };
 
@@ -247,8 +270,11 @@ export default function AdminAdvertisementPage() {
       
       // Auto-save after reordering
       try {
-        const enabled = next.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
-        localStorage.setItem(LS_KEY, JSON.stringify(enabled));
+        const orders = next.map((item, index) => ({
+          id: item.id,
+          display_order: index,
+        }));
+        void reorderAdvertisements(orders);
       } catch {}
       
       return next;
@@ -258,27 +284,28 @@ export default function AdminAdvertisementPage() {
     setDragOverIndex(null);
   };
 
-  const toggle = (idx: number, val: boolean) => {
+  const toggle = async (idx: number, val: boolean) => {
+    const item = items[idx];
+    if (!item) return;
+    
     setItems((prev) => {
-      const next = prev.map((it, i) => (i === idx ? { ...it, enabled: val } : it));
-      // Auto-save quietly to persist across navigations
-      try {
-        const enabled = next.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
-        localStorage.setItem(LS_KEY, JSON.stringify(enabled));
-      } catch {}
-      return next;
+      return prev.map((it, i) => (i === idx ? { ...it, enabled: val } : it));
     });
+    
+    // Update enabled status di backend
+    try {
+      await updateAdvertisement(item.id, { enabled: val });
+    } catch (e) {
+      console.error("[ADMIN_ADS] Failed to update enabled status:", e);
+      // Revert on error
+      setItems((prev) => {
+        return prev.map((it, i) => (i === idx ? { ...it, enabled: !val } : it));
+      });
+      toast.error(t("adminAds.toast.updateFailed", "❌ Gagal mengupdate status iklan"), { duration: 3000 });
+    }
   };
 
   // Note: manual media import trigger removed from UI; keep input for potential future use
-
-  const readFileAsDataURL = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
 
   const handleImportFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -287,24 +314,42 @@ export default function AdminAdvertisementPage() {
     
     try {
       const picked = Array.from(files).slice(0, 50); // safety limit
-      const loaded = await Promise.all(
-        picked.map(async (f) => {
-          const url = await readFileAsDataURL(f);
-          const isImage = f.type.startsWith("image/");
-          const isVideo = f.type.startsWith("video/");
-          const kind: AdType = isImage ? "image" : isVideo ? "video" : "image";
-          return { src: url, type: kind, enabled: true } as AdItem;
+      const uploaded = await Promise.all(
+        picked.map(async (file) => {
+          const isImage = file.type.startsWith("image/");
+          const isVideo = file.type.startsWith("video/");
+          if (!isImage && !isVideo) {
+            throw new Error(`File type not supported: ${file.type}`);
+          }
+          
+          // Upload ke backend
+          const ad = await uploadAdvertisement({
+            file,
+            enabled: true,
+            display_order: items.length, // Add to end
+          });
+          
+          return {
+            id: ad.id,
+            src: ad.src,
+            type: ad.type as AdType,
+            enabled: ad.enabled,
+            display_order: ad.display_order,
+            file_name: ad.file_name,
+            file_size: ad.file_size,
+            mime_type: ad.mime_type,
+            title: ad.title,
+            description: ad.description,
+            created_at: ad.created_at,
+            updated_at: ad.updated_at,
+          } as AdItem;
         })
       );
-      setItems((prev) => {
-        const next = [...prev, ...loaded];
-        try {
-          const enabled = next.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
-          localStorage.setItem(LS_KEY, JSON.stringify(enabled));
-        } catch {}
-        return next;
-      });
-      toast.success(t("adminAds.toast.imported", "✅ Berhasil mengimpor {count} media iklan", { count: loaded.length }), { duration: 3000 });
+      
+      // Reload untuk sync dengan backend
+      await load();
+      
+      toast.success(t("adminAds.toast.imported", "✅ Berhasil mengimpor {count} media iklan", { count: uploaded.length }), { duration: 3000 });
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : t("adminAds.toast.importFailed", "❌ Gagal mengimpor file");
       toast.error(error, { duration: 5000 });
@@ -317,11 +362,14 @@ export default function AdminAdvertisementPage() {
   const deleteSelected = async () => {
     try {
       if (!selected.length) return;
-      const toRemove = new Set(selected);
+      
+      // Find items by src (selected is array of src strings)
+      const itemsToDelete = items.filter((it) => selected.includes(it.src));
+      if (itemsToDelete.length === 0) return;
       
       const confirmed = await confirm({
         title: t("adminAds.confirm.delete.title", "Hapus Iklan"),
-        description: t("adminAds.confirm.delete.descSelected", "Apakah Anda yakin ingin menghapus {count} iklan yang dipilih? Tindakan ini tidak dapat dibatalkan.", { count: selected.length }),
+        description: t("adminAds.confirm.delete.descSelected", "Apakah Anda yakin ingin menghapus {count} iklan yang dipilih? Tindakan ini tidak dapat dibatalkan.", { count: itemsToDelete.length }),
         confirmText: t("adminAds.confirm.delete.confirm", "Hapus"),
         cancelText: t("adminAds.confirm.delete.cancel", "Batal"),
       });
@@ -329,22 +377,26 @@ export default function AdminAdvertisementPage() {
       if (!confirmed) return;
       
       setDeleting(true);
-      toast.info(t("adminAds.toast.deleting", "Menghapus {count} iklan...", { count: selected.length }), { duration: 2000 });
+      toast.info(t("adminAds.toast.deleting", "Menghapus {count} iklan...", { count: itemsToDelete.length }), { duration: 2000 });
       
-      const remaining = items.filter((it) => !toRemove.has(it.src));
-      setItems(remaining);
+      // Delete dari backend
+      await Promise.all(
+        itemsToDelete.map((item) => deleteAdvertisement(item.id))
+      );
+      
+      // Reload untuk sync dengan backend
+      await load();
+      
       setSelected([]);
-      const enabled = remaining.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
-      localStorage.setItem(LS_KEY, JSON.stringify(enabled));
       
       // Reset to first page if current page is empty
-      const newEffectivePerPage = perPage === "all" ? remaining.length : perPage;
-      const newTotalPages = perPage === "all" ? 1 : Math.ceil(remaining.length / newEffectivePerPage);
+      const newEffectivePerPage = perPage === "all" ? items.length - itemsToDelete.length : perPage;
+      const newTotalPages = perPage === "all" ? 1 : Math.ceil((items.length - itemsToDelete.length) / newEffectivePerPage);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(1);
       }
       
-      toast.success(t("adminAds.toast.deletedSelected", "✅ {count} iklan berhasil dihapus", { count: selected.length }), { duration: 3000 });
+      toast.success(t("adminAds.toast.deletedSelected", "✅ {count} iklan berhasil dihapus", { count: itemsToDelete.length }), { duration: 3000 });
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : t("adminAds.toast.deleteFailed", "❌ Gagal menghapus iklan");
       toast.error(error, { duration: 5000 });
@@ -358,40 +410,11 @@ export default function AdminAdvertisementPage() {
     importJsonInputRef.current?.click();
   };
 
-  const importFromJson = async (file: File) => {
+  const importFromJson = async (_file: File) => {
     try {
-      const text = await file.text();
-      const data = JSON.parse(text) as AdItem[];
-      
-      if (!Array.isArray(data)) {
-        toast.error(t("adminAds.toast.importJsonInvalid", "❌ Format JSON tidak valid"), { duration: 4000 });
-        return;
-      }
-
-      const imported: AdItem[] = data
-        .filter((it): it is AdItem => it && typeof it.src === "string" && (it.type === "image" || it.type === "video"))
-        .map(({ src, type }) => ({ src, type, enabled: true }));
-
-      if (imported.length === 0) {
-        toast.warn(t("adminAds.toast.importJsonEmpty", "⚠️ Tidak ada iklan valid dalam file JSON"), { duration: 4000 });
-        return;
-      }
-
-      setItems((prev) => {
-        const existingSrcs = new Set(prev.map((it) => it.src));
-        const newItems = imported.filter((it) => !existingSrcs.has(it.src));
-        const next = [...prev, ...newItems];
-        
-        // Auto-save
-        try {
-          const enabled = next.filter((it) => it.enabled).map(({ src, type }) => ({ src, type }));
-          localStorage.setItem(LS_KEY, JSON.stringify(enabled));
-        } catch {}
-        
-        return next;
-      });
-
-      toast.success(t("adminAds.toast.importJsonSuccess", "✅ Berhasil mengimpor {count} iklan dari JSON", { count: imported.length }), { duration: 3000 });
+      // Import from JSON is deprecated - show warning and reload from backend
+      toast.warn(t("adminAds.toast.importJsonDeprecated", "⚠️ Import JSON tidak didukung. Gunakan tombol Upload untuk menambah iklan baru."), { duration: 4000 });
+      await load();
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : t("adminAds.toast.importJsonFailed", "❌ Gagal mengimpor file JSON");
       toast.error(error, { duration: 5000 });
@@ -470,12 +493,12 @@ export default function AdminAdvertisementPage() {
                   }
                   return (
                     <div 
-                      key={it.src} 
+                      key={it.id || it.src} 
                       ref={(el) => {
                         if (el) {
-                          itemRefs.current.set(it.src, el);
+                          itemRefs.current.set(it.id || it.src, el);
                         } else {
-                          itemRefs.current.delete(it.src);
+                          itemRefs.current.delete(it.id || it.src);
                         }
                       }}
                       draggable
@@ -498,7 +521,7 @@ export default function AdminAdvertisementPage() {
                       <input
                         type="checkbox"
                         className="h-4 w-4"
-                        checked={selected.includes(it.src)}
+                        checked={isSelected}
                         onChange={(e) => {
                           setSelected((prev) => e.target.checked ? [...prev, it.src] : prev.filter((s) => s !== it.src));
                         }}
@@ -527,8 +550,11 @@ export default function AdminAdvertisementPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{it.src}</div>
-                        <div className="text-xs text-muted-foreground">{it.type.toUpperCase()}</div>
+                        <div className="text-sm font-medium truncate">{it.title || it.file_name || it.src}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {it.type.toUpperCase()}
+                          {it.file_size && ` • ${(it.file_size / 1024).toFixed(1)} KB`}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} disabled={globalIdx === 0}>
@@ -659,10 +685,18 @@ export default function AdminAdvertisementPage() {
                   </>
                 )}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading || saving || !!error}
+              >
+                <Icon name="Upload" className="h-4 w-4 mr-2" />
+                {t("common.upload", "Upload")}
+              </Button>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/mp4,video/webm"
+                accept="image/*,video/*,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov"
                 multiple
                 className="hidden"
                 onChange={(e) => handleImportFiles(e.target.files)}

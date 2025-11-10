@@ -532,6 +532,11 @@ try:
     app.include_router(config.router)
     app.include_router(register_db.router)
     app.include_router(public_vision.router)
+    try:
+        from routes import advertisements
+        app.include_router(advertisements.router)
+    except Exception as _e:
+        print("[ROUTER] advertisements router not loaded:", _e)
     # Redirect UI paths to Next.js app so backend has the same "tampilan" when accessed directly
     app.include_router(ui_redirects.router)
 except Exception as _e:
