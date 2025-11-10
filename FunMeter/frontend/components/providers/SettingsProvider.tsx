@@ -86,13 +86,13 @@ const DEFAULT_SETTINGS = {
     sendWidth: 640,
     jpegQuality: 0.8,
     funIntervalMs: 100,
-    baseInterval: 200,
+    baseInterval: 2000,
   },
   attendance: {
     sendWidth: 640,
     jpegQuality: 0.8,
   },
-  baseInterval: 200,
+  baseInterval: 2000,
 } as const satisfies SettingsState;
 
 interface SettingsProviderProps {
@@ -114,7 +114,7 @@ const DEFAULT_FORM: SettingsForm = {
   attendanceJpegQuality: 0.8,
   funSendWidth: 640,
   funJpegQuality: 0.8,
-  baseInterval: 200,
+  baseInterval: 2000,
 };
 
 const SETTINGS_STORAGE_KEY = "settings";
@@ -286,7 +286,7 @@ export function SettingsProvider({ children, initialSettings }: SettingsProvider
       attendanceJpegQuality: (getSetting("attendance.jpegQuality") as number) || 0.8,
       funSendWidth: (getSetting("funMeter.sendWidth") as number) || 640,
       funJpegQuality: (getSetting("funMeter.jpegQuality") as number) || 0.8,
-      baseInterval: (getSetting("baseInterval") as number) || 200,
+      baseInterval: (getSetting("baseInterval") as number) || 2000,
     });
     setModalOpen(true);
   }, [getSetting]);

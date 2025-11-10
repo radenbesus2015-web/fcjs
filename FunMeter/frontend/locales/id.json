@@ -872,7 +872,7 @@
       },
       "interval": {
         "label": "Interval Attendance & FunMeter (ms)",
-        "help": "Default: 200. Jeda antar frame ke server attendance."
+        "help": "Default: 2000. Jeda antar frame ke server attendance."
       }
     },
     "actions": {
