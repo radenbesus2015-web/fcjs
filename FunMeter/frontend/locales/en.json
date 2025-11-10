@@ -71,7 +71,11 @@
       "type": "Type",
       "size": "Size",
       "order": "Order",
-      "show": "Show"
+      "show": "Show",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "createdBy": "Created By",
+      "updatedBy": "Updated By"
     },
     "toast": {
       "saved": "Ad list saved. Attendance page will use this list after refresh.",
@@ -89,7 +93,10 @@
       "loaded": "Successfully loaded {count} ads",
       "saving": "Saving ads...",
       "deleting": "Deleting ads...",
-      "importJsonDeprecated": "JSON import not supported. Use Upload button to add new ads."
+      "importJsonDeprecated": "JSON import not supported. Use Upload button to add new ads.",
+      "titleUpdated": "Ad name updated successfully.",
+      "titleUpdateFailed": "Failed to update ad name.",
+      "updateFailed": "Failed to update ad status."
     },
     "confirm": {
       "delete": {
@@ -117,7 +124,8 @@
       "moveLeft": "Move left",
       "moveRight": "Move right",
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "clickToEdit": "Click to edit name"
     }
   },
   "adminAttendanceSummary": {
@@ -580,6 +588,7 @@
     "clear": "Clear",
     "delete": "Delete",
     "view": "View",
+    "save": "Save",
     "idLabel": "ID:",
     "separator": "•"
   },

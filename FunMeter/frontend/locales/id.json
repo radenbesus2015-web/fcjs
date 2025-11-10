@@ -71,7 +71,11 @@
       "type": "Jenis",
       "size": "Ukuran",
       "order": "Urutan",
-      "show": "Tampilkan"
+      "show": "Tampilkan",
+      "createdAt": "Dibuat Pada",
+      "updatedAt": "Diperbarui Pada",
+      "createdBy": "Dibuat Oleh",
+      "updatedBy": "Diperbarui Oleh"
     },
     "toast": {
       "saved": "Daftar iklan tersimpan. Halaman Absensi akan menggunakan daftar ini setelah di-refresh.",
@@ -83,7 +87,16 @@
       "importJsonInvalid": "Format JSON tidak valid.",
       "importJsonEmpty": "Tidak ada iklan valid dalam file JSON.",
       "importJsonSuccess": "{count} iklan berhasil diimpor dari JSON.",
-      "importJsonFailed": "Gagal mengimpor file JSON."
+      "importJsonFailed": "Gagal mengimpor file JSON.",
+      "loading": "Memuat iklan...",
+      "loadError": "Gagal memuat daftar iklan: {error}",
+      "loaded": "Berhasil memuat {count} iklan",
+      "saving": "Menyimpan iklan...",
+      "deleting": "Menghapus iklan...",
+      "importJsonDeprecated": "Import JSON tidak didukung. Gunakan tombol Upload untuk menambah iklan baru.",
+      "titleUpdated": "Nama iklan berhasil diupdate.",
+      "titleUpdateFailed": "Gagal mengupdate nama iklan.",
+      "updateFailed": "Gagal mengupdate status iklan."
     },
     "confirm": {
       "delete": {
@@ -106,7 +119,8 @@
       "moveLeft": "Pindah ke kiri",
       "moveRight": "Pindah ke kanan",
       "moveUp": "Pindah ke atas",
-      "moveDown": "Pindah ke bawah"
+      "moveDown": "Pindah ke bawah",
+      "clickToEdit": "Klik untuk edit nama"
     }
   },
   "adminAttendanceSummary": {

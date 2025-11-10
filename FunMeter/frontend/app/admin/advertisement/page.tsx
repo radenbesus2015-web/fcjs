@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
 import { Icon } from "@/components/common/Icon";
+import { fmtAttendanceMultilingual } from "@/lib/format";
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import { 
   fetchAllAdvertisements, 
@@ -31,7 +33,7 @@ interface AdItem extends Advertisement {
 // LS_KEY removed - now using backend API
 
 export default function AdminAdvertisementPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const confirm = useConfirmDialog();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,6 +44,8 @@ export default function AdminAdvertisementPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [arrowAnimation, setArrowAnimation] = useState<{ index: number; direction: -1 | 1 } | null>(null);
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState<string>("");
   const itemRefs = useRef(new Map<string, HTMLDivElement | HTMLTableRowElement>());
   const prevPositionsRef = useRef(new Map<string, DOMRect>());
   
@@ -341,6 +345,46 @@ export default function AdminAdvertisementPage() {
     }
   };
 
+  const startEditTitle = (idx: number) => {
+    const item = items[idx];
+    if (!item) return;
+    setEditingTitleId(item.id);
+    setEditingTitleValue(item.title || item.file_name || "");
+  };
+
+  const cancelEditTitle = () => {
+    setEditingTitleId(null);
+    setEditingTitleValue("");
+  };
+
+  const saveTitle = async (idx: number) => {
+    const item = items[idx];
+    if (!item || !editingTitleId) return;
+    
+    const newTitle = editingTitleValue.trim();
+    
+    // Update local state
+    setItems((prev) => {
+      return prev.map((it, i) => (i === idx ? { ...it, title: newTitle || undefined } : it));
+    });
+    
+    setEditingTitleId(null);
+    setEditingTitleValue("");
+    
+    // Update di backend
+    try {
+      await updateAdvertisement(item.id, { title: newTitle || undefined });
+      toast.success(t("adminAds.toast.titleUpdated", "✅ Nama iklan berhasil diupdate"), { duration: 2000 });
+    } catch (e) {
+      console.error("[ADMIN_ADS] Failed to update title:", e);
+      // Revert on error
+      setItems((prev) => {
+        return prev.map((it, i) => (i === idx ? { ...it, title: item.title } : it));
+      });
+      toast.error(t("adminAds.toast.titleUpdateFailed", "❌ Gagal mengupdate nama iklan"), { duration: 3000 });
+    }
+  };
+
   // Note: manual media import trigger removed from UI; keep input for potential future use
 
   const handleImportFiles = async (files: FileList | null) => {
@@ -441,12 +485,12 @@ export default function AdminAdvertisementPage() {
     }
   };
 
-  // Import ads from JSON file
-  const handleImportJson = () => {
-    importJsonInputRef.current?.click();
-  };
+  // Import ads from JSON file (deprecated)
+  // const handleImportJson = () => {
+  //   importJsonInputRef.current?.click();
+  // };
 
-  const importFromJson = async (_file: File) => {
+  const importFromJson = async () => {
     try {
       // Import from JSON is deprecated - show warning and reload from backend
       toast.warn(t("adminAds.toast.importJsonDeprecated", "⚠️ Import JSON tidak didukung. Gunakan tombol Upload untuk menambah iklan baru."), { duration: 4000 });
@@ -500,7 +544,7 @@ export default function AdminAdvertisementPage() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
-                  void importFromJson(file);
+                  void importFromJson();
                 }
                 if (e.target) e.target.value = "";
               }}
@@ -557,6 +601,8 @@ export default function AdminAdvertisementPage() {
                         <th className="text-left p-3 font-medium w-20">{t("adminAds.table.type", "Jenis")}</th>
                         <th className="text-right p-3 font-medium w-24">{t("adminAds.table.size", "Ukuran")}</th>
                         <th className="text-center p-3 font-medium w-24 hidden md:table-cell">{t("adminAds.table.order", "Urutan")}</th>
+                        <th className="text-left p-3 font-medium w-32 hidden lg:table-cell">{t("adminAds.table.createdAt", "Created At")}</th>
+                        <th className="text-left p-3 font-medium w-32 hidden lg:table-cell">{t("adminAds.table.updatedAt", "Updated At")}</th>
                         <th className="text-center p-3 font-medium w-20">{t("adminAds.table.show", "Show")}</th>
                       </tr>
                     </thead>
@@ -630,9 +676,69 @@ export default function AdminAdvertisementPage() {
                               </div>
                             </td>
                             <td className="p-3">
-                              <div className="text-sm font-medium truncate max-w-xs">
-                                {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
-                              </div>
+                              {editingTitleId === it.id ? (
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    value={editingTitleValue}
+                                    onChange={(e) => setEditingTitleValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        saveTitle(globalIdx);
+                                      } else if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        cancelEditTitle();
+                                      }
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-8 text-sm flex-1"
+                                    autoFocus
+                                    placeholder={it.file_name || it.src.split('/').pop() || 'Unknown'}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      saveTitle(globalIdx);
+                                    }}
+                                    title={t("common.save", "Save")}
+                                  >
+                                    <Icon name="Check" className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      cancelEditTitle();
+                                    }}
+                                    title={t("common.cancel", "Cancel")}
+                                  >
+                                    <Icon name="X" className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-medium truncate max-w-xs flex-1">
+                                    {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEditTitle(globalIdx);
+                                    }}
+                                    title={t("adminAds.actions.editName", "Edit nama")}
+                                  >
+                                    <Icon name="Edit" className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </td>
                             <td className="p-3">
                               <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
@@ -667,6 +773,12 @@ export default function AdminAdvertisementPage() {
                                   ↓
                                 </Button>
                               </div>
+                            </td>
+                            <td className="p-3 text-xs text-muted-foreground hidden lg:table-cell">
+                              {it.created_at ? fmtAttendanceMultilingual(it.created_at, locale) : '-'}
+                            </td>
+                            <td className="p-3 text-xs text-muted-foreground hidden lg:table-cell">
+                              {it.updated_at ? fmtAttendanceMultilingual(it.updated_at, locale) : '-'}
                             </td>
                             <td className="p-3">
                               <div className="flex items-center justify-center">
@@ -720,7 +832,7 @@ export default function AdminAdvertisementPage() {
                         } ${
                           isDragOver ? 'border-primary border-2 bg-primary/10 scale-105 shadow-xl' : ''
                         } ${
-                          isArrowAnimated ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 scale-105' : ''
+                          isArrowAnimated ? 'ring-2 ring-primary shadow-lg bg-linear-to-br from-primary/10 to-primary/5 scale-105' : ''
                         } hover:shadow-lg hover:border-primary/50 hover:scale-[1.02]`}
                         style={{
                           transition: isArrowAnimated 
@@ -789,9 +901,69 @@ export default function AdminAdvertisementPage() {
 
                         {/* Card Footer with Info */}
                         <div className="p-3 space-y-2">
-                          <div className="text-sm font-medium truncate" title={it.title || it.file_name || it.src}>
-                            {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
-                          </div>
+                          {editingTitleId === it.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingTitleValue}
+                                onChange={(e) => setEditingTitleValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    saveTitle(globalIdx);
+                                  } else if (e.key === 'Escape') {
+                                    e.preventDefault();
+                                    cancelEditTitle();
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="h-8 text-sm flex-1"
+                                autoFocus
+                                placeholder={it.file_name || it.src.split('/').pop() || 'Unknown'}
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveTitle(globalIdx);
+                                }}
+                                title={t("common.save", "Save")}
+                              >
+                                <Icon name="Check" className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cancelEditTitle();
+                                }}
+                                title={t("common.cancel", "Cancel")}
+                              >
+                                <Icon name="X" className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm font-medium truncate flex-1">
+                                {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startEditTitle(globalIdx);
+                                }}
+                                title={t("adminAds.actions.editName", "Edit nama")}
+                              >
+                                <Icon name="Edit" className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
                           <div className="flex items-center justify-between">
                             <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
                               it.type === 'image' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
@@ -815,6 +987,22 @@ export default function AdminAdvertisementPage() {
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
+                          {(it.created_at || it.updated_at) && (
+                            <div className="pt-2 border-t space-y-1 text-xs text-muted-foreground">
+                              {it.created_at && (
+                                <div className="flex items-center justify-between">
+                                  <span>{t("adminAds.table.createdAt", "Created At")}:</span>
+                                  <span className="text-right">{fmtAttendanceMultilingual(it.created_at, locale)}</span>
+                                </div>
+                              )}
+                              {it.updated_at && (
+                                <div className="flex items-center justify-between">
+                                  <span>{t("adminAds.table.updatedAt", "Updated At")}:</span>
+                                  <span className="text-right">{fmtAttendanceMultilingual(it.updated_at, locale)}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
