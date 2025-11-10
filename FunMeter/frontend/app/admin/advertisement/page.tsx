@@ -531,10 +531,10 @@ export default function AdminAdvertisementPage() {
                         <div className="text-xs text-muted-foreground">{it.type.toUpperCase()}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} disabled={globalIdx === 0}>
+                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, -1); }} disabled={globalIdx === 0} className="hidden md:flex">
                           ↑
                         </Button>
-                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, 1); }} disabled={globalIdx === items.length - 1}>
+                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); move(globalIdx, 1); }} disabled={globalIdx === items.length - 1} className="hidden md:flex">
                           ↓
                         </Button>
                         <div className="flex items-center gap-2">

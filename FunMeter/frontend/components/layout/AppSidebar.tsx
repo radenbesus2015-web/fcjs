@@ -191,39 +191,35 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
 
       {/* Footer */}
       <div className={cn(
-        "border-t transition-all duration-300 ease-in-out",
+        "border-t transition-all duration-300 ease-in-out space-y-3",
         isOpen ? "p-4" : "p-2"
       )}>
         <Button
           variant="ghost"
           className={cn(
-            "mb-2 w-full transition-all duration-300 ease-in-out flex",
+            "w-full transition-all duration-300 ease-in-out flex",
             isOpen ? "justify-start" : "justify-center items-center px-0"
           )}
           onClick={openSettingsModal}
           aria-label={ft("actions.openSettings", "Buka Pengaturan")}
           title={ft("actions.openSettings", "Buka Pengaturan")}
         >
-          <Icon name="Settings" className={cn(
-            "transition-all duration-300 ease-in-out",
-            isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
-          )} />
-          <span
-            className={cn(
-              "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
-              isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
-            )}
-            aria-hidden={!isOpen}
-          >
-            {ft("actions.openSettings", "Buka Pengaturan")}
-          </span>
+          {isOpen ? (
+            <>
+              <Icon name="Settings" className="h-4 w-4 mr-2 transition-all duration-300 ease-in-out" />
+              <span className="truncate transition-all duration-300 ease-in-out will-change-[opacity,width]">
+                {ft("actions.openSettings", "Buka Pengaturan")}
+              </span>
+            </>
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center">
+              <Icon name="Settings" className="h-6 w-6 transition-all duration-300 ease-in-out" />
+            </div>
+          )}
         </Button>
 
         {user ? (
-          <div className={cn(
-            "transition-all duration-300 ease-in-out",
-            isOpen ? "space-y-2" : "space-y-0"
-          )}>
+          <>
             {isOpen ? (
               <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent p-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm">
@@ -240,32 +236,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
                 </div>
               </div>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "w-full transition-all duration-300 ease-in-out flex",
-                isOpen ? "justify-start" : "justify-center items-center px-0"
-              )}
-              onClick={handleLogoutClick}
-              aria-label={t("avatar.menu.logout", "Sign out")}
-              title={t("avatar.menu.logout", "Sign out")}
-            >
-              <Icon name="LogOut" className={cn(
-                "transition-all duration-300 ease-in-out flex-shrink-0",
-                isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
-              )} />
-              <span
-                className={cn(
-                  "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
-                  isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
-                )}
-                aria-hidden={!isOpen}
-              >
-                {t("avatar.menu.logout", "Sign out")}
-              </span>
-            </Button>
-          </div>
+          </>
         ) : (
           <Button
             variant="ghost"
@@ -278,19 +249,18 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
             aria-label={t("avatar.menu.login", "Sign in")}
             title={t("avatar.menu.login", "Sign in")}
           >
-            <Icon name="LogIn" className={cn(
-            "transition-all duration-300 ease-in-out flex-shrink-0",
-            isOpen ? "h-4 w-4 mr-2" : "h-6 w-6"
-          )} />
-            <span
-              className={cn(
-                "truncate transition-all duration-300 ease-in-out will-change-[opacity,width]",
-                isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
-              )}
-              aria-hidden={!isOpen}
-            >
-              {t("avatar.menu.login", "Sign in")}
-            </span>
+            {isOpen ? (
+              <>
+                <Icon name="LogIn" className="h-4 w-4 mr-2 transition-all duration-300 ease-in-out flex-shrink-0" />
+                <span className="truncate transition-all duration-300 ease-in-out will-change-[opacity,width]">
+                  {t("avatar.menu.login", "Sign in")}
+                </span>
+              </>
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center">
+                <Icon name="LogIn" className="h-6 w-6 transition-all duration-300 ease-in-out flex-shrink-0" />
+              </div>
+            )}
           </Button>
         )}
       </div>
