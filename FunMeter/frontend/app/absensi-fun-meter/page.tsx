@@ -533,45 +533,44 @@ export default function AttendanceFunMeterPage() {
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [repeatCount, setRepeatCount] = useState(3); // Jumlah repeat iklan ke kanan dan kiri (total = 1 center + 3 kiri + 3 kanan = 7)
 
-  // Preload semua iklan saat component mount untuk render cepat
-  useEffect(() => {
-    adMediaList.forEach((ad) => {
-      if (ad.type === 'image') {
-        // Preload gambar
-        const img = new window.Image();
-        img.src = ad.src;
-        img.decode(); // Decode immediately
-      } else if (ad.type === 'video') {
-        // Preload video
-        const video = document.createElement('video');
-        video.src = ad.src;
-        video.preload = 'auto';
-        video.muted = true;
-        video.playsInline = true;
-        video.load();
-      }
-    });
-  }, [adMediaList]);
+  // Optimized preload: hanya preload current dan next ad
+  const preloadedVideos = useRef<Map<string, HTMLVideoElement>>(new Map());
   
-  // Preload next ad untuk transisi smooth
   useEffect(() => {
+    const currentAd = adMediaList[currentAdIndex];
     const nextIndex = (currentAdIndex + 1) % adMediaList.length;
     const nextAd = adMediaList[nextIndex];
     
-    if (nextAd) {
-      if (nextAd.type === 'image') {
-        const img = new window.Image();
-        img.src = nextAd.src;
-        img.decode();
-      } else if (nextAd.type === 'video') {
-        const video = document.createElement('video');
-        video.src = nextAd.src;
-        video.preload = 'auto';
-        video.muted = true;
-        video.playsInline = true;
-        video.load();
-      }
+    // Preload current ad
+    if (currentAd && currentAd.type === 'video' && !preloadedVideos.current.has(currentAd.src)) {
+      const video = document.createElement('video');
+      video.src = currentAd.src;
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+      video.load();
+      preloadedVideos.current.set(currentAd.src, video);
     }
+    
+    // Preload next ad
+    if (nextAd && nextAd.type === 'video' && !preloadedVideos.current.has(nextAd.src)) {
+      const video = document.createElement('video');
+      video.src = nextAd.src;
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+      video.load();
+      preloadedVideos.current.set(nextAd.src, video);
+    }
+    
+    // Cleanup old preloaded videos (keep only current and next)
+    const keepSources = new Set([currentAd?.src, nextAd?.src]);
+    preloadedVideos.current.forEach((video, src) => {
+      if (!keepSources.has(src)) {
+        video.src = '';
+        preloadedVideos.current.delete(src);
+      }
+    });
   }, [currentAdIndex, adMediaList]);
 
   const startCamera = async () => {
@@ -937,16 +936,15 @@ export default function AttendanceFunMeterPage() {
         goToNextAd();
       }, 5000);
     } else if (currentAd.type === 'video') {
-      // Untuk video, play semua instance sekaligus
-      const videoElements = document.querySelectorAll(`video[src="${currentAd.src}"]`);
-      videoElements.forEach((video) => {
-        const videoEl = video as HTMLVideoElement;
-        videoEl.currentTime = 0; // Reset ke awal
-        videoEl.play().catch(() => {
+      // Untuk video, hanya play center video (CSS akan handle clone visual)
+      const centerVideo = adVideoRef.current;
+      if (centerVideo) {
+        centerVideo.currentTime = 0;
+        centerVideo.play().catch(() => {
           // Retry sekali jika gagal
-          setTimeout(() => videoEl.play().catch(() => {}), 100);
+          setTimeout(() => centerVideo.play().catch(() => {}), 100);
         });
-      });
+      }
     }
     
     return () => {
@@ -1128,6 +1126,20 @@ export default function AttendanceFunMeterPage() {
         .ad-overlay-container {
           width: 280px;
           min-width: 280px;
+          /* Hardware acceleration untuk smooth rendering */
+          will-change: transform;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+        }
+        
+        /* Video optimization */
+        .ad-overlay-container video {
+          will-change: transform, opacity;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          /* Disable anti-aliasing untuk performa */
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
         }
         
         /* Portrait mode - smaller ads */
@@ -1286,6 +1298,7 @@ export default function AttendanceFunMeterPage() {
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
           
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
+          {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
           <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none overflow-hidden">
             <div className="flex items-end gap-0">
               {/* Repeat ke kiri */}
@@ -1303,13 +1316,16 @@ export default function AttendanceFunMeterPage() {
                       draggable={false} 
                       className="select-none pointer-events-none w-full h-auto object-contain block" 
                       style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                      onError={(e) => {
+                        console.error('[AD_IMAGE] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <video
                       src={adMediaList[currentAdIndex].src}
                       autoPlay
                       muted
-                      loop
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
@@ -1318,6 +1334,10 @@ export default function AttendanceFunMeterPage() {
                       onLoadedData={(e) => {
                         const video = e.currentTarget;
                         video.play().catch(() => {});
+                      }}
+                      onError={(e) => {
+                        console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
                       }}
                     />
                   )}
@@ -1338,6 +1358,10 @@ export default function AttendanceFunMeterPage() {
                     draggable={false} 
                     className="select-none pointer-events-none w-full h-auto object-contain block" 
                     style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                    onError={(e) => {
+                      console.error('[AD_IMAGE] Failed to load:', adMediaList[currentAdIndex].src);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <video
@@ -1345,17 +1369,22 @@ export default function AttendanceFunMeterPage() {
                     src={adMediaList[currentAdIndex].src}
                     autoPlay
                     muted
-                    loop
                     playsInline
-                    preload="auto"
+                    preload="metadata"
                     crossOrigin="anonymous"
                     className="select-none w-full h-auto object-contain block"
                     style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
-                    onLoadedData={(e) => {
+                    onLoadedMetadata={(e) => {
                       const video = e.currentTarget;
-                      video.play().catch(() => {});
+                      video.play().catch(() => {
+                        setTimeout(() => video.play().catch(() => {}), 100);
+                      });
                     }}
                     onEnded={goToNextAd}
+                    onError={(e) => {
+                      console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 )}
               </div>
@@ -1375,13 +1404,16 @@ export default function AttendanceFunMeterPage() {
                       draggable={false} 
                       className="select-none pointer-events-none w-full h-auto object-contain block" 
                       style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                      onError={(e) => {
+                        console.error('[AD_IMAGE] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <video
                       src={adMediaList[currentAdIndex].src}
                       autoPlay
                       muted
-                      loop
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
@@ -1391,12 +1423,17 @@ export default function AttendanceFunMeterPage() {
                         const video = e.currentTarget;
                         video.play().catch(() => {});
                       }}
+                      onError={(e) => {
+                        console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   )}
                 </div>
               ))}
             </div>
           </div>
+          )}
         </div>
       </section>
       

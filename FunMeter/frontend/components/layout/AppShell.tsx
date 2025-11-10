@@ -89,8 +89,8 @@ const routes = [
     meta: {
       titleKey: "pages.adminAdvertisement.title",
       navKey: "nav.adminAdvertisement",
-      titleFallback: "Advertisement",
-      navFallback: "Advertisement",
+      titleFallback: "Kelola Iklan",
+      navFallback: "Kelola Iklan",
       requiresAdmin: true,
     },
   },

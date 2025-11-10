@@ -760,14 +760,15 @@ export default function HomePage() {
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
 
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
+          {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
           <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none overflow-hidden">
             <div className="flex items-end gap-0">
               {/* Repeat ke kiri */}
               {Array.from({ length: repeatCount }).reverse().map((_, index) => (
                 <div key={`left-${index}`} className="ad-overlay-container flex-shrink-0">
-                  {adMediaList[currentAdIndex]?.type === 'image' ? (
+                  {adMediaList[currentAdIndex].type === 'image' ? (
                     <Image
-                      src={adMediaList[currentAdIndex]?.src || ''}
+                      src={adMediaList[currentAdIndex].src}
                       alt={`Iklan Kiri ${index + 1}`}
                       width={600}
                       height={400}
@@ -777,13 +778,16 @@ export default function HomePage() {
                       draggable={false}
                       className="select-none pointer-events-none w-full h-auto object-contain block"
                       style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                      onError={(e) => {
+                        console.error('[AD_IMAGE] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <video
-                      src={adMediaList[currentAdIndex]?.src}
+                      src={adMediaList[currentAdIndex].src}
                       autoPlay
                       muted
-                      loop
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
@@ -793,6 +797,10 @@ export default function HomePage() {
                         const video = e.currentTarget;
                         video.play().catch(() => {});
                       }}
+                      onError={(e) => {
+                        console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   )}
                 </div>
@@ -800,9 +808,9 @@ export default function HomePage() {
               
               {/* Center - iklan utama yang stay still */}
               <div className="ad-overlay-container flex-shrink-0">
-                {adMediaList[currentAdIndex]?.type === 'image' ? (
+                {adMediaList[currentAdIndex].type === 'image' ? (
                   <Image
-                    src={adMediaList[currentAdIndex]?.src || ''}
+                    src={adMediaList[currentAdIndex].src}
                     alt="Iklan Center"
                     width={600}
                     height={400}
@@ -812,11 +820,15 @@ export default function HomePage() {
                     draggable={false}
                     className="select-none pointer-events-none w-full h-auto object-contain block"
                     style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                    onError={(e) => {
+                      console.error('[AD_IMAGE] Failed to load:', adMediaList[currentAdIndex].src);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <video
                     ref={adVideoRef}
-                    src={adMediaList[currentAdIndex]?.src}
+                    src={adMediaList[currentAdIndex].src}
                     autoPlay
                     muted
                     playsInline
@@ -836,6 +848,10 @@ export default function HomePage() {
                       }
                       goToNextAd();
                     }}
+                    onError={(e) => {
+                      console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 )}
               </div>
@@ -843,9 +859,9 @@ export default function HomePage() {
               {/* Repeat ke kanan */}
               {Array.from({ length: repeatCount }).map((_, index) => (
                 <div key={`right-${index}`} className="ad-overlay-container flex-shrink-0">
-                  {adMediaList[currentAdIndex]?.type === 'image' ? (
+                  {adMediaList[currentAdIndex].type === 'image' ? (
                     <Image
-                      src={adMediaList[currentAdIndex]?.src || ''}
+                      src={adMediaList[currentAdIndex].src}
                       alt={`Iklan Kanan ${index + 1}`}
                       width={600}
                       height={400}
@@ -855,13 +871,16 @@ export default function HomePage() {
                       draggable={false}
                       className="select-none pointer-events-none w-full h-auto object-contain block"
                       style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                      onError={(e) => {
+                        console.error('[AD_IMAGE] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <video
-                      src={adMediaList[currentAdIndex]?.src}
+                      src={adMediaList[currentAdIndex].src}
                       autoPlay
                       muted
-                      loop
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
@@ -871,12 +890,17 @@ export default function HomePage() {
                         const video = e.currentTarget;
                         video.play().catch(() => {});
                       }}
+                      onError={(e) => {
+                        console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   )}
                 </div>
               ))}
             </div>
           </div>
+          )}
                 </div>
               </section>
 

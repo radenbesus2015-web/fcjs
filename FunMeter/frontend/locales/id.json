@@ -12,7 +12,7 @@
     "adminSchedule": "Jadwal",
     "adminUsers": "Manajemen Pengguna",
     "adminConfig": "Konfigurasi Sistem",
-    "adminAdvertisement": "Advertisement"
+    "adminAdvertisement": "Kelola Iklan"
   },
   "pages": {
     "home": {
@@ -49,16 +49,29 @@
       "title": "Konfigurasi Sistem"
     },
     "adminAdvertisement": {
-      "title": "Advertisement"
+      "title": "Kelola Iklan",
+      "subtitle": "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter."
     }
   },
   "adminAds": {
     "title": "Kelola Iklan (Absensi Fun Meter)",
     "subtitle": "Atur iklan yang muncul pada halaman Absensi Fun Meter.",
     "empty": "Tidak ada media iklan ditemukan.",
+    "view": {
+      "grid": "Tampilan Grid",
+      "list": "Tampilan List"
+    },
     "fields": {
       "show": "Tampilkan",
       "select": "Pilih iklan"
+    },
+    "table": {
+      "preview": "Preview",
+      "fileName": "Nama File",
+      "type": "Jenis",
+      "size": "Ukuran",
+      "order": "Urutan",
+      "show": "Tampilkan"
     },
     "toast": {
       "saved": "Daftar iklan tersimpan. Halaman Absensi akan menggunakan daftar ini setelah di-refresh.",
@@ -88,6 +101,12 @@
       "last": "Halaman terakhir",
       "perPage": "Per halaman:",
       "all": "Semua"
+    },
+    "actions": {
+      "moveLeft": "Pindah ke kiri",
+      "moveRight": "Pindah ke kanan",
+      "moveUp": "Pindah ke atas",
+      "moveDown": "Pindah ke bawah"
     }
   },
   "adminAttendanceSummary": {

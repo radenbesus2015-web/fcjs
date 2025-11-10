@@ -11,7 +11,8 @@
     "adminAttendanceSummary": "Attendance Summary",
     "adminSchedule": "Admin Schedule",
     "adminUsers": "Admin Users",
-    "adminConfig": "Admin Config"
+    "adminConfig": "Admin Config",
+    "adminAdvertisement": "Manage Ads"
   },
   "pages": {
     "home": {
@@ -46,6 +47,77 @@
     },
     "adminConfig": {
       "title": "System Configuration"
+    },
+    "adminAdvertisement": {
+      "title": "Manage Advertisements",
+      "subtitle": "Configure advertisements displayed on the Attendance Fun Meter page."
+    }
+  },
+  "adminAds": {
+    "title": "Manage Advertisements (Attendance Fun Meter)",
+    "subtitle": "Configure ads displayed on the Attendance Fun Meter page.",
+    "empty": "No advertisement media found.",
+    "view": {
+      "grid": "Grid View",
+      "list": "List View"
+    },
+    "fields": {
+      "show": "Show",
+      "select": "Select ad"
+    },
+    "table": {
+      "preview": "Preview",
+      "fileName": "File Name",
+      "type": "Type",
+      "size": "Size",
+      "order": "Order",
+      "show": "Show"
+    },
+    "toast": {
+      "saved": "Ad list saved. Attendance page will use this list after refresh.",
+      "saveFailed": "Failed to save ad list.",
+      "imported": "Successfully imported ad media.",
+      "importFailed": "Failed to import file.",
+      "deletedSelected": "Selected ads successfully deleted.",
+      "deleteFailed": "Failed to delete ads.",
+      "importJsonInvalid": "Invalid JSON format.",
+      "importJsonEmpty": "No valid ads in JSON file.",
+      "importJsonSuccess": "{count} ads successfully imported from JSON.",
+      "importJsonFailed": "Failed to import JSON file.",
+      "loading": "Loading ads...",
+      "loadError": "Failed to load ads list: {error}",
+      "loaded": "Successfully loaded {count} ads",
+      "saving": "Saving ads...",
+      "deleting": "Deleting ads...",
+      "importJsonDeprecated": "JSON import not supported. Use Upload button to add new ads."
+    },
+    "confirm": {
+      "delete": {
+        "title": "Delete Ads",
+        "descSelected": "Are you sure you want to delete {count} selected ads? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
+    },
+    "pagination": {
+      "info": "Showing {start}-{end} of {total} ads",
+      "first": "First page",
+      "previous": "Previous",
+      "next": "Next",
+      "last": "Last page",
+      "perPage": "Per page:",
+      "all": "All"
+    },
+    "actions": {
+      "resetDefault": "Reset to Default",
+      "save": "Save",
+      "delete": "Delete",
+      "upload": "Upload",
+      "import": "Import",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     }
   },
   "adminAttendanceSummary": {
