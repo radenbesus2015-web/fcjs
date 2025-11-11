@@ -524,7 +524,7 @@ export default function FunMeterPage() {
                   <span className="font-medium text-foreground">{modelName}</span>
                 ) : (
                   <span className="text-muted-foreground italic">
-                    {t("funMeter.model.notAvailable", "Menunggu data dari server...")}
+                    {t("funMeter.model.notAvailable", "Waiting for server data...")}
                   </span>
                 )}
               </div>
