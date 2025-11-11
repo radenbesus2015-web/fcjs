@@ -264,8 +264,10 @@ export default function AdminListMembersPage() {
       toast.success(t("adminListMembers.edit.success", "Data berhasil diperbarui."));
       cancelEditLabel();
       fetchMembers(currentPage, searchQuery);
-    } catch (error: any) {
-      const msg = error?.message || error?.data?.message || "Gagal menyimpan";
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 
+        (error && typeof error === 'object' && 'data' in error ? 
+          (error as { data?: { message?: string } }).data?.message : undefined) || "Gagal menyimpan";
       toast.error(t("adminListMembers.edit.error", "Gagal menyimpan: {msg}", { msg }));
       setSavingEdit(false);
     }
@@ -295,9 +297,11 @@ export default function AdminListMembersPage() {
       toast.success(t("adminListMembers.toast.deleteSuccess", "Anggota berhasil dihapus: {name}", { name: memberName }));
       console.log("[DELETE] Success! Refreshing list...");
       fetchMembers(currentPage, searchQuery);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[DELETE] Error:", error);
-      const errorMsg = error?.message || error?.data?.message || "Unknown error";
+      const errorMsg = error instanceof Error ? error.message : 
+        (error && typeof error === 'object' && 'data' in error ? 
+          (error as { data?: { message?: string } }).data?.message : undefined) || "Unknown error";
       toast.error(t("adminListMembers.toast.deleteError", "Gagal menghapus anggota: {error}", { error: errorMsg }));
     }
   };
@@ -336,9 +340,11 @@ export default function AdminListMembersPage() {
       console.log("[BULK_DELETE] Success! Clearing selection and refreshing...");
       setSelectedMembers([]);
       fetchMembers(currentPage, searchQuery);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[BULK_DELETE] Error:", error);
-      const errorMsg = error?.message || error?.data?.message || "Unknown error";
+      const errorMsg = error instanceof Error ? error.message : 
+        (error && typeof error === 'object' && 'data' in error ? 
+          (error as { data?: { message?: string } }).data?.message : undefined) || "Unknown error";
       toast.error(t("adminListMembers.toast.deleteMultipleError", "Gagal menghapus anggota: {error}", { error: errorMsg }));
     }
   };
@@ -391,9 +397,9 @@ export default function AdminListMembersPage() {
 
       toast.success(t("adminListMembers.toast.exportSuccess", "Export selesai: {filename}", { filename }));
       console.log("[EXPORT] Success! Downloaded:", filename);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[EXPORT] Error:", error);
-      const errorMsg = error?.message || "Unknown error";
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
       toast.error(t("adminListMembers.toast.exportError", "Gagal export: {error}", { error: errorMsg }));
     }
   };
@@ -539,10 +545,14 @@ export default function AdminListMembersPage() {
 
         // Small delay to avoid overwhelming server
         await new Promise(resolve => setTimeout(resolve, 400));
-      } catch (error: any) {
-        const errorMsg = error?.message || "Upload gagal";
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 
+          (error && typeof error === 'object' && 'message' in error ? 
+            String((error as { message?: string }).message) : "Upload gagal");
+        const errorStatus = error && typeof error === 'object' && 'status' in error ? 
+          (error as { status?: number }).status : undefined;
         
-        if (error?.status === 409 || errorMsg.includes("409")) {
+        if (errorStatus === 409 || errorMsg.includes("409")) {
           setBulkItems(prev => prev.map(it => 
             it.id === item.id 
               ? { ...it, status: "duplicate", message: t("adminListMembers.bulk.duplicate", "Duplikat: {msg}", { msg: errorMsg }) }

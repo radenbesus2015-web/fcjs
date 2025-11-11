@@ -54,6 +54,22 @@ export default function RegisterFacePage() {
     token?: string;
   }
 
+  interface FaceDetectionData {
+    faces?: Array<{ bbox: [number, number, number, number] }>;
+    [key: string]: unknown;
+  }
+
+  interface RegisterResponse {
+    status?: string;
+    success?: boolean;
+    ok?: boolean;
+    label?: string;
+    error?: string;
+    message?: string;
+    duplicate?: boolean;
+    [key: string]: unknown;
+  }
+
   // Settings
   const { model: baseInterval } = useSetting("baseInterval", { clamp: { max: 5000, round: true } });
   const { model: attSendWidth } = useSetting("attendance.sendWidth", { 
@@ -74,7 +90,8 @@ export default function RegisterFacePage() {
         setStatusText(t("registerFace.status.wsDisconnected", "WS terputus"));
         toast.warn(t("registerFace.toast.wsDisconnected", "Koneksi WebSocket terputus"));
       },
-      face_detection(data: any) {
+      face_detection(...args: unknown[]) {
+        const data = args[0] as FaceDetectionData;
         const faces = Array.isArray(data?.faces) ? data.faces : [];
         setFaceDetected(faces.length > 0);
         setFacesCount(faces.length);
@@ -315,7 +332,7 @@ export default function RegisterFacePage() {
       formData.append('file', blob, 'face.jpg');
       formData.append('force', force ? '1' : '0');
 
-      const response: any = await postForm('http://localhost:8000/register-face', formData);
+      const response = await postForm<RegisterResponse>('http://localhost:8000/register-face', formData);
       return response;
     };
 
@@ -323,7 +340,7 @@ export default function RegisterFacePage() {
     try {
       console.log("[REGISTER] Starting registration for:", userName.trim());
 
-      let response: any = await sendOnce(false);
+      let response = await sendOnce(false);
       console.log("[REGISTER] Response:", response);
 
       // Success shape
@@ -354,15 +371,16 @@ export default function RegisterFacePage() {
         const errorMsg = response?.error || response?.message || 'Registration failed';
         throw new Error(errorMsg);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[REGISTER] Error:", error);
       let errorMessage = "Unknown error";
       
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (error?.data) {
+      } else if (error && typeof error === 'object' && 'data' in error) {
         // Handle HttpError with data
-        errorMessage = error.data?.message || error.data?.detail || JSON.stringify(error.data);
+        const err = error as { data?: { message?: string; detail?: string } };
+        errorMessage = err.data?.message || err.data?.detail || JSON.stringify(err.data);
       } else if (typeof error === 'string') {
         errorMessage = error;
       } else if (typeof error === 'object') {

@@ -171,7 +171,7 @@ export function ws(pathOrUrl = "", config: WsConfig = {}): WsWrapper {
 
       try {
         // socket.emit with ack callback - server should call callback(err, res) or (res)
-        (socket as any).emit(ev, payload, (...args: unknown[]) => {
+        socket.emit(ev, payload, (...args: unknown[]) => {
           if (args.length >= 2) {
             const [err, res] = args as [unknown, unknown];
             if (err) return finalize(() => reject(err));

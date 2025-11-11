@@ -41,6 +41,45 @@ interface AttendanceFunResult {
   }>;
 }
 
+interface AttendanceResult {
+  bbox?: [number, number, number, number];
+  box?: [number, number, number, number];
+  label?: string;
+  name?: string;
+  score?: number;
+  [key: string]: unknown;
+}
+
+interface EmotionResult {
+  bbox: [number, number, number, number];
+  expr?: string;
+  emotion?: string;
+  score?: number;
+  probs?: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface AttResultData {
+  results?: AttendanceResult[];
+  marked?: string[];
+  marked_info?: Array<{
+    label?: string;
+    score?: number;
+    message?: string;
+  }>;
+  [key: string]: unknown;
+}
+
+interface FunResultData {
+  results?: EmotionResult[];
+  [key: string]: unknown;
+}
+
+interface LastAttResults {
+  t: number;
+  results: AttendanceResult[];
+}
+
 export default function AttendanceFunMeterPage() {
   // Dynamic Ads: load from localStorage override or public index.json, fallback to defaults
   const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
@@ -134,11 +173,11 @@ export default function AttendanceFunMeterPage() {
   const [statusText, setStatusText] = useState("");
   const [sendingFun, setSendingFun] = useState(false);
   const [sendingAtt, setSendingAtt] = useState(false);
-  const [attendanceResults, setAttendanceResults] = useState<any[]>([]);
-  const [emotionResults, setEmotionResults] = useState<any[]>([]);
+  const [attendanceResults, setAttendanceResults] = useState<AttendanceResult[]>([]);
+  const [emotionResults, setEmotionResults] = useState<EmotionResult[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastAttPush, setLastAttPush] = useState(0);
-  const [lastAttResults, setLastAttResults] = useState<any>({ t: 0, results: [] });
+  const [lastAttResults, setLastAttResults] = useState<LastAttResults>({ t: 0, results: [] });
   
   const snapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const sendHeightRef = useRef(0);
@@ -169,7 +208,8 @@ export default function AttendanceFunMeterPage() {
         setStatusText("WS disconnected");
         toast.warn(t("attendanceFunMeter.toast.wsDisconnected", "Koneksi WebSocket terputus"), { duration: 3000 });
       },
-      att_result(data: any) {
+      att_result(...args: unknown[]) {
+        const data = args[0] as AttResultData;
         const results = Array.isArray(data?.results) ? data.results : [];
         console.log("[ATT_RESULT] Received:", { results, marked: data?.marked, marked_info: data?.marked_info });
         setAttendanceResults(results);
@@ -205,7 +245,8 @@ export default function AttendanceFunMeterPage() {
           drawFun(emotionResults);
         }
       },
-      fun_result(data: any) {
+      fun_result(...args: unknown[]) {
+        const data = args[0] as FunResultData;
         const results = Array.isArray(data?.results) ? data.results : [];
         console.log("[FUN_RESULT] Received", results.length, "emotion results:", results);
         setEmotionResults(results);
@@ -249,7 +290,7 @@ export default function AttendanceFunMeterPage() {
       console.log("[FUSION] No att results or too old"); // DEBUG LOG
       return null;
     }
-    let best: any = null, bestIoU = 0;
+    let best: AttendanceResult | null = null, bestIoU = 0;
     for (const r of lastAttResults.results) {
       const i = iou(funBox, r.bbox || r.box || [0, 0, 0, 0]);
       if (i > bestIoU) {
@@ -392,7 +433,7 @@ export default function AttendanceFunMeterPage() {
     ctx.fillText(botText, botX + botW / 2, botY + th / 2);
   };
   
-  const drawFun = (results: any[]) => {
+  const drawFun = (results: EmotionResult[]) => {
     // Ensure snap size is calculated
     if (!ensureSnapSize()) {
       console.log("[DRAW_FUN] Cannot ensure snap size");
@@ -421,7 +462,7 @@ export default function AttendanceFunMeterPage() {
     }
     
     let missingName = false;
-    (results || []).forEach((r: any) => {
+    (results || []).forEach((r) => {
       const [bx, by, bw, bh] = r.bbox || [0, 0, 0, 0];
       // Transform dari koordinat snapCanvas ke koordinat display
       // Bbox dari server dalam koordinat snapCanvas, transform ke display

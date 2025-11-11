@@ -270,11 +270,11 @@ export default function AdminSchedulePage() {
           const idNumeric = String(ov.id || "").match(/^\d+$/) ? Number(ov.id) : undefined;
           const targets = Array.isArray(ov.targets)
             ? ov.targets
-                .map((t: any) => (typeof t === "object" ? (t?.value ?? t?.id ?? t?.person_id ?? null) : t))
+                .map((t: unknown) => (typeof t === "object" && t !== null ? ((t as { value?: unknown; id?: unknown; person_id?: unknown }).value ?? (t as { value?: unknown; id?: unknown; person_id?: unknown }).id ?? (t as { value?: unknown; id?: unknown; person_id?: unknown }).person_id ?? null) : t))
                 .filter(Boolean)
-                .map((x: any) => (String(x).match(/^\d+$/) ? Number(x) : String(x)))
+                .map((x: unknown) => (String(x).match(/^\d+$/) ? Number(x) : String(x)))
             : [];
-          const body: any = {
+          const body: Record<string, unknown> = {
             start_date: ov.start_date,
             end_date: ov.end_date || ov.start_date,
             label: ov.label || t("adminSchedule.overrides.defaultLabel", "Jadwal Khusus"),
@@ -309,9 +309,13 @@ export default function AdminSchedulePage() {
       setOverrides(sorted);
       setOrigOverrides(JSON.parse(JSON.stringify(sorted)));
       toast.success(t("adminSchedule.toast.saved", "Jadwal tersimpan."));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[SCHEDULE_SAVE] Error:", err);
-      const msg = err?.message || err?.data?.message || err?.response?.data?.message || "Gagal menyimpan jadwal.";
+      const msg = err instanceof Error ? err.message : 
+        (err && typeof err === 'object' && 'data' in err ? 
+          (err as { data?: { message?: string } }).data?.message : undefined) || 
+        (err && typeof err === 'object' && 'response' in err ? 
+          (err as { response?: { data?: { message?: string } } }).response?.data?.message : undefined) || "Gagal menyimpan jadwal.";
       toast.error(t("adminSchedule.error.save", "Gagal menyimpan jadwal.") + (msg ? `\n${msg}` : ""));
     } finally {
       setSaving(false);

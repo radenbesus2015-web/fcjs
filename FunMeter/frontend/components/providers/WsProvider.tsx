@@ -6,9 +6,12 @@
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { ws, setWsBase } from "@/lib/ws";
 import { CONFIG } from "@/lib/config";
+import io from "socket.io-client";
+
+type IOSocket = ReturnType<typeof io>;
 
 interface WsWrapper {
-  socket: any;
+  socket: IOSocket;
   on: (ev: string, fn: (...args: unknown[]) => void) => void;
   off: (ev: string, fn: (...args: unknown[]) => void) => void;
   once: (ev: string, fn: (...args: unknown[]) => void) => void;

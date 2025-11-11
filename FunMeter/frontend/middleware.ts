@@ -5,8 +5,16 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { CONFIG } from './lib/config';
 
+interface User {
+  id?: string | number;
+  username?: string;
+  is_admin?: boolean;
+  is_owner?: boolean;
+  [key: string]: unknown;
+}
+
 // Fungsi untuk memverifikasi user dari API
-async function verifyUser(apiKey: string): Promise<{ user: any; isValid: boolean }> {
+async function verifyUser(apiKey: string): Promise<{ user: User | null; isValid: boolean }> {
   if (!apiKey) {
     return { user: null, isValid: false };
   }
