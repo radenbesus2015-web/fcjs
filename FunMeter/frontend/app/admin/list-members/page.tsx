@@ -620,36 +620,41 @@ export default function AdminListMembersPage() {
     if (!p) return "";
     const s = String(p).replace(/\\/g, "/");
     const isExternal = /^https?:\/\//i.test(s);
-    let url = isExternal ? s : resolveApi(s.replace(/^\/+/, ""));
     
-    // Add query parameter for image compression/resize
-    // Only add if it's not an external URL or if it's our API
-    if (!isExternal || url.includes(resolveApi(""))) {
-      try {
-        const urlObj = new URL(url);
-        // Add size parameter for compression (backend can use this to resize)
-        if (size === "thumb") {
-          urlObj.searchParams.set("w", "128");
-          urlObj.searchParams.set("q", "80");
-        } else if (size === "medium") {
-          urlObj.searchParams.set("w", "256");
-          urlObj.searchParams.set("q", "85");
-        } else {
-          // Default: optimize for display size
-          urlObj.searchParams.set("w", "512");
-          urlObj.searchParams.set("q", "85");
-        }
-        url = urlObj.toString();
-      } catch {
-        // If URL parsing fails, append query params manually
-        const separator = url.includes("?") ? "&" : "?";
-        if (size === "thumb") {
-          url = `${url}${separator}w=128&q=80`;
-        } else if (size === "medium") {
-          url = `${url}${separator}w=256&q=85`;
-        } else {
-          url = `${url}${separator}w=512&q=85`;
-        }
+    // If it's an external URL (Supabase), return as-is without modification
+    // Supabase URLs already have proper caching and versioning
+    if (isExternal) {
+      return s;
+    }
+    
+    // For local/relative paths, resolve through API
+    let url = resolveApi(s.replace(/^\/+/, ""));
+    
+    // Add query parameter for image compression/resize only for local API
+    try {
+      const urlObj = new URL(url);
+      // Add size parameter for compression (backend can use this to resize)
+      if (size === "thumb") {
+        urlObj.searchParams.set("w", "128");
+        urlObj.searchParams.set("q", "80");
+      } else if (size === "medium") {
+        urlObj.searchParams.set("w", "256");
+        urlObj.searchParams.set("q", "85");
+      } else {
+        // Default: optimize for display size
+        urlObj.searchParams.set("w", "512");
+        urlObj.searchParams.set("q", "85");
+      }
+      url = urlObj.toString();
+    } catch {
+      // If URL parsing fails, append query params manually
+      const separator = url.includes("?") ? "&" : "?";
+      if (size === "thumb") {
+        url = `${url}${separator}w=128&q=80`;
+      } else if (size === "medium") {
+        url = `${url}${separator}w=256&q=85`;
+      } else {
+        url = `${url}${separator}w=512&q=85`;
       }
     }
     
@@ -815,9 +820,16 @@ export default function AdminListMembersPage() {
                             height={64} 
                             className="h-16 w-16 rounded-md object-cover border" 
                             loading="lazy"
+                            unoptimized={photoUrl(row, "thumb").startsWith('http://') || photoUrl(row, "thumb").startsWith('https://')}
+                            onError={(e) => {
+                              console.error('[IMAGE] Failed to load thumbnail for', row.label);
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
                         ) : (
-                          <div className="h-16 w-16 rounded-md bg-muted" />
+                          <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center">
+                            <Icon name="User" className="h-8 w-8 text-muted-foreground" />
+                          </div>
                         )}
                       </div>
                     </td>
@@ -951,6 +963,19 @@ export default function AdminListMembersPage() {
                       height={400} 
                       className="w-full aspect-square rounded-b-lg object-cover transition-transform group-hover:scale-105" 
                       loading="lazy"
+                      unoptimized={photoUrl(row).startsWith('http://') || photoUrl(row).startsWith('https://')}
+                      onError={(e) => {
+                        console.error('[IMAGE] Failed to load photo for', row.label, ':', photoUrl(row));
+                        e.currentTarget.style.display = 'none';
+                        // Show placeholder by finding the next sibling or creating one
+                        const parent = e.currentTarget.parentElement;
+                        if (parent && !parent.querySelector('.image-placeholder')) {
+                          const placeholder = document.createElement('div');
+                          placeholder.className = 'image-placeholder w-full aspect-square rounded-b-lg bg-muted flex items-center justify-center absolute inset-0';
+                          placeholder.innerHTML = '<svg class="h-16 w-16 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>';
+                          parent.appendChild(placeholder);
+                        }
+                      }}
                     />
                   ) : (
                     <div className="w-full aspect-square rounded-b-lg bg-muted flex items-center justify-center">
@@ -1107,6 +1132,11 @@ export default function AdminListMembersPage() {
                       height={128} 
                       className="h-32 w-32 rounded-md object-cover border" 
                       loading="lazy"
+                      unoptimized={photoUrl(editingItem, "medium").startsWith('http://') || photoUrl(editingItem, "medium").startsWith('https://')}
+                      onError={(e) => {
+                        console.error('[IMAGE] Failed to load photo for edit modal:', editingItem.label);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                 ) : (
                   <div className="h-32 w-32 rounded-md bg-muted flex items-center justify-center">

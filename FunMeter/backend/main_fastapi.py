@@ -177,17 +177,32 @@ def _load_reg_list_cached() -> List[dict]:
             print("[WARNING] No data returned from register_faces table")
             return []
 
+        from db.storage import get_face_public_url  # type: ignore[no-redef]
+
         out: List[dict] = []
         for it in rows:
             try:
+                photo_path = it.get("photo_path")
+                photo_url = None
+                if photo_path:
+                    version = None
+                    try:
+                        version = str(it.get("ts") or "") or None
+                    except Exception:
+                        version = None
+                    try:
+                        photo_url = get_face_public_url(photo_path, version)
+                    except Exception as e:
+                        print(f"[WARNING] Failed to generate photo_url for {photo_path}: {e}")
+                        photo_url = None
+                
                 out.append({
                     "id": it.get("id"),
                     "person_id": it.get("person_id"),
                     "label": it.get("label"),
                     "embedding": it.get("embedding") or [],
-                    "photo_path": it.get("photo_path"),
-                    "photo_url": ("/" + str(it.get("photo_path") or "").lstrip("/"))
-                                 if it.get("photo_path") else None,
+                    "photo_path": photo_path,
+                    "photo_url": photo_url,
                     "x": it.get("x"),
                     "y": it.get("y"),
                     "width": it.get("width"),
@@ -3155,6 +3170,9 @@ async def register_face(
         entries = _ensure_register_person_ids(entries)
         _save_reg_list(entries)
         
+        # Invalidate cache to ensure fresh data is loaded
+        _invalidate_reg_list_cache()
+        
         # Register embedding ke engine untuk offline recognition
         ok_reg, msg = engine.register_embedding(label, emb_list)
         if ok_reg:
@@ -3168,7 +3186,7 @@ async def register_face(
         if preview_token:
             _preview_cache_consume(preview_token)
 
-    return {"status": "ok", "message": "OK", "label": label}
+    return {"status": "ok", "message": "OK", "label": label, "photo_url": entry.get("photo_url")}
 
 async def register_face_preview(file: UploadFile = File(...)):
     data = await file.read()
