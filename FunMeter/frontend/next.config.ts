@@ -88,21 +88,23 @@ const nextConfig: NextConfig = {
     ];
   },
   
+  // Rewrites dihapus karena kita menggunakan API routes di app/api/[...path]/route.ts
+  // API routes akan proxy request ke backend yang di-deploy terpisah
+  // Untuk development, backend URL bisa di-set via NEXT_PUBLIC_BACKEND_URL atau BACKEND_URL
+  // Untuk production, set NEXT_PUBLIC_BACKEND_URL di Vercel environment variables
   async rewrites() {
-    // Di production, gunakan API routes Next.js (/api/*)
-    // Di development, proxy langsung ke localhost:8000 untuk kemudahan
-    const isProduction = process.env.NODE_ENV === 'production';
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    // Di development, jika NEXT_PUBLIC_USE_API_ROUTES tidak di-set, 
+    // kita bisa tetap menggunakan rewrites untuk kemudahan
+    const useApiRoutes = process.env.NEXT_PUBLIC_USE_API_ROUTES === 'true' || 
+                         process.env.NODE_ENV === 'production';
     
-    // Jika di production dan ada backend URL, gunakan API routes
-    // Jika di development, gunakan rewrites langsung ke localhost
-    if (isProduction && backendUrl !== 'http://localhost:8000') {
-      // Di production, semua request akan melalui /api/* routes
-      // Tidak perlu rewrites karena akan menggunakan API routes
+    if (useApiRoutes) {
+      // Di production atau jika explicitly di-set, tidak perlu rewrites
+      // Semua request akan melalui /api/[...path] yang akan proxy ke backend
       return [];
     }
     
-    // Development: proxy langsung ke localhost:8000
+    // Di development, tetap gunakan rewrites untuk kemudahan
     return [
       {
         source: "/face/register",

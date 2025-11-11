@@ -332,7 +332,7 @@ export default function RegisterFacePage() {
       formData.append('file', blob, 'face.jpg');
       formData.append('force', force ? '1' : '0');
 
-      const response = await postForm<RegisterResponse>('/register-face', formData);
+      const response = await postForm<RegisterResponse>('http://localhost:8000/register-face', formData);
       return response;
     };
 

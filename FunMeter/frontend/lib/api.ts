@@ -17,6 +17,19 @@ export class HttpError extends Error {
   }
 }
 
+// Determine if we should use API routes (for production/Vercel deployment)
+// API routes akan proxy request ke backend yang di-deploy terpisah
+const shouldUseApiRoutes = (() => {
+  if (typeof window === "undefined") {
+    // Server-side: check environment variable
+    return process.env.NEXT_PUBLIC_USE_API_ROUTES === 'true' || 
+           process.env.NODE_ENV === 'production';
+  }
+  // Client-side: check if we're in production or explicitly set
+  return process.env.NEXT_PUBLIC_USE_API_ROUTES === 'true' ||
+         window.location.hostname !== 'localhost';
+})();
+
 let API_BASE = (() => {
   if (typeof window === "undefined") return "";
   const { protocol, hostname, port } = window.location;
@@ -31,24 +44,25 @@ export function setApiBase(url: string): void {
 
 export function resolveApi(path = "", base = API_BASE): string {
   const s = String(path || "");
-  // Jika sudah URL lengkap, return langsung
+  
+  // Jika sudah absolute URL, return as-is
   if (/^https?:\/\//i.test(s)) return s;
   
   const clean = s.replace(/^\/+/, "");
   
-  // Cek apakah di production dan perlu menggunakan API routes
-  const backendUrl = typeof window !== "undefined" 
-    ? process.env.NEXT_PUBLIC_BACKEND_URL 
-    : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL);
-  const isProduction = process.env.NODE_ENV === "production";
-  
-  // Jika di production dan ada backend URL (bukan localhost), gunakan /api/* routes
-  if (isProduction && backendUrl && backendUrl !== "http://localhost:8000") {
-    // Gunakan API routes Next.js
-    return `/api/${clean}`;
+  // Jika menggunakan API routes (production/Vercel), tambahkan prefix /api/
+  if (shouldUseApiRoutes && clean) {
+    // Pastikan path dimulai dengan /api/
+    const apiPath = clean.startsWith('api/') ? clean : `api/${clean}`;
+    if (!base) return `/${apiPath}`;
+    try {
+      return new URL(apiPath, base).toString();
+    } catch {
+      return `/${apiPath}`;
+    }
   }
   
-  // Development atau localhost: gunakan path langsung (akan di-rewrite)
+  // Di development dengan rewrites, gunakan path langsung
   if (!base) return `/${clean}`;
   try {
     return new URL(clean, base).toString();

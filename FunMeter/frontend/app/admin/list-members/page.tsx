@@ -235,7 +235,7 @@ export default function AdminListMembersPage() {
       
       // Save label if changed
       if (newLabel !== editingItem.label) {
-      await request(`/admin/register-db/item/${editingId}`, {
+      await request(`http://localhost:8000/admin/register-db/item/${editingId}`, {
         method: "PUT",
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('api_key') || ''}`,
@@ -252,7 +252,7 @@ export default function AdminListMembersPage() {
         formData.append('file', editingReplaceFile);
       formData.append('force', '1');
       
-      await request('/register-face', {
+      await request('http://localhost:8000/register-face', {
         method: 'POST',
         body: formData,
         headers: {
@@ -288,7 +288,7 @@ export default function AdminListMembersPage() {
     try {
       console.log("[DELETE] Deleting member ID:", memberId);
       // Backend endpoint: /admin/register-db/item/{item_id}?delete_photo=1
-      await request(`/admin/register-db/item/${memberId}?delete_photo=1`, { 
+      await request(`http://localhost:8000/admin/register-db/item/${memberId}?delete_photo=1`, { 
         method: "DELETE",
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('api_key') || ''}`
@@ -324,7 +324,7 @@ export default function AdminListMembersPage() {
 
     try {
       console.log("[BULK_DELETE] Deleting members:", selectedMembers);
-      await request("/admin/register-db/bulk", {
+      await request("http://localhost:8000/admin/register-db/bulk", {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('api_key') || ''}`,
@@ -358,7 +358,7 @@ export default function AdminListMembersPage() {
 
     try {
       console.log("[EXPORT] Exporting members:", selectedMembers);
-      const response = await fetch(resolveApi("/admin/register-db/bulk"), {
+      const response = await fetch("http://localhost:8000/admin/register-db/bulk", {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('api_key') || ''}`,
@@ -517,7 +517,7 @@ export default function AdminListMembersPage() {
         formData.append("file", item.file);
         formData.append("force", bulkForce ? "1" : "0");
 
-        const response = await fetch(resolveApi("/register-face"), {
+        const response = await fetch("http://localhost:8000/register-face", {
           method: "POST",
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('api_key') || ''}`

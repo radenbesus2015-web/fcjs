@@ -1,163 +1,164 @@
 // app/api/[...path]/route.ts
-// Universal API proxy route untuk semua backend endpoints
+// API Route handler untuk proxy semua request ke backend FastAPI
+// Digunakan untuk deployment di Vercel dimana backend di-deploy terpisah
 
-import { NextRequest, NextResponse } from "next/server";
-import { proxyRequest, getBackendUrl } from "@/lib/api-proxy";
+import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Universal API proxy handler
- * Menangani semua request ke /api/* dan memproxynya ke backend
- * 
- * Contoh:
- * - /api/admin/dashboard-data -> http://backend-url/admin/dashboard-data
- * - /api/auth/login -> http://backend-url/auth/login
- * - /api/register-db-data -> http://backend-url/register-db-data
- */
+// Get backend URL from environment variable
+// Di development: gunakan localhost:8000
+// Di production: gunakan URL backend yang di-deploy (Railway, Render, dll)
+function getBackendUrl(): string {
+  // Prioritas: NEXT_PUBLIC_BACKEND_URL > BACKEND_URL > default localhost
+  const backendUrl = 
+    process.env.NEXT_PUBLIC_BACKEND_URL || 
+    process.env.BACKEND_URL || 
+    'http://localhost:8000';
+  
+  // Pastikan tidak ada trailing slash
+  return backendUrl.replace(/\/+$/, '');
+}
+
+// Handler untuk semua HTTP methods
 export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  return handleProxyRequest(request, params, "GET");
+  return handleRequest(request, params);
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  return handleProxyRequest(request, params, "POST");
+  return handleRequest(request, params);
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { path: string[] }
 ) {
-  return handleProxyRequest(request, params, "PUT");
+  return handleRequest(request, params);
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params: { path: string[] } }
+  { params }: { path: string[] }
 ) {
-  return handleProxyRequest(request, params, "PATCH");
+  return handleRequest(request, params);
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { path: string[] }
 ) {
-  return handleProxyRequest(request, params, "DELETE");
+  return handleRequest(request, params);
 }
 
-async function handleProxyRequest(
+async function handleRequest(
   request: NextRequest,
-  params: { path: string[] },
-  method: string
+  params: { path: string[] }
 ) {
   try {
-    // Reconstruct path dari params
-    const path = `/${params.path.join("/")}`;
-
-    // Get query parameters
-    const query: Record<string, string | number | boolean | undefined> = {};
-    request.nextUrl.searchParams.forEach((value, key) => {
-      query[key] = value;
-    });
-
-    // Get headers (forward Authorization dan headers penting lainnya)
-    const headers = new Headers();
-    const authHeader = request.headers.get("authorization");
-    if (authHeader) {
-      headers.set("authorization", authHeader);
-    }
+    const backendUrl = getBackendUrl();
+    const pathSegments = params.path || [];
+    const path = pathSegments.join('/');
     
-    // Forward headers penting lainnya
-    const contentType = request.headers.get("content-type");
-    if (contentType) {
-      headers.set("content-type", contentType);
-    }
-
-    // Get body
-    let body: unknown = undefined;
-    if (method !== "GET" && method !== "HEAD") {
-      const contentType = request.headers.get("content-type");
-      if (contentType?.includes("application/json")) {
-        try {
-          body = await request.json();
-        } catch {
-          // Body mungkin kosong atau invalid JSON
-        }
-      } else if (contentType?.includes("multipart/form-data") || contentType?.includes("application/x-www-form-urlencoded")) {
-        // Untuk FormData, kita perlu forward sebagai FormData
-        try {
-          const formData = await request.formData();
-          body = formData;
-        } catch {
-          // Fallback ke text jika gagal parse FormData
-          body = await request.text();
-        }
+    // Build full backend URL
+    const url = new URL(path, `${backendUrl}/`);
+    
+    // Copy query parameters
+    request.nextUrl.searchParams.forEach((value, key) => {
+      url.searchParams.append(key, value);
+    });
+    
+    // Prepare headers (exclude host and connection headers)
+    const headers = new Headers();
+    request.headers.forEach((value, key) => {
+      // Skip headers that should not be forwarded
+      const lowerKey = key.toLowerCase();
+      if (
+        lowerKey !== 'host' &&
+        lowerKey !== 'connection' &&
+        lowerKey !== 'content-length' &&
+        lowerKey !== 'transfer-encoding'
+      ) {
+        headers.set(key, value);
+      }
+    });
+    
+    // Get request body if present
+    let body: BodyInit | undefined;
+    const contentType = request.headers.get('content-type');
+    
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      if (contentType?.includes('multipart/form-data')) {
+        // For FormData, we need to read it as form data
+        const formData = await request.formData();
+        body = formData;
+      } else if (contentType?.includes('application/json')) {
+        const json = await request.json();
+        body = JSON.stringify(json);
+        headers.set('content-type', 'application/json');
+      } else if (contentType?.includes('application/x-www-form-urlencoded')) {
+        const text = await request.text();
+        body = text;
+        headers.set('content-type', 'application/x-www-form-urlencoded');
       } else {
-        // Fallback: baca sebagai text
+        // For other types, try to read as text/blob
         try {
-          const text = await request.text();
-          if (text) {
-            body = text;
-          }
+          const blob = await request.blob();
+          body = blob;
         } catch {
-          // Body kosong atau tidak bisa dibaca
+          // If reading fails, body will be undefined
         }
       }
     }
-
-    // Proxy request ke backend
-    const response = await proxyRequest(path, {
-      method,
+    
+    // Make request to backend
+    const response = await fetch(url.toString(), {
+      method: request.method,
       headers,
       body,
-      query,
+      // Forward redirects
+      redirect: 'follow',
     });
-
-    // Get response body
-    const contentType = response.headers.get("content-type");
-    let responseBody: unknown;
     
-    if (contentType?.includes("application/json")) {
-      try {
-        responseBody = await response.json();
-      } catch {
-        responseBody = await response.text();
-      }
-    } else if (contentType?.includes("text/")) {
-      responseBody = await response.text();
-    } else {
-      // Untuk binary data (images, files, dll), gunakan array buffer
-      responseBody = await response.arrayBuffer();
-    }
-
-    // Create NextResponse dengan status dan headers yang sama
-    const nextResponse = NextResponse.json(responseBody, {
+    // Get response body
+    const responseBody = await response.arrayBuffer();
+    
+    // Create response with same status and headers
+    const nextResponse = new NextResponse(responseBody, {
       status: response.status,
       statusText: response.statusText,
     });
-
-    // Forward response headers (kecuali yang tidak perlu)
+    
+    // Copy response headers (exclude some that should not be forwarded)
     response.headers.forEach((value, key) => {
-      // Skip headers yang dikontrol oleh Next.js
+      const lowerKey = key.toLowerCase();
       if (
-        !["content-encoding", "content-length", "transfer-encoding"].includes(
-          key.toLowerCase()
-        )
+        lowerKey !== 'content-encoding' &&
+        lowerKey !== 'content-length' &&
+        lowerKey !== 'transfer-encoding' &&
+        lowerKey !== 'connection'
       ) {
         nextResponse.headers.set(key, value);
       }
     });
-
+    
+    // Set content-length if we have body
+    if (responseBody.byteLength > 0) {
+      nextResponse.headers.set('content-length', responseBody.byteLength.toString());
+    }
+    
     return nextResponse;
   } catch (error) {
-    console.error("[API Proxy] Error:", error);
+    console.error('[API Proxy] Error proxying request:', error);
+    
+    // Return error response
     return NextResponse.json(
       {
-        error: "Proxy error",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: 'Proxy error',
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
