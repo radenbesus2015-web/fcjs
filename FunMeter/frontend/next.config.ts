@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // Compiler optimizations
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+  
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: [
@@ -16,7 +24,10 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',
       'recharts',
+      'socket.io-client',
     ],
+    // Optimize CSS
+    optimizeCss: true,
   },
   
   // Allow images from Supabase Storage and localhost backend

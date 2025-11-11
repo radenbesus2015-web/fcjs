@@ -241,7 +241,10 @@ export default function AdminDashboardPage() {
               <div className="flex flex-wrap sm:flex-nowrap gap-2">
                 <Input value={maskedApiKey} readOnly className="font-mono font-semibold tracking-wide" />
                 <Button variant="outline" size="sm" onClick={() => setShowApiKey(v => !v)}>
-                  {showApiKey ? t("adminDashboard.apiKey.hide", "Hide") : t("adminDashboard.apiKey.show", "Show")}
+                  <Icon name={showApiKey ? "EyeOff" : "Eye"} className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">
+                    {showApiKey ? t("adminDashboard.apiKey.hide", "Hide") : t("adminDashboard.apiKey.show", "Show")}
+                  </span>
                 </Button>
                 <Button
                   variant="outline"
@@ -252,11 +255,14 @@ export default function AdminDashboardPage() {
                   aria-label={t("adminDashboard.apiKey.copy", "Copy API Key")}
                 >
                   {copying ? (
-                    t("adminDashboard.apiKey.copying", "Copying…")
+                    <>
+                      <Icon name="Loader2" className="h-4 w-4 animate-spin" />
+                      <span className="hidden sm:inline ml-2">{t("adminDashboard.apiKey.copying", "Copying…")}</span>
+                    </>
                   ) : (
                     <>
-                      <span className="sm:hidden">{t("adminDashboard.apiKey.copyShort", "Copy")}</span>
-                      <span className="hidden sm:inline">{t("adminDashboard.apiKey.copy", "Copy API Key")}</span>
+                      <Icon name="Copy" className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-2">{t("adminDashboard.apiKey.copy", "Copy API Key")}</span>
                     </>
                   )}
                 </Button>
@@ -268,11 +274,14 @@ export default function AdminDashboardPage() {
                   aria-label={t("adminDashboard.actions.rotateKey", "Rotate API Key")}
                 >
                   {rotating ? (
-                    t("adminDashboard.actions.processing", "Processing…")
+                    <>
+                      <Icon name="Loader2" className="h-4 w-4 animate-spin" />
+                      <span className="hidden sm:inline ml-2">{t("adminDashboard.actions.processing", "Processing…")}</span>
+                    </>
                   ) : (
                     <>
-                      <span className="sm:hidden">{t("adminDashboard.actions.rotateShort", "Rotate")}</span>
-                      <span className="hidden sm:inline">{t("adminDashboard.actions.rotateKey", "Rotate API Key")}</span>
+                      <Icon name="RefreshCw" className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-2">{t("adminDashboard.actions.rotateKey", "Rotate API Key")}</span>
                     </>
                   )}
                 </Button>

@@ -72,31 +72,30 @@ export function ThemeProvider({
     }
   }, [theme, storageKey]);
 
-  // Listen to storage changes from SettingsProvider
+  // Listen to localStorage changes from other tabs only (same tab handled by setTheme)
   useEffect(() => {
-    const handleStorageChange = () => {
+    if (typeof window === "undefined") return;
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== "settings") return;
       try {
-        const settingsStr = localStorage.getItem("settings");
-        if (settingsStr) {
-          const settings = JSON.parse(settingsStr);
+        const stored = e.newValue;
+        if (stored) {
+          const settings = JSON.parse(stored);
           if (settings.theme && settings.theme !== theme) {
             setThemeState(settings.theme);
           }
         }
-      } catch (e) {
-        console.warn("Failed to sync theme from settings", e);
+      } catch (err) {
+        console.warn("Failed to sync theme from localStorage", err);
       }
     };
 
-    // Listen to storage events (from other tabs)
+    // Listen to storage events (from other tabs only)
     window.addEventListener("storage", handleStorageChange);
-    
-    // Also check periodically for same-tab updates
-    const interval = setInterval(handleStorageChange, 500);
     
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
     };
   }, [theme]);
 

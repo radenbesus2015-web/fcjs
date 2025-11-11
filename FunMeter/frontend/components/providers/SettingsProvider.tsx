@@ -185,61 +185,40 @@ export function SettingsProvider({ children, initialSettings }: SettingsProvider
     }
   }, [state]);
 
-  // Listen to localStorage changes from ThemeProvider/I18nProvider to keep in sync
+  // Listen to localStorage changes from other tabs only (same tab handled by setSetting)
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    const handleStorageChange = () => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== SETTINGS_STORAGE_KEY) return;
       try {
-        const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        const stored = e.newValue;
         if (stored) {
           const parsed = JSON.parse(stored);
           // Update state if localStorage has different values
-          setState(prevState => {
-            const prevStr = JSON.stringify(prevState);
-            const parsedStr = JSON.stringify({
-              ...DEFAULT_SETTINGS,
-              ...parsed,
-              attendance: {
-                ...(DEFAULT_SETTINGS.attendance as Record<string, unknown>),
-                ...(parsed.attendance || {}),
-              },
-              funMeter: {
-                ...(DEFAULT_SETTINGS.funMeter as Record<string, unknown>),
-                ...(parsed.funMeter || {}),
-              },
-            });
-            if (prevStr !== parsedStr) {
-              return {
-                ...DEFAULT_SETTINGS,
-                ...parsed,
-                attendance: {
-                  ...(DEFAULT_SETTINGS.attendance as Record<string, unknown>),
-                  ...(parsed.attendance || {}),
-                },
-                funMeter: {
-                  ...(DEFAULT_SETTINGS.funMeter as Record<string, unknown>),
-                  ...(parsed.funMeter || {}),
-                },
-              };
-            }
-            return prevState;
+          setState({
+            ...DEFAULT_SETTINGS,
+            ...parsed,
+            attendance: {
+              ...(DEFAULT_SETTINGS.attendance as Record<string, unknown>),
+              ...(parsed.attendance || {}),
+            },
+            funMeter: {
+              ...(DEFAULT_SETTINGS.funMeter as Record<string, unknown>),
+              ...(parsed.funMeter || {}),
+            },
           });
         }
-      } catch (e) {
-        console.warn("Failed to sync settings from localStorage", e);
+      } catch (err) {
+        console.warn("Failed to sync settings from localStorage", err);
       }
     };
 
-    // Listen to storage events (from other tabs)
+    // Listen to storage events (from other tabs only)
     window.addEventListener("storage", handleStorageChange);
-    
-    // Also check periodically for same-tab updates
-    const interval = setInterval(handleStorageChange, 500);
     
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 

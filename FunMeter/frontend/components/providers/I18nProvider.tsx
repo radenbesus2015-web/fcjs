@@ -142,33 +142,30 @@ export function I18nProvider({ children, initialLocale = FALLBACK_LOCALE }: I18n
     setDocumentLang(locale);
   }, [locale]);
 
-  // Listen to localStorage changes from SettingsProvider
+  // Listen to localStorage changes from SettingsProvider (only from other tabs)
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    const handleStorageChange = () => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== "settings") return;
       try {
-        const stored = localStorage.getItem("settings");
+        const stored = e.newValue;
         if (stored) {
           const settings = JSON.parse(stored);
           if (settings.language && settings.language !== locale) {
             setLocaleState(resolveLocale(settings.language));
           }
         }
-      } catch (e) {
-        console.warn("Failed to sync language from localStorage", e);
+      } catch (err) {
+        console.warn("Failed to sync language from localStorage", err);
       }
     };
 
-    // Listen to storage events (from other tabs)
+    // Listen to storage events (from other tabs only - same tab handled by setLocale)
     window.addEventListener("storage", handleStorageChange);
-    
-    // Also check periodically for same-tab updates
-    const interval = setInterval(handleStorageChange, 500);
     
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
     };
   }, [locale]);
 

@@ -76,6 +76,13 @@ export default function FunMeterPage() {
       },
       fun_result(...args: unknown[]) {
         const data = args[0] as FunResultData;
+        
+        // Check if metadata is included in fun_result response
+        if (!modelName && (data as { model?: string }).model) {
+          console.log("[FUN_METADATA] Found model in fun_result:", (data as { model?: string }).model);
+          setModelName((data as { model?: string }).model || "");
+        }
+        
         const funResults = Array.isArray(data?.results) ? data.results : [];
         console.log("[FUN_RESULT] Received", funResults.length, "faces:", funResults);
         
@@ -119,6 +126,17 @@ export default function FunMeterPage() {
       },
     },
   });
+
+  // Request metadata when socket is ready
+  useEffect(() => {
+    if (socket?.socket?.connected) {
+      console.log("[FUN_METADATA] Socket connected, requesting metadata...");
+      
+      // Try multiple possible event names that backend might support
+      socket.emit("get_fun_metadata", {});
+      socket.emit("fun_metadata_request", {});
+    }
+  }, [socket?.socket?.connected]);
 
   // Camera functions
   const startCamera = async () => {
@@ -501,8 +519,14 @@ export default function FunMeterPage() {
               <label className="text-sm font-medium block mb-1">
                 {t("funMeter.form.model", "Model")}
               </label>
-              <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground bg-background">
-                {modelName || t("funMeter.model.waiting", "Menunggu metadata...")}
+              <div className="h-10 flex items-center px-3 border rounded-md text-sm bg-background">
+                {modelName ? (
+                  <span className="font-medium text-foreground">{modelName}</span>
+                ) : (
+                  <span className="text-muted-foreground italic">
+                    {t("funMeter.model.notAvailable", "Menunggu data dari server...")}
+                  </span>
+                )}
               </div>
             </div>
           </div>
