@@ -31,8 +31,24 @@ export function setApiBase(url: string): void {
 
 export function resolveApi(path = "", base = API_BASE): string {
   const s = String(path || "");
+  // Jika sudah URL lengkap, return langsung
   if (/^https?:\/\//i.test(s)) return s;
+  
   const clean = s.replace(/^\/+/, "");
+  
+  // Cek apakah di production dan perlu menggunakan API routes
+  const backendUrl = typeof window !== "undefined" 
+    ? process.env.NEXT_PUBLIC_BACKEND_URL 
+    : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL);
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Jika di production dan ada backend URL (bukan localhost), gunakan /api/* routes
+  if (isProduction && backendUrl && backendUrl !== "http://localhost:8000") {
+    // Gunakan API routes Next.js
+    return `/api/${clean}`;
+  }
+  
+  // Development atau localhost: gunakan path langsung (akan di-rewrite)
   if (!base) return `/${clean}`;
   try {
     return new URL(clean, base).toString();

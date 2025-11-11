@@ -89,8 +89,21 @@ const nextConfig: NextConfig = {
   },
   
   async rewrites() {
+    // Di production, gunakan API routes Next.js (/api/*)
+    // Di development, proxy langsung ke localhost:8000 untuk kemudahan
+    const isProduction = process.env.NODE_ENV === 'production';
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    
+    // Jika di production dan ada backend URL, gunakan API routes
+    // Jika di development, gunakan rewrites langsung ke localhost
+    if (isProduction && backendUrl !== 'http://localhost:8000') {
+      // Di production, semua request akan melalui /api/* routes
+      // Tidak perlu rewrites karena akan menggunakan API routes
+      return [];
+    }
+    
+    // Development: proxy langsung ke localhost:8000
     return [
-      // Proxy API routes to backend (port 8000)
       {
         source: "/face/register",
         destination: "http://localhost:8000/register-face",
@@ -135,7 +148,6 @@ const nextConfig: NextConfig = {
         source: "/register-dataset",
         destination: "http://localhost:8000/register-dataset",
       },
-      // Admin Config endpoints (required by admin/config page)
       {
         source: "/config",
         destination: "http://localhost:8000/config",
