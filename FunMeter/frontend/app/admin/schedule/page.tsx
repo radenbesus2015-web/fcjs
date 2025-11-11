@@ -304,7 +304,9 @@ export default function AdminSchedulePage() {
       const nextRules = normalizeRules((att.rules as Partial<RuleItem>[]) || payload.rules, baseGIn, baseGOut);
       setRules(nextRules);
       setOrigRules(JSON.parse(JSON.stringify(nextRules)));
-      const rawOverrides = (att.overrides as OverrideItem[]) || (payload.overrides as OverrideItem[]);
+      // Type-safe conversion: use unknown first, then validate structure
+      const rawOverrides = (Array.isArray(att.overrides) ? (att.overrides as unknown as OverrideItem[]) : null) 
+        || (Array.isArray(payload.overrides) ? (payload.overrides as unknown as OverrideItem[]) : []);
       const sorted = sortOverrides(rawOverrides.map((x) => ({ ...x, id: String(x.id || genId()) })));
       setOverrides(sorted);
       setOrigOverrides(JSON.parse(JSON.stringify(sorted)));

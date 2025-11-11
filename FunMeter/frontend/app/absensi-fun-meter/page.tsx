@@ -401,7 +401,7 @@ export default function AttendanceFunMeterPage() {
     // TOP name
     const topText = capitalizeFirstLetter(name || "Unknown");
     const topW = Math.ceil(ctx.measureText(topText).width) + padX * 2;
-    let topX = clamp(Math.round(x), 2, Math.round(hostRect.width - topW - 2));
+    const topX = clamp(Math.round(x), 2, Math.round(hostRect.width - topW - 2));
     let topY = Math.round(y - th - gap);
     if (topY < 0) topY = Math.max(Math.round(y + 2), Math.round(y + 2));
     ctx.fillStyle = "rgba(2,6,23,0.88)";
@@ -418,7 +418,7 @@ export default function AttendanceFunMeterPage() {
     // BOTTOM expr
     const botText = capitalizeFirstLetter(expr || "Biasa");
     const botW = Math.ceil(ctx.measureText(botText).width) + padX * 2;
-    let botX = clamp(Math.round(x), 2, Math.round(hostRect.width - botW - 2));
+    const botX = clamp(Math.round(x), 2, Math.round(hostRect.width - botW - 2));
     let botY = Math.round(y + h + gap);
     if (botY + th > hostRect.height) botY = Math.max(Math.round(y + h - th - 2), Math.round(y + 2));
     ctx.fillStyle = "rgba(2,6,23,0.88)";
@@ -471,10 +471,12 @@ export default function AttendanceFunMeterPage() {
       const w = bw * sx;
       const h = bh * sy;
       
-      const exprRaw = (r.top?.label || r.expression || r.emotion || "Biasa").trim();
+      // Type-safe access to r.top.label
+      const top = r.top as { label?: string } | undefined;
+      const exprRaw = String(top?.label || r.expression || r.emotion || "Biasa").trim();
       const expr = mapExprLabel(exprRaw);
       const fused = fuseName([bx, by, bw, bh]);
-      const name = fused || r.label || r.name || "Unknown";
+      const name = String(fused || r.label || r.name || "Unknown");
       if (!fused) missingName = true;
       const color = EXP_COLORS[expr] || "#38bdf8";
       drawBoxWithLabels(x, y, w, h, name, expr, color);
