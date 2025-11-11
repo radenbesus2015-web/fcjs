@@ -272,13 +272,19 @@ export default function AdminAttendancePage() {
 
   const formatDate = (dateString: string) => {
     try {
+      const date = new Date(dateString);
       const userLocale = locale || (typeof navigator !== "undefined" ? navigator.language : "id-ID");
-      return new Date(dateString).toLocaleDateString(userLocale, {
-        weekday: "long",
-        day: "2-digit", 
-        month: "long",
-        year: "numeric"
-      });
+      
+      // Get day name (multilingual)
+      const dayName = date.toLocaleDateString(userLocale, { weekday: "long" });
+      
+      // Get day, month short, year
+      const day = date.getDate().toString().padStart(2, '0');
+      const monthShort = date.toLocaleDateString(userLocale, { month: "short" });
+      const year = date.getFullYear();
+      
+      // Format: <Day Name> dd/MMM/yyyy
+      return `${dayName} ${day}/${monthShort}/${year}`;
     } catch {
       return dateString;
     }

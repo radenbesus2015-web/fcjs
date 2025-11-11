@@ -470,9 +470,9 @@ export default function FunMeterPage() {
 
   return (
     <div className="space-y-6" key={locale}>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left: Camera Card */}
-        <div className="bg-card rounded-lg border p-6">
+        <div className="bg-card rounded-lg border p-6 self-start">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
             {t("funMeter.camera.title", "Kamera")}
           </p>

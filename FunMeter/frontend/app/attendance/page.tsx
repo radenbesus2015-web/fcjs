@@ -8,7 +8,6 @@ import { toast } from "@/lib/toast";
 import { request } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
-import { fmtAttendanceWIB } from "@/lib/format";
 import * as Cam from "@/lib/cameraManager";
 
 interface AttendanceRecord {
@@ -46,7 +45,7 @@ interface AttLogSnapshotData {
 }
 
 export default function AttendancePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -110,10 +109,16 @@ export default function AttendancePage() {
         // Show toast notifications for marked attendance
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
-          const message = info.message || `✅ Absen berhasil: ${label}${score}`;
+          const scorePercent = info.score ? (info.score * 100).toFixed(1) : "0.0";
+          // Always use translated message, ignore backend message
+          const message = t(
+            "attendance.toast.attendanceSuccess",
+            "Attendance recorded: {name} (score {score}%)",
+            { name: label, score: scorePercent }
+          );
           if (label) {
-            console.log("[ATTENDANCE] Showing success toast for:", label);
+            console.log("[ATTENDANCE] Backend message (ignored):", info.message);
+            console.log("[ATTENDANCE] Using translated message:", message);
             toast.success(message, { duration: 5000 });
           }
         }
@@ -122,7 +127,10 @@ export default function AttendancePage() {
         if (!markedInfo.length && marked.length > 0) {
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing success toast for (fallback):", label);
-            toast.success(`✅ Absen berhasil: ${label}`, { duration: 5000 });
+            toast.success(
+              t("attendance.toast.attendanceMarked", "Attendance marked: {name}", { name: label }),
+              { duration: 5000 }
+            );
           }
         }
         
@@ -130,6 +138,7 @@ export default function AttendancePage() {
         for (const block of blocked) {
           if (block.message) {
             console.log("[ATTENDANCE] Blocked:", block.message);
+            // Use block message directly (might need translation in future)
             toast.info(block.message, { duration: 4000 });
           }
         }
@@ -250,6 +259,31 @@ export default function AttendancePage() {
       toast.error(t("attendance.toast.cameraError", "❌ Gagal mengakses kamera: {error}", { error: errorMsg }), { duration: 5000 });
     } finally {
       setCameraLoading(false);
+    }
+  };
+
+  // Format datetime with multilingual day name: <Day Name> dd/MMM/yyyy HH:mm
+  const formatDateTime = (dateTimeString: string) => {
+    try {
+      const date = new Date(dateTimeString);
+      const userLocale = locale || (typeof navigator !== "undefined" ? navigator.language : "id-ID");
+      
+      // Get day name (multilingual)
+      const dayName = date.toLocaleDateString(userLocale, { weekday: "long" });
+      
+      // Get day, month short, year
+      const day = date.getDate().toString().padStart(2, '0');
+      const monthShort = date.toLocaleDateString(userLocale, { month: "short" });
+      const year = date.getFullYear();
+      
+      // Get time HH:mm
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      
+      // Format: HH:mm - <Day Name> dd/MMM/yyyy
+      return `${hours}:${minutes} - ${dayName} ${day}/${monthShort}/${year}`;
+    } catch {
+      return dateTimeString;
     }
   };
 
@@ -770,7 +804,7 @@ export default function AttendancePage() {
                       <tr key={`${item.ts}-${idx}`} className="border-b last:border-0">
                         <td className="p-3">{no}</td>
                         <td className="p-3">{item.label || "-"}</td>
-                        <td className="p-3">{fmtAttendanceWIB(item.ts)}</td>
+                        <td className="p-3">{formatDateTime(item.ts)}</td>
                         <td className="p-3 text-right font-mono">{(item.score || 0).toFixed(3)}</td>
                       </tr>
                     );
@@ -800,7 +834,7 @@ export default function AttendancePage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="px-3 py-1 rounded-md bg-gray-100 text-foreground">{logMeta.page}</span>
+              <span className="px-3 py-1 rounded-md bg-muted border text-foreground font-medium">{logMeta.page}</span>
               <Button
                 variant="outline"
                 size="sm"
