@@ -249,7 +249,7 @@ export default function RegisterFacePage() {
     }
   };
 
-  const resetPreview = () => {
+  const resetPreview = async () => {
     try {
       if (previewSrc && previewSrc.startsWith("blob:")) URL.revokeObjectURL(previewSrc);
     } catch {}
@@ -258,12 +258,10 @@ export default function RegisterFacePage() {
     setPreviewFaces([]);
     clearCanvas(overlayRef.current);
     setStatusText(t("registerFace.status.noImage", "Tidak ada gambar."));
-    // If camera is not active (e.g., after capture), reopen it
-    if (!cameraActive) {
-      startCamera();
-    } else {
-      try { videoRef.current?.play(); } catch {}
-    }
+    // Always restart camera for fresh start
+    stopCamera();
+    await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure clean stop
+    await startCamera();
   };
 
   // Build one image (prefer captured preview, then upload, then live video)
@@ -462,7 +460,7 @@ export default function RegisterFacePage() {
                 type="button"
                 variant="outline"
                 onClick={resetPreview}
-                disabled={cameraActive}
+                disabled={isRegistering}
                 className="backdrop-blur-md"
               >
                 <Icon name="RotateCcw" className="mr-2 h-4 w-4" />

@@ -54,76 +54,6 @@ export default function AdminListMembersPage() {
   const [savingEdit, setSavingEdit] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const editFileInputRef = React.useRef<HTMLInputElement>(null);
-  
-  // Drag and drop state
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<string | null>(null);
-  
-  // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, itemId: string) => {
-    setDraggedItem(itemId);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", itemId);
-    // Add drag image styling
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = "0.5";
-    }
-  };
-
-  const handleDragEnd = (e: React.DragEvent) => {
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = "1";
-    }
-    setDraggedItem(null);
-    setDragOverItem(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDragEnter = (e: React.DragEvent, itemId: string) => {
-    e.preventDefault();
-    if (draggedItem !== itemId) {
-      setDragOverItem(itemId);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if leaving the actual card, not child elements
-    if (e.currentTarget === e.target) {
-      setDragOverItem(null);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent, targetItemId: string) => {
-    e.preventDefault();
-    
-    if (!draggedItem || draggedItem === targetItemId) {
-      setDragOverItem(null);
-      return;
-    }
-
-    // Reorder items locally
-    const draggedIndex = items.findIndex(item => String(item.id) === draggedItem);
-    const targetIndex = items.findIndex(item => String(item.id) === targetItemId);
-
-    if (draggedIndex === -1 || targetIndex === -1) {
-      setDragOverItem(null);
-      return;
-    }
-
-    const newItems = [...items];
-    const [removed] = newItems.splice(draggedIndex, 1);
-    newItems.splice(targetIndex, 0, removed);
-    
-    setItems(newItems);
-    setDragOverItem(null);
-    
-    // Optional: Show success feedback
-    toast.success(t("adminListMembers.toast.reordered", "Items reordered"));
-  };
 
   // Bulk upload state
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
@@ -921,26 +851,9 @@ export default function AdminListMembersPage() {
             items.map((row) => (
               <div 
                 key={String(row.id)} 
-                draggable
-                onDragStart={(e) => handleDragStart(e, String(row.id))}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDragEnter={(e) => handleDragEnter(e, String(row.id))}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, String(row.id))}
-                className={`border rounded-lg overflow-hidden bg-card transition-all cursor-move ${
-                  draggedItem === String(row.id) ? "opacity-50 scale-95" : ""
-                } ${
-                  dragOverItem === String(row.id) ? "ring-2 ring-primary scale-105 shadow-lg" : ""
-                }`}
+                className="border rounded-lg overflow-hidden bg-card transition-all"
               >
                 <div className="flex items-center gap-3 p-4 border-b">
-                  <div title={t("adminListMembers.dragToReorder", "Drag to reorder")}>
-                    <Icon 
-                      name="GripVertical" 
-                      className="h-5 w-5 text-muted-foreground cursor-grab active:cursor-grabbing flex-shrink-0" 
-                    />
-                  </div>
                   <input
                     type="checkbox"
                     checked={selectedMembers.includes(String(row.id))}
