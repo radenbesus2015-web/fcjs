@@ -69,10 +69,11 @@ export function resolveLucideName(name?: string | null): string | null {
   return null;
 }
 
-export function getLucideComponent(name?: string | null): React.ComponentType<any> | null {
+export function getLucideComponent(name?: string | null): React.ComponentType<Lucide.LucideProps> | null {
   const compName = resolveLucideName(name);
   if (!compName) return null;
-  return (Lucide as any)[compName] ?? null;
+  const lucideComponents = Lucide as unknown as Record<string, React.ComponentType<Lucide.LucideProps>>;
+  return lucideComponents[compName] ?? null;
 }
 
 export { Lucide };

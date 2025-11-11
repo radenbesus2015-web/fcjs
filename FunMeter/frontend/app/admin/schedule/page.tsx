@@ -304,9 +304,7 @@ export default function AdminSchedulePage() {
       const nextRules = normalizeRules((att.rules as Partial<RuleItem>[]) || payload.rules, baseGIn, baseGOut);
       setRules(nextRules);
       setOrigRules(JSON.parse(JSON.stringify(nextRules)));
-      // Type-safe conversion: use unknown first, then validate structure
-      const rawOverrides = (Array.isArray(att.overrides) ? (att.overrides as unknown as OverrideItem[]) : null) 
-        || (Array.isArray(payload.overrides) ? (payload.overrides as unknown as OverrideItem[]) : []);
+      const rawOverrides = (att.overrides as OverrideItem[]) || (payload.overrides as unknown as OverrideItem[]);
       const sorted = sortOverrides(rawOverrides.map((x) => ({ ...x, id: String(x.id || genId()) })));
       setOverrides(sorted);
       setOrigOverrides(JSON.parse(JSON.stringify(sorted)));
@@ -385,11 +383,20 @@ export default function AdminSchedulePage() {
   }, [locale]);
 
   // Modal States
+  type ModalEditOverride = OverrideItem & { singleDay?: boolean; scope?: "all" | "individual" };
   const [modalView, setModalView] = useState<{ open: boolean; ov: OverrideItem | null }>({ open: false, ov: null });
   const [modalEdit, setModalEdit] = useState<{
     open: boolean;
-    ov: (OverrideItem & { singleDay?: boolean; scope?: "all" | "individual"; targets?: OverrideItem["targets"]; notes?: string }) | null;
+    ov: ModalEditOverride | null;
   }>({ open: false, ov: null });
+  
+  // Helper function to update modal edit state
+  const updateModalEdit = (updater: (ov: ModalEditOverride) => Partial<ModalEditOverride>) => {
+    setModalEdit(p => {
+      if (!p.ov) return p;
+      return { ...p, ov: { ...p.ov, ...updater(p.ov) } };
+    });
+  };
   const [modalDeleteOv, setModalDeleteOv] = useState<{ open: boolean; ov: OverrideItem | null }>({ open: false, ov: null });
   const [modalDeleteLog, setModalDeleteLog] = useState<{ open: boolean; ov: OverrideItem | null }>({ open: false, ov: null });
 
@@ -525,53 +532,53 @@ export default function AdminSchedulePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.label", "Label")}</Label>
-                <Input value={modalEdit.ov.label} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), label: e.target.value } }))} />
+                <Input value={modalEdit.ov.label} onChange={(e)=> updateModalEdit(() => ({ label: e.target.value }))} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.range", "Date Range")}</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input type="date" value={modalEdit.ov.start_date} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), start_date: e.target.value, end_date: (p.ov?.singleDay ? e.target.value : (p.ov?.end_date || e.target.value)) } }))} />
-                  <Input type="date" value={modalEdit.ov.singleDay ? modalEdit.ov.start_date : modalEdit.ov.end_date} disabled={!!modalEdit.ov.singleDay} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), end_date: e.target.value } }))} />
+                  <Input type="date" value={modalEdit.ov.start_date} onChange={(e)=> updateModalEdit((ov) => ({ start_date: e.target.value, end_date: ov.singleDay ? e.target.value : (ov.end_date || e.target.value) }))} />
+                  <Input type="date" value={modalEdit.ov.singleDay ? modalEdit.ov.start_date : modalEdit.ov.end_date} disabled={!!modalEdit.ov.singleDay} onChange={(e)=> updateModalEdit(() => ({ end_date: e.target.value }))} />
                 </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold flex items-center gap-2">
-                  <input type="checkbox" checked={!!modalEdit.ov.singleDay} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), singleDay: e.target.checked, end_date: e.target.checked ? (p.ov?.start_date || "") : (p.ov?.end_date || p.ov?.start_date || "") } }))} />
+                  <input type="checkbox" checked={!!modalEdit.ov.singleDay} onChange={(e)=> updateModalEdit((ov) => ({ singleDay: e.target.checked, end_date: e.target.checked ? (ov.start_date || "") : (ov.end_date || ov.start_date || "") }))} />
                   {t("adminSchedule.overrides.form.singleDay", "Single Day")}
                 </Label>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3 mt-6">
                   <span className="text-xs text-muted-foreground">{t("adminSchedule.common.offLabel", "Hari Libur")}</span>
-                  <input type="checkbox" className="h-4 w-4" checked={!!modalEdit.ov.enabled} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), enabled: e.target.checked } }))} />
+                  <input type="checkbox" className="h-4 w-4" checked={!!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ enabled: e.target.checked }))} />
                   <span className="text-xs text-muted-foreground">{t("adminSchedule.common.onLabel", "Hari Masuk")}</span>
                 </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.checkIn", "Check In")}</Label>
-                <Input type="time" value={modalEdit.ov.check_in ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), check_in: e.target.value } }))} />
+                <Input type="time" value={modalEdit.ov.check_in ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ check_in: e.target.value }))} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.checkOut", "Check Out")}</Label>
-                <Input type="time" value={modalEdit.ov.check_out ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), check_out: e.target.value } }))} />
+                <Input type="time" value={modalEdit.ov.check_out ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ check_out: e.target.value }))} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.graceIn", "Grace In (minutes)")}</Label>
-                <Input type="number" value={modalEdit.ov.grace_in_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), grace_in_min: clamp(Number(e.target.value), 0, 240) } }))} />
+                <Input type="number" value={modalEdit.ov.grace_in_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ grace_in_min: clamp(Number(e.target.value), 0, 240) }))} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.graceOut", "Grace Out (minutes)")}</Label>
-                <Input type="number" value={modalEdit.ov.grace_out_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), grace_out_min: clamp(Number(e.target.value), 0, 240) } }))} />
+                <Input type="number" value={modalEdit.ov.grace_out_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ grace_out_min: clamp(Number(e.target.value), 0, 240) }))} />
               </div>
               <div className="space-y-1 sm:col-span-2">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.notes", "Notes")}</Label>
-                <textarea rows={3} className="w-full rounded-md border p-2 text-sm" placeholder={t("adminSchedule.form.notesPlaceholder", "Optional")} value={modalEdit.ov.notes || ""} onChange={(e)=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), notes: e.target.value } }))} />
+                <textarea rows={3} className="w-full rounded-md border p-2 text-sm" placeholder={t("adminSchedule.form.notesPlaceholder", "Optional")} value={modalEdit.ov.notes || ""} onChange={(e)=> updateModalEdit(() => ({ notes: e.target.value }))} />
               </div>
               <div className="space-y-1 sm:col-span-2">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.scope", "Applies to")}</Label>
                 <div className="flex gap-2">
-                  <Button type="button" size="sm" variant={modalEdit.ov.scope === "all" ? "default" : "outline"} onClick={()=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), scope: "all", targets: [] } }))}>{t("adminSchedule.overrides.scope.all", "Applies to everyone")}</Button>
-                  <Button type="button" size="sm" variant={modalEdit.ov.scope === "individual" ? "default" : "outline"} onClick={()=> setModalEdit((p)=> ({ ...p, ov: { ...(p.ov as any), scope: "individual" } }))}>{t("adminSchedule.overrides.scope.individual", "Specific people")}</Button>
+                  <Button type="button" size="sm" variant={modalEdit.ov.scope === "all" ? "default" : "outline"} onClick={()=> updateModalEdit(() => ({ scope: "all", targets: [] }))}>{t("adminSchedule.overrides.scope.all", "Applies to everyone")}</Button>
+                  <Button type="button" size="sm" variant={modalEdit.ov.scope === "individual" ? "default" : "outline"} onClick={()=> updateModalEdit(() => ({ scope: "individual" }))}>{t("adminSchedule.overrides.scope.individual", "Specific people")}</Button>
                 </div>
                 <p className="text-xs text-muted-foreground">{modalEdit.ov.scope === "individual" ? t("adminSchedule.overrides.form.scopeHelpIndividual", "Select specific members that receive this override.") : t("adminSchedule.overrides.form.scopeHelpAll", "Override applies to every member.")}</p>
               </div>

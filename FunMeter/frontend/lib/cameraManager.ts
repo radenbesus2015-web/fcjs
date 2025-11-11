@@ -33,8 +33,7 @@ function stopStream(): void {
 export async function attach(videoEl: HTMLVideoElement, constraints?: MediaStreamConstraints): Promise<MediaStream> {
   const stream = await ensureStream(constraints);
   // Re-attach latest stream
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (videoEl as any).srcObject = stream;
+  videoEl.srcObject = stream;
   if (!attachedElements.has(videoEl)) {
     attachedElements.add(videoEl);
     attachCount += 1;
@@ -47,9 +46,8 @@ export async function attach(videoEl: HTMLVideoElement, constraints?: MediaStrea
 }
 
 export function detach(videoEl?: HTMLVideoElement | null): void {
-  if (videoEl && (videoEl as any).srcObject) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (videoEl as any).srcObject = null;
+  if (videoEl && videoEl.srcObject) {
+    videoEl.srcObject = null;
   }
   if (videoEl && attachedElements.has(videoEl)) {
     attachedElements.delete(videoEl);
