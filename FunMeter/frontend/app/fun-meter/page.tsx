@@ -59,12 +59,12 @@ export default function FunMeterPage() {
     root: true,
     on: {
       connect() {
-        setStatusText(t("funMeter.status.wsConnected", "WS terhubung"));
-        toast.success(t("funMeter.toast.wsConnected", "Terhubung ke server WebSocket"));
+        setStatusText(t("funMeter.status.wsConnected", "WS connected"));
+        toast.success(t("funMeter.toast.wsConnected", "Connected to WebSocket server"));
       },
       disconnect(..._args: unknown[]) {
-        setStatusText(t("funMeter.status.wsDisconnected", "WS terputus"));
-        toast.warn(t("funMeter.toast.wsDisconnected", "Koneksi WebSocket terputus"));
+        setStatusText(t("funMeter.status.wsDisconnected", "WS disconnected"));
+        toast.warn(t("funMeter.toast.wsDisconnected", "WebSocket connection lost"));
       },
       fun_metadata(...args: unknown[]) {
         // Receive model metadata from server
@@ -72,6 +72,10 @@ export default function FunMeterPage() {
         if (data?.model) {
           console.log("[FUN_METADATA] Received model:", data.model);
           setModelName(data.model);
+          toast.success(
+            t("funMeter.toast.modelLoaded", "Model loaded: {model}", { model: data.model }),
+            { duration: 4000 }
+          );
         }
       },
       fun_result(...args: unknown[]) {
@@ -79,8 +83,15 @@ export default function FunMeterPage() {
         
         // Check if metadata is included in fun_result response
         if (!modelName && (data as { model?: string }).model) {
-          console.log("[FUN_METADATA] Found model in fun_result:", (data as { model?: string }).model);
-          setModelName((data as { model?: string }).model || "");
+          const detectedModel = (data as { model?: string }).model || "";
+          console.log("[FUN_METADATA] Found model in fun_result:", detectedModel);
+          setModelName(detectedModel);
+          if (detectedModel) {
+            toast.success(
+              t("funMeter.toast.modelLoaded", "Model loaded: {model}", { model: detectedModel }),
+              { duration: 4000 }
+            );
+          }
         }
         
         const funResults = Array.isArray(data?.results) ? data.results : [];
@@ -151,7 +162,7 @@ export default function FunMeterPage() {
       const video = videoRef.current;
       video.srcObject = stream;
       setCameraActive(true);
-      setStatusText(t("funMeter.status.cameraActive", "Kamera aktif"));
+      setStatusText(t("funMeter.status.cameraActive", "Camera active"));
       
       await new Promise((resolve) => {
         if (video.readyState >= 2) resolve(undefined);
@@ -159,8 +170,8 @@ export default function FunMeterPage() {
       });
       
     } catch (error) {
-      setStatusText(t("funMeter.status.cameraDenied", "Akses kamera ditolak"));
-      toast.error(t("funMeter.toast.cameraError", "Gagal mengakses kamera"));
+      setStatusText(t("funMeter.status.cameraDenied", "Camera access denied"));
+      toast.error(t("funMeter.toast.cameraError", "Failed to access camera"));
     }
   };
 
@@ -179,7 +190,7 @@ export default function FunMeterPage() {
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
-    setStatusText(t("funMeter.status.cameraStopped", "Kamera dihentikan"));
+    setStatusText(t("funMeter.status.cameraStopped", "Camera stopped"));
     // Clear detection states and overlay when camera is stopped
     setResults([]);
     setFacesCount(0);
@@ -196,16 +207,16 @@ export default function FunMeterPage() {
   
   const mapExprLabel = React.useCallback((s: string): string => {
     const k = String(s || "").toLowerCase().trim();
-    if (["happiness", "happy", "senang"].includes(k)) return t("funMeter.emotions.happy", "Senang");
-    if (["sadness", "sad", "sedih"].includes(k)) return t("funMeter.emotions.sad", "Sedih");
-    if (["surprise", "surprised", "kaget"].includes(k)) return t("funMeter.emotions.surprised", "Kaget");
-    if (["anger", "angry", "marah"].includes(k)) return t("funMeter.emotions.angry", "Marah");
-    if (["fear", "fearful", "takut"].includes(k)) return t("funMeter.emotions.fear", "Takut");
-    if (["disgust", "disgusted", "jijik"].includes(k)) return t("funMeter.emotions.disgust", "Jijik");
-    if (["neutral", "biasa"].includes(k)) return t("funMeter.emotions.neutral", "Biasa");
+    if (["happiness", "happy", "senang"].includes(k)) return t("funMeter.emotions.happy", "Happy");
+    if (["sadness", "sad", "sedih"].includes(k)) return t("funMeter.emotions.sad", "Sad");
+    if (["surprise", "surprised", "kaget"].includes(k)) return t("funMeter.emotions.surprised", "Surprised");
+    if (["anger", "angry", "marah"].includes(k)) return t("funMeter.emotions.angry", "Angry");
+    if (["fear", "fearful", "takut"].includes(k)) return t("funMeter.emotions.fear", "Fear");
+    if (["disgust", "disgusted", "jijik"].includes(k)) return t("funMeter.emotions.disgust", "Disgust");
+    if (["neutral", "biasa"].includes(k)) return t("funMeter.emotions.neutral", "Neutral");
     
-    // Fallback: capitalize first letter untuk emotion tidak dikenal
-    return k ? k.charAt(0).toUpperCase() + k.slice(1) : t("funMeter.emotions.neutral", "Biasa");
+    // Fallback: capitalize first letter for unknown emotions
+    return k ? k.charAt(0).toUpperCase() + k.slice(1) : t("funMeter.emotions.neutral", "Neutral");
   }, [t]);
 
   const getLetterboxTransform = () => {
@@ -474,7 +485,7 @@ export default function FunMeterPage() {
         {/* Left: Camera Card */}
         <div className="bg-card rounded-lg border p-6 self-start">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("funMeter.camera.title", "Kamera")}
+            {t("funMeter.camera.title", "Camera")}
           </p>
           <h3 className="text-lg font-semibold mb-4">{t("funMeter.camera.subtitle", "Streaming Fun Meter")}</h3>
 
@@ -534,13 +545,13 @@ export default function FunMeterPage() {
           <div className="flex gap-2 mb-2">
             <Button onClick={toggleCamera}>
               {cameraActive
-                ? t("funMeter.actions.stopCamera", "Hentikan Kamera")
-                : t("funMeter.actions.startCamera", "Mulai Kamera")}
+                ? t("funMeter.actions.stopCamera", "Stop Camera")
+                : t("funMeter.actions.startCamera", "Start Camera")}
             </Button>
           </div>
 
           <p className="text-sm text-muted-foreground">
-            {t("funMeter.camera.help", "Tekan mulai untuk mengirim frame ke server.")}
+            {t("funMeter.camera.help", "Press start to send frames to server.")}
           </p>
         </div>
 
@@ -549,9 +560,9 @@ export default function FunMeterPage() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {t("funMeter.summary.title", "Ringkasan")}
+                {t("funMeter.summary.title", "Summary")}
               </p>
-              <h3 className="text-lg font-semibold">{t("funMeter.summary.subtitle", "Label & Hasil Terakhir")}</h3>
+              <h3 className="text-lg font-semibold">{t("funMeter.summary.subtitle", "Labels & Latest Results")}</h3>
             </div>
             <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
               {emotionLabels.length} {emotionLabels.length === 1 ? t("funMeter.summary.label", "label") : t("funMeter.summary.labels", "labels")}
@@ -561,7 +572,7 @@ export default function FunMeterPage() {
           <p className="text-sm text-muted-foreground mb-4">
             {t(
               "funMeter.summary.description",
-              "Fun merepresentasikan probabilitas kebahagiaan (0–100%). Daftar label diambil langsung dari model di server."
+              "Fun represents happiness probability (0–100%). Label list is retrieved directly from the model on the server."
             )}
           </p>
 
@@ -606,8 +617,8 @@ export default function FunMeterPage() {
               {emotionData.length === 0 && (
                 <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground text-center">
                   {results.length === 0
-                    ? t("funMeter.summary.empty", "Belum ada hasil dari kamera.")
-                    : t("funMeter.summary.nonEmpty", "Menerima hasil…")}
+                    ? t("funMeter.summary.empty", "No results from camera yet.")
+                    : t("funMeter.summary.nonEmpty", "Receiving results…")}
                 </div>
               )}
             </>

@@ -97,7 +97,7 @@ export default function AdminConfigPage() {
     }
     const n = Number(s);
     if (Number.isFinite(n) && n >= 0) return Math.round(n);
-    throw new Error(t("adminConfig.errors.mustDuration", "Cooldown harus berupa mm:ss atau jumlah detik."));
+    throw new Error(t("adminConfig.errors.mustDuration", "Cooldown must be in mm:ss format or seconds."));
   };
 
   const toInputValue = (value: unknown): string => {
@@ -125,20 +125,20 @@ export default function AdminConfigPage() {
 
   const loadConfig = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: "" }));
-    toast.info(t("adminConfig.toast.loading", "Memuat konfigurasi..."), { duration: 2000 });
+    toast.info(t("adminConfig.toast.loading", "Loading configuration..."), { duration: 2000 });
     
     try {
       const data = await request<DashboardData>("/admin/dashboard-data", { method: "GET" });
       const config = data?.config || { face_engine: {}, attendance: {} };
       const defaults = data?.config_defaults || { face_engine: {}, attendance: {} };
       setState({ loading: false, error: "", config, defaults });
-      toast.success(t("adminConfig.toast.loaded", "✅ Konfigurasi berhasil dimuat"), { duration: 2000 });
+      toast.success(t("adminConfig.toast.loaded", "Configuration loaded successfully"), { duration: 2000 });
 
       // no-op: we don't need to update auth user here
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setState(prev => ({ ...prev, loading: false, error: error?.message || t("adminConfig.error.fetch", "Gagal memuat konfigurasi.") }));
-      toast.error(t("adminConfig.toast.loadError", "❌ Gagal memuat konfigurasi"), { duration: 4000 });
+      setState(prev => ({ ...prev, loading: false, error: error?.message || t("adminConfig.error.fetch", "Failed to load configuration.") }));
+      toast.error(t("adminConfig.toast.loadError", "Failed to load configuration"), { duration: 4000 });
     }
   }, [t, user]);
 
@@ -156,7 +156,7 @@ export default function AdminConfigPage() {
       const parseNumber = (key: keyof FaceEngineConfig, value: string) => {
         if (value === "" || value === null || value === undefined) return;
         const num = Number(value);
-        if (Number.isNaN(num)) throw new Error(t("adminConfig.errors.mustNumber", "{field} harus berupa angka.", { field: String(key) }));
+        if (Number.isNaN(num)) throw new Error(t("adminConfig.errors.mustNumber", "{field} must be a number.", { field: String(key) }));
         payload[key] = num;
       };
       parseNumber("min_cosine_accept", faceForm.min_cosine_accept);
@@ -178,7 +178,7 @@ export default function AdminConfigPage() {
       }
       if (attendanceForm.min_cosine_accept !== "") {
         const num = Number(attendanceForm.min_cosine_accept);
-        if (Number.isNaN(num)) throw new Error(t("adminConfig.errors.mustNumber", "{field} harus berupa angka.", { field: "min_cosine_accept" }));
+        if (Number.isNaN(num)) throw new Error(t("adminConfig.errors.mustNumber", "{field} must be a number.", { field: "min_cosine_accept" }));
         payload["min_cosine_accept"] = num;
       }
       if (Object.keys(payload).length === 0) return null;
@@ -191,18 +191,18 @@ export default function AdminConfigPage() {
     try {
       const payload = buildConfigPayload(scope);
       if (!payload) {
-        toast.info(t("adminConfig.toast.noChanges", "ℹ️ Tidak ada perubahan untuk disimpan"), { duration: 3000 });
+        toast.info(t("adminConfig.toast.noChanges", "No changes to save"), { duration: 3000 });
         return;
       }
       setSaving(true);
-      toast.info(t("adminConfig.toast.saving", "Menyimpan konfigurasi..."), { duration: 2000 });
+      toast.info(t("adminConfig.toast.saving", "Saving configuration..."), { duration: 2000 });
       
       await request("/config", { method: "PUT", body: payload });
-      toast.success(t("adminConfig.toast.saved", "✅ Konfigurasi berhasil disimpan"), { duration: 3000 });
+      toast.success(t("adminConfig.toast.saved", "Configuration saved successfully"), { duration: 3000 });
       await loadConfig();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error?.message || t("adminConfig.error.generic", "❌ Gagal menyimpan konfigurasi"), { duration: 5000 });
+      toast.error(error?.message || t("adminConfig.error.generic", "Failed to save configuration"), { duration: 5000 });
     } finally {
       setSaving(false);
     }
@@ -210,27 +210,27 @@ export default function AdminConfigPage() {
 
   const resetConfig = async (scope: "face_engine" | "attendance" | "all") => {
     const label = scope === "face_engine"
-      ? t("adminConfig.reset.scopeFace", "konfigurasi face engine")
+      ? t("adminConfig.reset.scopeFace", "face engine configuration")
       : scope === "attendance"
-      ? t("adminConfig.reset.scopeAttendance", "konfigurasi attendance")
-      : t("adminConfig.reset.scopeAll", "semua konfigurasi");
+      ? t("adminConfig.reset.scopeAttendance", "attendance configuration")
+      : t("adminConfig.reset.scopeAll", "all configurations");
 
     const confirmed = await confirmDialog({
-      title: t("adminConfig.reset.title", "Konfirmasi Reset"),
-      description: t("adminConfig.reset.confirm", "Atur ulang {scope}?", { scope: label }),
-      confirmText: t("adminConfig.reset.ok", "Atur ulang"),
-      cancelText: t("common.cancel", "Batal"),
+      title: t("adminConfig.reset.title", "Confirm Reset"),
+      description: t("adminConfig.reset.confirm", "Reset {scope}?", { scope: label }),
+      confirmText: t("adminConfig.reset.ok", "Reset"),
+      cancelText: t("common.cancel", "Cancel"),
     });
     if (!confirmed) return;
     
     try {
-      toast.info(t("adminConfig.toast.resetting", "Mereset konfigurasi..."), { duration: 2000 });
+      toast.info(t("adminConfig.toast.resetting", "Resetting configuration..."), { duration: 2000 });
       await request("/config/reset", { method: "POST", body: { scope } });
-      toast.success(t("adminConfig.toast.reset", "✅ Konfigurasi berhasil direset"), { duration: 3000 });
+      toast.success(t("adminConfig.toast.reset", "Configuration reset successfully"), { duration: 3000 });
       await loadConfig();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error?.message || t("adminConfig.error.generic", "❌ Gagal mereset konfigurasi"), { duration: 5000 });
+      toast.error(error?.message || t("adminConfig.error.generic", "Failed to reset configuration"), { duration: 5000 });
     }
   };
 
@@ -251,7 +251,7 @@ export default function AdminConfigPage() {
       {/* Status */}
       {state.error && (
         <Alert variant="destructive">
-          <AlertTitle>{t("adminConfig.error.title", "Terjadi kesalahan")}</AlertTitle>
+          <AlertTitle>{t("adminConfig.error.title", "An error occurred")}</AlertTitle>
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
@@ -261,7 +261,7 @@ export default function AdminConfigPage() {
           <div className="flex flex-col items-center gap-3">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <p className="text-sm font-medium text-muted-foreground">
-              {t("state.loading", "Memuat data config...")}
+              {t("state.loading", "Loading config data...")}
             </p>
           </div>
         </div>
@@ -274,20 +274,20 @@ export default function AdminConfigPage() {
             <div className="space-y-1.5">
               <CardTitle>{t("adminConfig.sections.faceEngine.title", "Face Engine")}</CardTitle>
               <CardDescription>
-                {t("adminConfig.sections.faceEngine.subtitle", "Atur interval WS dan ambang deteksi YuNet.")}
+                {t("adminConfig.sections.faceEngine.subtitle", "Configure WS intervals and YuNet detection thresholds.")}
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => resetConfig("face_engine")}>{t("adminConfig.actions.resetFace", "Atur Ulang Face Engine")}</Button>
-              <Button variant="outline" size="sm" onClick={() => resetConfig("attendance")}>{t("adminConfig.actions.resetAttendance", "Atur Ulang Absensi")}</Button>
-              <Button variant="destructive" size="sm" onClick={() => resetConfig("all")}>{t("adminConfig.actions.resetAll", "Atur Ulang Semua")}</Button>
+              <Button variant="outline" size="sm" onClick={() => resetConfig("face_engine")}>{t("adminConfig.actions.resetFace", "Reset Face Engine")}</Button>
+              <Button variant="outline" size="sm" onClick={() => resetConfig("attendance")}>{t("adminConfig.actions.resetAttendance", "Reset Attendance")}</Button>
+              <Button variant="destructive" size="sm" onClick={() => resetConfig("all")}>{t("adminConfig.actions.resetAll", "Reset All")}</Button>
             </div>
           </CardHeader>
           <Separator />
           <CardContent className="p-6 space-y-6">
             <form className="grid gap-4 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); submitConfig("face_engine"); }}>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminConfig.fields.minCosine", "Ambang Cosine Minimum")}</Label>
+                <Label className="text-xs font-semibold">{t("adminConfig.fields.minCosine", "Minimum Cosine Threshold")}</Label>
                 <Input value={faceForm.min_cosine_accept} onChange={(e)=> setFaceForm(prev => ({ ...prev, min_cosine_accept: e.target.value }))} />
                 <p className="text-[11px] text-muted-foreground">
                   {t("adminConfig.defaults.value", "Default: {value}", { value: (state.defaults.face_engine?.min_cosine_accept as unknown) ?? "—" })}
@@ -295,7 +295,7 @@ export default function AdminConfigPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminConfig.fields.funInterval", "Interval WS Fun (detik)")}</Label>
+                <Label className="text-xs font-semibold">{t("adminConfig.fields.funInterval", "Fun WS Interval (seconds)")}</Label>
                 <Input value={faceForm.fun_ws_min_interval} onChange={(e)=> setFaceForm(prev => ({ ...prev, fun_ws_min_interval: e.target.value }))} />
                 <p className="text-[11px] text-muted-foreground">
                   {t("adminConfig.defaults.value", "Default: {value}", { value: (state.defaults.face_engine?.fun_ws_min_interval as unknown) ?? "—" })}
@@ -303,7 +303,7 @@ export default function AdminConfigPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminConfig.fields.attInterval", "Interval WS Attendance (detik)")}</Label>
+                <Label className="text-xs font-semibold">{t("adminConfig.fields.attInterval", "Attendance WS Interval (seconds)")}</Label>
                 <Input value={faceForm.att_ws_min_interval} onChange={(e)=> setFaceForm(prev => ({ ...prev, att_ws_min_interval: e.target.value }))} />
                 <p className="text-[11px] text-muted-foreground">
                   {t("adminConfig.defaults.value", "Default: {value}", { value: (state.defaults.face_engine?.att_ws_min_interval as unknown) ?? "—" })}
@@ -311,7 +311,7 @@ export default function AdminConfigPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminConfig.fields.scoreThreshold", "Ambang Skor YuNet")}</Label>
+                <Label className="text-xs font-semibold">{t("adminConfig.fields.scoreThreshold", "YuNet Score Threshold")}</Label>
                 <Input value={faceForm.yunet_score_threshold} onChange={(e)=> setFaceForm(prev => ({ ...prev, yunet_score_threshold: e.target.value }))} />
                 <p className="text-[11px] text-muted-foreground">
                   {t("adminConfig.defaults.value", "Default: {value}", { value: (state.defaults.face_engine?.yunet_score_threshold as unknown) ?? "—" })}
@@ -319,7 +319,7 @@ export default function AdminConfigPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminConfig.fields.nmsThreshold", "Ambang NMS YuNet")}</Label>
+                <Label className="text-xs font-semibold">{t("adminConfig.fields.nmsThreshold", "YuNet NMS Threshold")}</Label>
                 <Input value={faceForm.yunet_nms_threshold} onChange={(e)=> setFaceForm(prev => ({ ...prev, yunet_nms_threshold: e.target.value }))} />
                 <p className="text-[11px] text-muted-foreground">
                   {t("adminConfig.defaults.value", "Default: {value}", { value: (state.defaults.face_engine?.yunet_nms_threshold as unknown) ?? "—" })}
@@ -339,10 +339,10 @@ export default function AdminConfigPage() {
                   {saving ? (
                     <>
                       <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      {t("adminConfig.actions.saving", "Menyimpan...")}
+                      {t("adminConfig.actions.saving", "Saving...")}
                     </>
                   ) : (
-                    t("adminConfig.actions.saveFace", "Simpan Face Engine")
+                    t("adminConfig.actions.saveFace", "Save Face Engine")
                   )}
                 </Button>
               </div>
@@ -355,9 +355,9 @@ export default function AdminConfigPage() {
       {!state.loading && (
         <Card>
           <CardHeader className="space-y-1.5">
-            <CardTitle>{t("adminConfig.sections.attendance.title", "Absensi")}</CardTitle>
+            <CardTitle>{t("adminConfig.sections.attendance.title", "Attendance")}</CardTitle>
             <CardDescription>
-              {t("adminConfig.sections.attendance.subtitle", "Konfigurasi cooldown dan threshold absensi")}
+              {t("adminConfig.sections.attendance.subtitle", "Configure cooldown and attendance threshold")}
             </CardDescription>
           </CardHeader>
           <Separator />
@@ -368,7 +368,7 @@ export default function AdminConfigPage() {
                 <Input
                   value={attendanceForm.cooldown_str}
                   onChange={(e)=> setAttendanceForm(prev => ({ ...prev, cooldown_str: e.target.value }))}
-                  placeholder={t("adminConfig.help.wsInterval", "mm:ss atau detik")}
+                  placeholder={t("adminConfig.help.wsInterval", "mm:ss or seconds")}
                 />
                 <p className="text-[11px] text-muted-foreground">
                   {t("adminConfig.defaults.value", "Default: {value}", { value: (state.defaults.attendance?.cooldown_sec as unknown) ?? "—" })}
@@ -391,10 +391,10 @@ export default function AdminConfigPage() {
                   {saving ? (
                     <>
                       <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      {t("adminConfig.actions.saving", "Menyimpan...")}
+                      {t("adminConfig.actions.saving", "Saving...")}
                     </>
                   ) : (
-                    t("adminConfig.actions.saveAttendance", "Simpan Absensi")
+                    t("adminConfig.actions.saveAttendance", "Save Attendance")
                   )}
                 </Button>
               </div>
@@ -419,7 +419,7 @@ export default function AdminConfigPage() {
           <DialogHeader>
             <DialogTitle>{jsonModal.title}</DialogTitle>
             <DialogDescription>
-              {t("adminConfig.json.hint", "Dump data mentah untuk debugging")}
+              {t("adminConfig.json.hint", "Raw data dump for debugging")}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[50vh] overflow-auto rounded-lg bg-muted p-4">

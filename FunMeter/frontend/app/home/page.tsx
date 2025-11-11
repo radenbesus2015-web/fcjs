@@ -239,18 +239,36 @@ export default function HomePage() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
-          const message = info.message || `✅ Absen berhasil: ${label}${score}`;
+          const score = info.score ? (info.score * 100).toFixed(1) : null;
+          const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          
+          // Build detailed message
+          let detailMessage = `Attendance success: ${label}`;
+          const details: string[] = [];
+          
+          if (score) details.push(`Score: ${score}%`);
+          if (timestamp) details.push(`Time: ${timestamp}`);
+          
+          // Safe access to optional properties
+          const infoAny = info as Record<string, unknown>;
+          if (infoAny.person_id) details.push(`ID: ${infoAny.person_id}`);
+          if (infoAny.temperature) details.push(`Temp: ${infoAny.temperature}°C`);
+          
+          if (details.length > 0) {
+            detailMessage += `\n${details.join(' • ')}`;
+          }
+          
           if (label) {
-            console.log("[ATTENDANCE] Showing toast for:", label);
-            toast.success(message, { duration: 5000 });
+            console.log("[ATTENDANCE] Showing detailed toast for:", label, info);
+            toast.success(detailMessage, { duration: 6000 });
           }
         }
         
         if (!markedInfo.length && marked.length > 0) {
+          const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            toast.success(`✅ Absen berhasil: ${label}`, { duration: 5000 });
+            toast.success(`Attendance success: ${label}\nTime: ${timestamp}`, { duration: 5000 });
           }
         }
         

@@ -38,6 +38,68 @@ export default function AdminUsersPage() {
   const { t } = useI18n();
   const { user, updateUser } = useAuth();
   
+  // Permission helper functions based on RBAC
+  const canPromote = (currentUser: CurrentUser | null, targetUser: User): boolean => {
+    if (!currentUser) return false;
+    // Owner can promote user to admin
+    // Admin can promote user to admin
+    if (currentUser.is_owner || currentUser.is_admin) {
+      return !targetUser.is_admin && !targetUser.is_owner;
+    }
+    return false;
+  };
+  
+  const canDemote = (currentUser: CurrentUser | null, targetUser: User): boolean => {
+    if (!currentUser) return false;
+    // Owner can demote admin to user
+    // Admin can demote admin to user
+    if (currentUser.is_owner || currentUser.is_admin) {
+      return targetUser.is_admin && !targetUser.is_owner && !targetUser.is_current;
+    }
+    return false;
+  };
+  
+  const canRotateApi = (currentUser: CurrentUser | null, targetUser: User): boolean => {
+    if (!currentUser) return false;
+    // Owner can rotate all
+    if (currentUser.is_owner) return true;
+    // Admin can rotate self and user (not owner, not other admin)
+    if (currentUser.is_admin) {
+      if (targetUser.is_current) return true; // own account
+      return !targetUser.is_owner && !targetUser.is_admin; // only user
+    }
+    // User can only rotate self
+    return targetUser.is_current;
+  };
+  
+  const canDelete = (currentUser: CurrentUser | null, targetUser: User): boolean => {
+    if (!currentUser) return false;
+    if (targetUser.is_current) return true; // can delete own account
+    // Owner can delete admin and user (not owner)
+    if (currentUser.is_owner) {
+      return !targetUser.is_owner;
+    }
+    // Admin can delete user only (not owner, not admin)
+    if (currentUser.is_admin) {
+      return !targetUser.is_owner && !targetUser.is_admin;
+    }
+    // User cannot delete others
+    return false;
+  };
+  
+  const canEditPassword = (currentUser: CurrentUser | null, targetUser: User): boolean => {
+    if (!currentUser) return false;
+    // Owner can edit all passwords
+    if (currentUser.is_owner) return true;
+    // Admin can edit self password and users (not owner, not other admin)
+    if (currentUser.is_admin) {
+      if (targetUser.is_current) return true; // own account
+      return !targetUser.is_owner && !targetUser.is_admin; // only users
+    }
+    // User can only edit self password
+    return targetUser.is_current;
+  };
+  
   const [state, setState] = useState({
     loading: true,
     error: "",
@@ -91,6 +153,9 @@ export default function AdminUsersPage() {
   };
 
   const openPasswordModal = (userToEdit: User) => {
+    if (!canEditPassword(state.currentUser, userToEdit)) {
+      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+    }
     if (!userToEdit?.username) return;
     setPasswordModal({
       open: true,
@@ -152,8 +217,8 @@ export default function AdminUsersPage() {
   };
 
   const promoteUser = async (userToPromote: User) => {
-    if (!state.currentUser?.is_owner) {
-      return toast.error(t("adminUsers.toast.ownerOnly", "Hanya owner yang bisa ubah peran admin."));
+    if (!canPromote(state.currentUser, userToPromote)) {
+      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
     }
     if (!userToPromote?.username) return;
     
@@ -175,8 +240,8 @@ export default function AdminUsersPage() {
   };
 
   const demoteUser = async (userToDemote: User) => {
-    if (!state.currentUser?.is_owner) {
-      return toast.error(t("adminUsers.toast.ownerOnly", "Hanya owner yang bisa ubah peran admin."));
+    if (!canDemote(state.currentUser, userToDemote)) {
+      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
     }
     if (!userToDemote?.username) return;
     
@@ -204,9 +269,12 @@ export default function AdminUsersPage() {
   };
 
   const deleteUser = async (userToDelete: User) => {
+    if (!canDelete(state.currentUser, userToDelete)) {
+      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+    }
     if (!userToDelete?.username) return;
     
-    if (state.currentUser?.promoted_by && state.currentUser.promoted_by === userToDelete.username) {
+    if (!userToDelete.is_current && state.currentUser?.promoted_by && state.currentUser.promoted_by === userToDelete.username) {
       toast.error(t("adminUsers.toast.cannotDeletePromoter", "Tidak boleh menghapus orang yang mempromosikan kamu."));
       return;
     }
@@ -225,6 +293,9 @@ export default function AdminUsersPage() {
   };
 
   const rotateApiKey = async (userToRotate: User) => {
+    if (!canRotateApi(state.currentUser, userToRotate)) {
+      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+    }
     if (!userToRotate?.username) return;
     
     const self = Boolean(userToRotate.is_current);
@@ -383,58 +454,63 @@ export default function AdminUsersPage() {
 
                         <TableCell className="text-right">
                           <div className="flex flex-wrap justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={rotatingUser === userItem.username}
-                              onClick={() => rotateApiKey(userItem)}
-                              className="gap-2"
-                            >
-                              <Icon name="Key" className="h-4 w-4 flex-shrink-0" />
-                              <span className="hidden sm:inline">
-                                {rotatingUser === userItem.username
-                                  ? t("adminUsers.actions.processing", "Memproses…")
-                                  : t("adminUsers.actions.rotateKey", "Putar API Key")}
-                              </span>
-                            </Button>
+                            {canRotateApi(state.currentUser, userItem) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={rotatingUser === userItem.username}
+                                onClick={() => rotateApiKey(userItem)}
+                                className="gap-2"
+                              >
+                                <Icon name="Key" className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">
+                                  {rotatingUser === userItem.username
+                                    ? t("adminUsers.actions.processing", "Memproses…")
+                                    : t("adminUsers.actions.rotateKey", "Putar API Key")}
+                                </span>
+                              </Button>
+                            )}
                             
-                            <Button variant="outline" size="sm" onClick={() => openPasswordModal(userItem)} className="gap-2">
-                              <Icon name="Lock" className="h-4 w-4 flex-shrink-0" />
-                              <span className="hidden sm:inline">{t("adminUsers.actions.setPassword", "Setel Password")}</span>
-                            </Button>
+                            {canEditPassword(state.currentUser, userItem) && (
+                              <Button variant="outline" size="sm" onClick={() => openPasswordModal(userItem)} className="gap-2">
+                                <Icon name="Lock" className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">{t("adminUsers.actions.setPassword", "Setel Password")}</span>
+                              </Button>
+                            )}
 
-                            {!userItem.is_current && (
-                              <>
-                                {userItem.is_admin && !userItem.is_owner && state.currentUser?.is_owner && (
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => demoteUser(userItem)}
-                                    className="gap-2"
-                                  >
-                                    <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
-                                    <span className="hidden sm:inline">{t("adminUsers.actions.demote", "Turunkan")}</span>
-                                  </Button>
-                                )}
-                                
-                                {!userItem.is_owner && state.currentUser?.is_owner && !userItem.is_admin && (
-                                  <Button size="sm" onClick={() => promoteUser(userItem)} className="gap-2">
-                                    <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
-                                    <span className="hidden sm:inline">{t("adminUsers.actions.promote", "Naikkan")}</span>
-                                  </Button>
-                                )}
-                                
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  disabled={userItem.is_owner || (userItem.is_admin && !state.currentUser?.is_owner)}
-                                  onClick={() => deleteUser(userItem)}
-                                  className="gap-2"
-                                >
-                                  <Icon name="Trash" className="h-4 w-4 flex-shrink-0" />
-                                  <span className="hidden sm:inline">{t("adminUsers.actions.delete", "Hapus")}</span>
-                                </Button>
-                              </>
+                            {canPromote(state.currentUser, userItem) && (
+                              <Button size="sm" onClick={() => promoteUser(userItem)} className="gap-2">
+                                <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">{t("adminUsers.actions.promote", "Naikkan")}</span>
+                              </Button>
+                            )}
+                            
+                            {canDemote(state.currentUser, userItem) && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => demoteUser(userItem)}
+                                className="gap-2"
+                              >
+                                <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">{t("adminUsers.actions.demote", "Turunkan")}</span>
+                              </Button>
+                            )}
+                            
+                            {canDelete(state.currentUser, userItem) && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => deleteUser(userItem)}
+                                className="gap-2"
+                              >
+                                <Icon name="Trash" className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">
+                                  {userItem.is_current 
+                                    ? t("adminUsers.actions.deleteAccount", "Hapus Akun") 
+                                    : t("adminUsers.actions.delete", "Hapus")}
+                                </span>
+                              </Button>
                             )}
                           </div>
                         </TableCell>

@@ -903,10 +903,9 @@ export default function AdminListMembersPage() {
                   <button
                     onClick={() => startEditLabel(row)}
                     onMouseDown={(e) => e.stopPropagation()}
-                    onDragStart={(e) => e.preventDefault()}
                     title={t("adminListMembers.actions.edit", "Edit")}
                     aria-label={t("adminListMembers.actions.edit", "Edit")}
-                    className="absolute bottom-3 right-3 p-2.5 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
+                    className="absolute bottom-3 right-3 p-2.5 rounded-full bg-orange-600 text-white shadow-lg hover:bg-orange-700 transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
                   >
                     <Icon name="Pencil" className="h-4 w-4" />
                   </button>
@@ -915,7 +914,6 @@ export default function AdminListMembersPage() {
                   <button
                     onClick={() => deleteMember(String(row.id), row.label)}
                     onMouseDown={(e) => e.stopPropagation()}
-                    onDragStart={(e) => e.preventDefault()}
                     title={t("adminListMembers.actions.delete", "Delete")}
                     aria-label={t("adminListMembers.actions.delete", "Delete")}
                     className="absolute bottom-3 left-3 p-2.5 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
