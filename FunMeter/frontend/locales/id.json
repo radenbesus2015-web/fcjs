@@ -1578,7 +1578,8 @@
       "changeViaSettings": "Ubah melalui Pengaturan"
     },
     "model": {
-      "waiting": "Menunggu metadata..."
+      "waiting": "Menunggu metadata...",
+      "notAvailable": "Menunggu data dari server..."
     },
     "actions": {
       "startCamera": "Mulai Kamera",
@@ -1616,7 +1617,8 @@
     "toast": {
       "wsConnected": "Terhubung ke server WebSocket",
       "wsDisconnected": "Koneksi WebSocket terputus",
-      "cameraError": "Gagal mengakses kamera"
+      "cameraError": "Gagal mengakses kamera",
+      "modelLoaded": "Model dimuat: {model}"
     }
   }
 }

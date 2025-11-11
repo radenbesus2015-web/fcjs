@@ -1567,7 +1567,8 @@
       "changeViaSettings": "Change via Settings"
     },
     "model": {
-      "waiting": "Waiting for metadata..."
+      "waiting": "Waiting for metadata...",
+      "notAvailable": "Waiting for server data..."
     },
     "actions": {
       "startCamera": "Start Camera",
@@ -1605,7 +1606,8 @@
     "toast": {
       "wsConnected": "Connected to WebSocket server",
       "wsDisconnected": "WebSocket connection lost",
-      "cameraError": "Failed to access camera"
+      "cameraError": "Failed to access camera",
+      "modelLoaded": "Model loaded: {model}"
     }
   }
 }
