@@ -1,0 +1,7 @@
+# Ignore backend folder completely
+../backend/
+../../backend/
+backend/
+*.py
+requirements.txt
+

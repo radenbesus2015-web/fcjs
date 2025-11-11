@@ -2,6 +2,32 @@
 
 Dokumen ini menjelaskan cara mengkonfigurasi dan mendeploy aplikasi Next.js ke Vercel dengan backend terpisah.
 
+## ⚠️ KONFIGURASI ROOT DIRECTORY (WAJIB!)
+
+**MASALAH:** Vercel mendeteksi folder `backend/` dan mencoba build sebagai FastAPI, padahal yang perlu di-deploy hanya frontend Next.js.
+
+### ✅ SOLUSI: Set Root Directory di Vercel Dashboard
+
+**INI WAJIB DILAKUKAN!** File `vercel.json` tidak cukup, Anda HARUS set Root Directory di Dashboard:
+
+1. Buka **Vercel Dashboard** → Pilih project Anda
+2. Klik **Settings** (di menu atas)
+3. Scroll ke bagian **"General"**
+4. Cari **"Root Directory"**
+5. Klik **"Edit"** dan set ke: `FunMeter/frontend`
+6. Klik **"Save"**
+7. **Redeploy** project (atau push commit baru untuk trigger auto-deploy)
+
+**Setelah ini, Vercel akan hanya build dari folder `FunMeter/frontend` dan tidak akan mendeteksi backend.**
+
+### File Pendukung
+
+File-file berikut sudah dibuat untuk membantu:
+- `vercel.json` (root) - Konfigurasi build
+- `.vercelignore` (root) - Ignore backend folder
+
+Tapi **tetap harus set Root Directory di Dashboard** untuk hasil yang optimal.
+
 ## Environment Variables
 
 Tambahkan environment variables berikut di Vercel Dashboard (Settings > Environment Variables):
