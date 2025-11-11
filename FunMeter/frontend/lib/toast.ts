@@ -80,12 +80,19 @@ function getCurrentLanguage(): 'en' | 'id' {
   }
 }
 
+type ToastDict = {
+  success: string;
+  error: string;
+  warn: string;
+  info: string;
+};
+
 function fallbackTitle(type: keyof typeof TYPE_METHOD): string {
   const lang = getCurrentLanguage();
-  const dict = lang === 'en'
+  const dict: ToastDict = lang === 'en'
     ? { success: 'Success', error: 'Error', warn: 'Warning', info: 'Info' }
     : { success: 'Berhasil', error: 'Gagal', warn: 'Perhatian', info: 'Info' };
-  return (dict as any)[type] || dict.info;
+  return dict[type] || dict.info;
 }
 
 export const toast = {

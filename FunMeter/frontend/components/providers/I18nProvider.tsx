@@ -33,12 +33,12 @@ function resolveLocale(locale: string): string {
 function readMessage(locale: string, path: string): unknown {
   const bag = messages[locale];
   if (!bag) return undefined;
-  return path.split(".").reduce((acc: any, part) => {
-    if (acc && Object.prototype.hasOwnProperty.call(acc, part)) {
-      return acc[part];
+  return path.split(".").reduce((acc: Record<string, unknown> | unknown, part) => {
+    if (acc && typeof acc === 'object' && acc !== null && Object.prototype.hasOwnProperty.call(acc, part)) {
+      return (acc as Record<string, unknown>)[part];
     }
     return undefined;
-  }, bag);
+  }, bag as Record<string, unknown> | unknown);
 }
 
 function setDocumentLang(locale: string): void {

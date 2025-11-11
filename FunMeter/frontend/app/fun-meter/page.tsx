@@ -18,6 +18,16 @@ interface FunMeterResult {
   probs?: Record<string, number>;
 }
 
+interface FunMetadataData {
+  model?: string;
+  [key: string]: unknown;
+}
+
+interface FunResultData {
+  results?: FunMeterResult[];
+  [key: string]: unknown;
+}
+
 export default function FunMeterPage() {
   const { t, locale } = useI18n();
   const { useSetting } = useSettings();
@@ -56,14 +66,16 @@ export default function FunMeterPage() {
         setStatusText(t("funMeter.status.wsDisconnected", "WS terputus"));
         toast.warn(t("funMeter.toast.wsDisconnected", "Koneksi WebSocket terputus"));
       },
-      fun_metadata(data: any) {
+      fun_metadata(...args: unknown[]) {
         // Receive model metadata from server
+        const data = args[0] as FunMetadataData;
         if (data?.model) {
           console.log("[FUN_METADATA] Received model:", data.model);
           setModelName(data.model);
         }
       },
-      fun_result(data: any) {
+      fun_result(...args: unknown[]) {
+        const data = args[0] as FunResultData;
         const funResults = Array.isArray(data?.results) ? data.results : [];
         console.log("[FUN_RESULT] Received", funResults.length, "faces:", funResults);
         

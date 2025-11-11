@@ -18,6 +18,33 @@ interface AttendanceRecord {
   score: number;
 }
 
+interface AttendanceResult {
+  bbox?: [number, number, number, number];
+  box?: [number, number, number, number];
+  label?: string;
+  name?: string;
+  score?: number;
+  [key: string]: unknown;
+}
+
+interface AttResultData {
+  results?: AttendanceResult[];
+  marked?: string[];
+  marked_info?: Array<{
+    label?: string;
+    score?: number;
+    message?: string;
+  }>;
+  blocked?: Array<{
+    message?: string;
+  }>;
+  [key: string]: unknown;
+}
+
+interface AttLogSnapshotData {
+  [key: string]: unknown;
+}
+
 export default function AttendancePage() {
   const { t } = useI18n();
   const { useSetting } = useSettings();
@@ -31,7 +58,7 @@ export default function AttendancePage() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const refreshLogRef = useRef<((page?: number) => Promise<void>) | null>(null);
   const logMetaRef = useRef({ page: 1 });
-  const [lastResults, setLastResults] = useState<any[]>([]);
+  const [lastResults, setLastResults] = useState<AttendanceResult[]>([]);
   const [sending, setSending] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   
@@ -62,7 +89,8 @@ export default function AttendancePage() {
     url: "",
     root: true,
     on: {
-      att_result(data: any) {
+      att_result(...args: unknown[]) {
+        const data = args[0] as AttResultData;
         const results = Array.isArray(data?.results) ? data.results : [];
         setLastResults(results);
         draw(results);
@@ -119,7 +147,8 @@ export default function AttendancePage() {
           }, 500);
         }
       },
-      att_log_snapshot(data: any) {
+      att_log_snapshot(...args: unknown[]) {
+        const data = args[0] as AttLogSnapshotData;
         // Refresh log when server sends snapshot update
         const refresh = refreshLogRef.current;
         const currentPage = logMetaRef.current.page;
@@ -198,7 +227,7 @@ export default function AttendancePage() {
       try {
         await video.play();
         console.log("[CAMERA] Video playing");
-      } catch (playError: any) {
+      } catch (playError: unknown) {
         console.warn("[CAMERA] Auto-play failed:", playError);
         // Try again after a short delay
         setTimeout(async () => {
@@ -214,10 +243,10 @@ export default function AttendancePage() {
       setCameraActive(true);
       fitCanvasToVideo();
       toast.success(t("attendance.toast.cameraStarted", "✅ Kamera berhasil dimulai"), { duration: 3000 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[CAMERA] Error starting camera:", error);
       setCameraActive(false);
-      const errorMsg = error?.message || "Unknown error";
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
       toast.error(t("attendance.toast.cameraError", "❌ Gagal mengakses kamera: {error}", { error: errorMsg }), { duration: 5000 });
     } finally {
       setCameraLoading(false);
@@ -395,7 +424,7 @@ export default function AttendancePage() {
     return { sx, sy, ox, oy };
   };
 
-  const draw = (results: any[]) => {
+  const draw = (results: AttendanceResult[]) => {
     const overlay = overlayRef.current;
     const ctx = ctxRef.current;
     if (!overlay || !ctx) return;
@@ -413,7 +442,7 @@ export default function AttendancePage() {
     
     const { sx, sy, ox, oy } = getLetterboxTransform();
     
-    results.forEach((r: any) => {
+    results.forEach((r) => {
       const [bx, by, bw, bh] = r.bbox || r.box || [0, 0, 0, 0];
       
       // Transform bounding box coordinates with letterbox offset

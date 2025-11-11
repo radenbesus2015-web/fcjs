@@ -59,7 +59,12 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 
 /** Get nested value by path */
 function getByPath(obj: Record<string, unknown>, path: string): unknown {
-  return path.split(".").reduce((acc: any, k) => (acc ? acc[k] : undefined), obj);
+  return path.split(".").reduce((acc: Record<string, unknown> | unknown, k) => {
+    if (acc && typeof acc === 'object' && acc !== null && k in acc) {
+      return (acc as Record<string, unknown>)[k];
+    }
+    return undefined;
+  }, obj as Record<string, unknown> | unknown);
 }
 
 /** Set nested value by path */
@@ -68,11 +73,11 @@ function setByPath(obj: Record<string, unknown>, path: string, val: unknown): vo
   const last = keys.pop();
   if (!last) return;
   
-  const target = keys.reduce((acc: any, k) => {
+  const target = keys.reduce((acc: Record<string, unknown>, k) => {
     if (!acc[k] || typeof acc[k] !== 'object') {
       acc[k] = {};
     }
-    return acc[k];
+    return acc[k] as Record<string, unknown>;
   }, obj);
   
   target[last] = val;

@@ -39,7 +39,32 @@ interface AttendanceLog {
 }
 
 interface AttendanceMeta { page: number; total_pages: number; total: number; per_page: number; order?: "asc" | "desc" }
-interface AttendanceResponse { items: any[]; meta: Partial<AttendanceMeta> }
+
+interface ScheduleDetail {
+  check_in?: string | null;
+  check_out?: string | null;
+  grace_in_min?: number;
+  grace_out_min?: number;
+  day?: string;
+  [key: string]: unknown;
+}
+
+interface RawAttendanceRow {
+  id?: string | number;
+  person_id?: string | number;
+  label?: string;
+  date?: string;
+  check_in?: string | null;
+  check_out?: string | null;
+  schedule?: string;
+  schedule_detail?: ScheduleDetail;
+  status?: string;
+  schedule_override?: unknown;
+  schedule_source?: string;
+  [key: string]: unknown;
+}
+
+interface AttendanceResponse { items: RawAttendanceRow[]; meta: Partial<AttendanceMeta> }
 
 interface AttendanceFilters {
   search?: string;
@@ -72,10 +97,10 @@ export default function AdminAttendancePage() {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Helper: normalize server row like Vue normalizeDailyRow
-  const normalizeDailyRow = (row: any): AttendanceLog => {
-    const detail = {
+  const normalizeDailyRow = (row: RawAttendanceRow): AttendanceLog => {
+    const detail: ScheduleDetail = {
       ...(row?.schedule_detail || {}),
-    } as any;
+    };
     const check_in = row?.check_in || detail?.check_in || null;
     const check_out = row?.check_out || detail?.check_out || null;
     return {
@@ -86,19 +111,15 @@ export default function AdminAttendancePage() {
       check_in: check_in || null,
       check_out: check_out || null,
       schedule: { label: String(row?.schedule || detail?.day || "") },
-      status: (String(row?.status || "present") as any),
+      status: (String(row?.status || "present") as AttendanceLog['status']),
       has_override: Boolean(row?.schedule_override || row?.schedule_source === "override"),
-      // keep extra fields on object for rendering (TS ignore at use sites)
-      ...(row?.schedule_source ? { schedule_source: row.schedule_source } : {}),
-      ...(detail ? { schedule_detail: detail } : {}),
-      ...(row?.schedule_override ? { schedule_override: row.schedule_override } : {}),
-    } as any;
+    } as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; schedule_override?: unknown };
   };
 
   const fetchLogs = useCallback(async (page = 1, filterParams = filters) => {
     try {
       setLoading(true);
-      const params: Record<string, any> = {
+      const params: Record<string, string | number> = {
         page,
         per_page: filterParams.per_page || 10,
         order: filterParams.order || "desc",
@@ -108,12 +129,12 @@ export default function AdminAttendancePage() {
       if (filterParams.date_to?.trim()) params.end = filterParams.date_to.trim();
       if (filterParams.status && filterParams.status !== "") params.status = filterParams.status === "late_left_early" ? "mixed" : filterParams.status;
 
-      const query = new URLSearchParams(params as any).toString();
+      const query = new URLSearchParams(Object.entries(params).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {} as Record<string, string>)).toString();
       const data = await request<AttendanceResponse>(`/admin/attendance/daily?${query}`, { method: "GET" });
       const items = Array.isArray(data?.items) ? data.items : [];
       const mapped = items.map(normalizeDailyRow);
       const meta = data?.meta || {};
-      setLogs(mapped as any);
+      setLogs(mapped as AttendanceLog[]);
       const tp = Number(meta.total_pages || 1);
       setCurrentPage(Number(meta.page || page));
       setTotalPages(tp);
@@ -298,7 +319,7 @@ export default function AdminAttendancePage() {
     }
   };
 
-  const getScheduleBadge = (row: any) => {
+  const getScheduleBadge = (row: AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; day?: string }) => {
     const src = row?.schedule_source;
     if (src === "override") {
       return (
@@ -487,12 +508,12 @@ export default function AdminAttendancePage() {
                     <td className="p-4 text-sm align-top">
                       <div className="space-y-1">
                         <div className="text-sm font-semibold leading-tight">
-                          {String((log as any)?.schedule?.label || (log as any)?.schedule || t("adminAttendance.table.scheduleFallback", "Jam Kerja Normal"))}
+                          {String(log?.schedule?.label || t("adminAttendance.table.scheduleFallback", "Jam Kerja Normal"))}
                         </div>
-                        <div>{getScheduleBadge(log as any)}</div>
+                        <div>{getScheduleBadge(log as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail })}</div>
                         <div className="text-xs text-muted-foreground">
                           {(() => {
-                            const detail: any = (log as any)?.schedule_detail || {};
+                            const detail: ScheduleDetail = (log as AttendanceLog & { schedule_detail?: ScheduleDetail })?.schedule_detail || {};
                             const gIn = Number.isFinite(detail.grace_in_min) ? detail.grace_in_min : 10;
                             const gOut = Number.isFinite(detail.grace_out_min) ? detail.grace_out_min : 5;
                             return t("adminAttendance.table.graceSummary", "Grace: {in}/{out} min", { in: gIn, out: gOut });
@@ -610,7 +631,7 @@ export default function AdminAttendancePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.schedule", "Schedule")}</label>
-                <div className="mt-1">{getScheduleBadge(selectedLog.schedule)}</div>
+                <div className="mt-1">{getScheduleBadge(selectedLog as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; day?: string })}</div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.status", "Status")}</label>
