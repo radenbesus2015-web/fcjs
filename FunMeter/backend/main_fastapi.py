@@ -1338,8 +1338,8 @@ async def att_frame(sid: str, data: Any):
                     marked_info.append({
                         "label": label,
                         "score": float(score),
-                        "ts": _time_now_iso(),
-                        "message": f"Berhasil absen: {label} pada {_time_fmt_wib_full(datetime.now(timezone(timedelta(hours=7))))} (score {float(score):.3f})."
+                        "ts": _time_now_iso()
+                        # No message field - let frontend handle translation and formatting
                     })
 
         # Tahan satu frame hanya kalau ada toast yg tampil
