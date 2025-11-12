@@ -2,8 +2,10 @@
 // Main toast module - unified toast system untuk frontend dan backend
 // Adaptor dari src-vue-original/utils/toast.js ke sonner (React)
 
+"use client";
+
 import { toast as sonner } from 'sonner';
-import { ToastOptions } from './types';
+import type { ToastOptions } from './types';
 import { TYPE_METHOD, DEFAULTS } from './constants';
 import { fallbackTitle } from './utils';
 

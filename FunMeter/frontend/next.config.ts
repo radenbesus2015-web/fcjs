@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // Turbopack configuration (Next.js 16 default bundler)
+  // Empty config silences the webpack warning
+  turbopack: {},
+  
   // Compiler optimizations
   compiler: {
     // Remove console logs in production

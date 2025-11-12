@@ -1,7 +1,9 @@
 // lib/toast/utils.ts
 // Utility functions untuk toast system
 
-import { Language, ToastDict, ToastType } from './types';
+"use client";
+
+import type { Language, ToastDict, ToastType } from './types';
 
 /**
  * Mengambil bahasa saat ini dari localStorage

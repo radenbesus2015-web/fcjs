@@ -22,6 +22,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Ignore certain HMR-related errors that don't require error boundary
+    const errorMessage = error?.message || '';
+    const isHMRError = errorMessage.includes('module factory is not available') ||
+                       errorMessage.includes('was instantiated because it was required') ||
+                       errorMessage.includes('HMR') ||
+                       errorMessage.includes('Cannot find module');
+    
+    // Don't show error boundary for HMR errors - they usually resolve on next render
+    if (isHMRError && process.env.NODE_ENV === 'development') {
+      console.warn('[ErrorBoundary] Ignoring HMR-related error:', error);
+      return { hasError: false, error: null };
+    }
+    
     // Update state so the next render will show the fallback UI
     return { hasError: true, error };
   }
@@ -29,6 +42,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console for debugging
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
+    
+    // Auto-retry for module instantiation errors in development
+    const errorMessage = error?.message || '';
+    const isModuleError = errorMessage.includes('module') && 
+                          (errorMessage.includes('instantiated') || errorMessage.includes('factory'));
+    
+    if (isModuleError && process.env.NODE_ENV === 'development') {
+      console.log('[ErrorBoundary] Module error detected, attempting auto-recovery...');
+      // Reset error state after a short delay to allow modules to reload
+      setTimeout(() => {
+        this.setState({ hasError: false, error: null });
+      }, 100);
+    }
   }
 
   render() {
