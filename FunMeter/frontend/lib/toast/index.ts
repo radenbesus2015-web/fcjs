@@ -74,10 +74,24 @@ export const toast = {
   },
 
   /**
+   * Alias untuk warn (untuk backward compatibility)
+   */
+  warning(message: string, extra: Partial<ToastOptions> = {}) {
+    return show({ type: 'warn', message, ...(extra || {}) });
+  },
+
+  /**
    * Menampilkan info toast
    */
   info(message: string, extra: Partial<ToastOptions> = {}) {
     return show({ type: 'info', message, ...(extra || {}) });
+  },
+
+  /**
+   * Menampilkan loading toast
+   */
+  loading(message: string, extra: Partial<ToastOptions> = {}) {
+    return show({ type: 'info', message, title: 'Loading...', ...(extra || {}) });
   },
 
   /**

@@ -1162,8 +1162,15 @@
       "blockedReasonDefault": "Cannot mark attendance (rule active).",
       "blockedRetry": " • Try again: {time}",
       "blockedFallback": "Cannot mark attendance (already marked today or still in cooldown).",
-      "cameraStopped": "Camera stopped.",
-      "cameraError": "Failed to access camera: {message}",
+      "cameraStarting": "Starting camera...",
+      "cameraStarted": "✅ Camera started successfully",
+      "cameraStopping": "Stopping camera...",
+      "cameraStopped": "✅ Camera stopped successfully",
+      "cameraError": "❌ Failed to access camera: {error}",
+      "refreshSuccess": "Attendance data refreshed successfully",
+      "fetchError": "Failed to load attendance data",
+      "attendanceSuccess": "Attendance recorded: {name} (score {score}%)",
+      "attendanceMarked": "Attendance marked: {name}",
       "logError": "Failed to load Attendance Log. Please try again."
     },
     "labels": {

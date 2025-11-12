@@ -23,7 +23,7 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
     titleKey: "pages.attendanceFunMeter.title",
     titleFallback: "Face Recognition",
     navKey: "nav.attendanceFunMeter",
-    navFallback: "Absensi Fun Meter",
+    navFallback: "Pengenalan Wajah",
   },
   "/attendance": {
     titleKey: "pages.attendance.title",
@@ -39,7 +39,7 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
   },
   "/absensi-fun-meter": {
     titleKey: "pages.attendanceFunMeter.title",
-    titleFallback: "Absensi Fun Meter",
+    titleFallback: "attendance Fun Meter",
     navKey: "nav.attendanceFunMeter",
     navFallback: "Absensi Fun Meter",
   },
