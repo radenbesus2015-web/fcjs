@@ -70,9 +70,9 @@ export default function SettingsModal() {
 
   return (
     <AlertDialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border border-border bg-background p-3 sm:p-4 md:p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden rounded-2xl">
-        <AlertDialogHeader>
-          <div className="flex items-center justify-between gap-4 border-b border-border pb-4 bg-background -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 flex flex-col w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 border border-border bg-background shadow-lg duration-200 focus:outline-none max-h-[95vh] rounded-2xl overflow-hidden">
+        <AlertDialogHeader className="flex-shrink-0">
+          <div className="flex items-center justify-between gap-4 border-b border-border pb-4 bg-background px-4 sm:px-6 pt-4">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">
                 {ft("breadcrumb", "Preferensi")}
@@ -93,8 +93,8 @@ export default function SettingsModal() {
           </div>
         </AlertDialogHeader>
 
-        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden pr-1 sm:pr-2 space-y-1">
-        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6">
+        <form id="settings-form" className="space-y-4 sm:space-y-6 py-4" onSubmit={handleSubmit}>
           {/* Language Section */}
           <section className="space-y-3 p-4 rounded-lg bg-card border border-border">
             <h3 className="text-sm font-semibold text-foreground">
@@ -257,42 +257,59 @@ export default function SettingsModal() {
             </div>
           </section>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-border bg-background -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-2">
+        </form>
+        </div>
+        
+        {/* Sticky Footer */}
+        <div className="flex-shrink-0 border-t border-border bg-background px-4 sm:px-6 py-4">
+          <div className="flex flex-wrap justify-between items-center gap-1 sm:gap-2 md:gap-3">
             {/* Logout button on the left */}
             {user && (
               <Button
                 type="button"
                 variant="destructive"
                 onClick={handleLogoutClick}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
+                title={t("avatar.menu.logout", "Sign out")}
               >
-                <Icon name="LogOut" className="h-4 w-4 mr-2" />
-                {t("avatar.menu.logout", "Sign out")}
+                <Icon name="LogOut" className="h-4 w-4" />
+                <span className="hidden md:inline">{t("avatar.menu.logout", "Sign out")}</span>
               </Button>
             )}
             
             {/* Other buttons on the right */}
-            <div className="flex flex-wrap gap-2 sm:gap-3 ml-auto">
+            <div className="flex flex-wrap gap-1 sm:gap-2 md:gap-3 ml-auto">
               <Button
                 type="button"
                 variant="outline"
                 onClick={reset}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
+                title={ft("actions.reset", "Atur Ulang ke Bawaan")}
               >
-                {ft("actions.reset", "Atur Ulang ke Bawaan")}
+                <Icon name="RotateCcw" className="h-4 w-4" />
+                <span className="hidden md:inline">{ft("actions.reset", "Atur Ulang ke Bawaan")}</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={closeModal}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
+                title={ft("actions.cancel", "Batal")}
               >
-                {ft("actions.cancel", "Batal")}
+                <Icon name="X" className="h-4 w-4" />
+                <span className="hidden md:inline">{ft("actions.cancel", "Batal")}</span>
               </Button>
-              <Button type="submit">
-                {ft("actions.save", "Simpan")}
+              <Button 
+                type="submit" 
+                form="settings-form"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
+                title={ft("actions.save", "Simpan")}
+              >
+                <Icon name="Save" className="h-4 w-4" />
+                <span className="hidden md:inline">{ft("actions.save", "Simpan")}</span>
               </Button>
             </div>
           </div>
-        </form>
         </div>
       </AlertDialogContent>
       

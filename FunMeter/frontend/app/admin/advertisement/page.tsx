@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/toast";
 import { Icon } from "@/components/common/Icon";
 import { fmtAttendanceMultilingual } from "@/lib/format";
@@ -627,12 +628,34 @@ export default function AdminAdvertisementPage() {
       <Card>
         <CardHeader className="flex sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1.5">
-            <CardTitle>{t("pages.adminAdvertisement.title", "Kelola Iklan")}</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {t("pages.adminAdvertisement.title", "Kelola Iklan")}
+            </CardTitle>
             <CardDescription>
               {t("pages.adminAdvertisement.subtitle", "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter.")}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || saving || !!error}
+              title={t("common.upload", "Upload")}
+              aria-label={t("common.upload", "Upload")}
+            >
+              <Icon name="Upload" className="h-4 w-4" />
+              <span className="ml-2 hidden lg:inline">
+                {t("common.upload", "Upload")}
+              </span>
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov"
+              multiple
+              className="hidden"
+              onChange={(e) => handleImportFiles(e.target.files)}
+            />
             {/* View Mode Toggle */}
             <div className="flex items-center border rounded-md">
               <Button 
@@ -828,11 +851,9 @@ export default function AdminAdvertisementPage() {
                             </td>
                             {/* Type */}
                             <td className="p-3">
-                              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                it.type === 'image' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                              }`}>
+                              <Badge variant={it.type === 'image' ? 'image' : 'video'}>
                                 {it.type.toUpperCase()}
-                              </span>
+                              </Badge>
                             </td>
                             {/* Size */}
                             <td className="p-3 text-right text-sm text-muted-foreground">
@@ -1028,11 +1049,9 @@ export default function AdminAdvertisementPage() {
                             </Button>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                              it.type === 'image' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                            }`}>
+                            <Badge variant={it.type === 'image' ? 'image' : 'video'}>
                               {it.type.toUpperCase()}
-                            </span>
+                            </Badge>
                             <span className="text-xs text-muted-foreground">
                               {it.file_size ? `${(it.file_size / 1024 / 1024).toFixed(2)} MB` : '-'}
                             </span>
@@ -1198,26 +1217,6 @@ export default function AdminAdvertisementPage() {
                   </>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading || saving || !!error}
-                title={t("common.upload", "Upload")}
-                aria-label={t("common.upload", "Upload")}
-              >
-                <Icon name="Upload" className="h-4 w-4" />
-                <span className="ml-2 hidden lg:inline">
-                  {t("common.upload", "Upload")}
-                </span>
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov"
-                multiple
-                className="hidden"
-                onChange={(e) => handleImportFiles(e.target.files)}
-              />
             </div>
           </div>
 

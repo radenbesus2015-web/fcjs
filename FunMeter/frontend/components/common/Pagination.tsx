@@ -65,13 +65,48 @@ export function Pagination({
     }
   };
 
-  // Responsive page number calculation
-  const getMaxVisiblePages = () => {
-    if (windowWidth < 480) return 3;      // Mobile: max 3 pages (1 + current + 1)
-    if (windowWidth < 640) return 3;      // Small mobile: max 3 pages
-    if (windowWidth < 768) return 5;      // Tablet: max 5 pages  
-    if (windowWidth < 1024) return 7;     // Desktop small: max 7 pages
-    return 9;                             // Desktop large: max 9 pages
+  // Generate page numbers with new style: << < 1 .... n > >>
+  const generatePageNumbers = () => {
+    const pages: (number | string)[] = [];
+    
+    if (totalPages <= 7) {
+      // If total pages <= 7, show all pages: 1 2 3 4 5 6 7
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage <= 4) {
+        // Current page is near the beginning: 1 2 3 4 5 ... n
+        for (let i = 2; i <= Math.min(5, totalPages - 1); i++) {
+          pages.push(i);
+        }
+        if (totalPages > 5) {
+          pages.push("...");
+          pages.push(totalPages);
+        }
+      } else if (currentPage >= totalPages - 3) {
+        // Current page is near the end: 1 ... n-4 n-3 n-2 n-1 n
+        if (totalPages > 5) {
+          pages.push("...");
+        }
+        for (let i = Math.max(2, totalPages - 4); i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Current page is in the middle: 1 ... current-1 current current+1 ... n
+        pages.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   return (
@@ -123,72 +158,24 @@ export function Pagination({
           <Icon name="ChevronLeft" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
 
-        {/* Page numbers - Responsive */}
+        {/* Page numbers with new style */}
         <div className="flex items-center gap-0.5 sm:gap-1 mx-1 sm:mx-2 overflow-hidden max-w-[60vw] sm:max-w-none">
-          {(() => {
-            const maxVisible = getMaxVisiblePages();
-            const pages: (number | string)[] = [];
-            const halfVisible = Math.floor(maxVisible / 2);
-            
-            let startPage = Math.max(1, currentPage - halfVisible);
-            let endPage = Math.min(totalPages, currentPage + halfVisible);
-
-            // Adjust if we're near the beginning or end
-            if (endPage - startPage + 1 < maxVisible) {
-              if (startPage === 1) {
-                endPage = Math.min(totalPages, startPage + maxVisible - 1);
-              } else {
-                startPage = Math.max(1, endPage - maxVisible + 1);
-              }
-            }
-
-            // Add first page and ellipsis if needed (more aggressive on mobile)
-            if (startPage > 1) {
-              pages.push(1);
-              if (startPage > 2 && windowWidth >= 640) {
-                pages.push("...");
-              } else if (startPage > 2 && windowWidth < 640) {
-                // On mobile, skip ellipsis if too many pages to save space
-                if (startPage <= 4) {
-                  for (let i = 2; i < startPage; i++) {
-                    pages.push(i);
-                  }
-                } else {
-                  pages.push("...");
-                }
-              }
-            }
-
-            // Add visible pages
-            for (let i = startPage; i <= endPage; i++) {
-              pages.push(i);
-            }
-
-            // Add ellipsis and last page if needed
-            if (endPage < totalPages) {
-              if (endPage < totalPages - 1) {
-                pages.push("...");
-              }
-              pages.push(totalPages);
-            }
-
-            return pages.map((page, index) => (
-              <React.Fragment key={index}>
-                {page === "..." ? (
-                  <span className="px-1 sm:px-2 py-1 text-xs sm:text-sm text-muted-foreground">...</span>
-                ) : (
-                  <Button
-                    variant={page === currentPage ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onPageChange(page as number)}
-                    className="h-7 w-6 sm:h-8 sm:w-7 md:w-8 p-0 text-xs sm:text-sm flex-shrink-0 min-w-0"
-                  >
-                    {page}
-                  </Button>
-                )}
-              </React.Fragment>
-            ));
-          })()}
+          {generatePageNumbers().map((page, index) => (
+            <React.Fragment key={index}>
+              {page === "..." ? (
+                <span className="px-1 sm:px-2 py-1 text-xs sm:text-sm text-muted-foreground">...</span>
+              ) : (
+                <Button
+                  variant={page === currentPage ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(page as number)}
+                  className="h-7 w-6 sm:h-8 sm:w-7 md:w-8 p-0 text-xs sm:text-sm flex-shrink-0 min-w-0"
+                >
+                  {page}
+                </Button>
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
         {/* Next button */}

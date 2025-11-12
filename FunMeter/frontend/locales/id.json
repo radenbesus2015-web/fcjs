@@ -52,12 +52,12 @@
       "title": "Konfigurasi Sistem"
     },
     "adminAdvertisement": {
-      "title": "Kelola Iklan",
+      "title": "Daftar Iklan",
       "subtitle": "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter."
     }
   },
   "adminAds": {
-    "title": "Kelola Iklan (Absensi Fun Meter)",
+    "title": "Daftar Iklan (Absensi Fun Meter)",
     "subtitle": "Atur iklan yang muncul pada halaman Absensi Fun Meter.",
     "empty": "Tidak ada media iklan ditemukan.",
     "view": {

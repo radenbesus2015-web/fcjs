@@ -89,7 +89,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
       
       {/* Sidebar */}
       <div className={cn(
-        "flex h-svh flex-col border-r bg-sidebar text-sidebar-foreground overflow-hidden transition-all duration-300 ease-in-out will-change-[width,transform]",
+        "flex h-svh flex-col border-r border-border bg-sidebar text-sidebar-foreground overflow-hidden transition-all duration-300 ease-in-out will-change-[width,transform]",
         // Mobile: fixed position with slide animation
         isMobile ? [
           "fixed top-0 left-0 z-50",
@@ -102,7 +102,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
       )}>
       {/* Header */}
       <div className={cn(
-        "flex h-16 items-center border-b transition-all duration-300 ease-in-out",
+        "flex h-16 items-center border-b border-border transition-all duration-300 ease-in-out",
         isOpen ? "px-4" : "justify-center px-0"
       )}>
         <div className={cn(
@@ -191,7 +191,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
 
       {/* Footer */}
       <div className={cn(
-        "border-t transition-all duration-300 ease-in-out space-y-3",
+        "border-t border-border transition-all duration-300 ease-in-out space-y-3",
         isOpen ? "p-4" : "p-2"
       )}>
         <Button

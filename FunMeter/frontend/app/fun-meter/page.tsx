@@ -552,28 +552,33 @@ export default function FunMeterPage() {
               onClick={toggleCamera}
               variant={cameraActive ? "destructive" : "default"}
               disabled={cameraLoading}
+              className={`flex items-center gap-2 ${
+                cameraActive 
+                  ? "bg-red-600 hover:bg-red-700 text-white" 
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground"
+              } ${cameraLoading ? "opacity-75 cursor-not-allowed" : ""}`}
             >
               {cameraLoading ? (
                 <>
-                  <Icon name="RefreshCw" className="h-4 w-4 mr-2 animate-spin" />
-                  {t("funMeter.actions.loading", "Memuat...")}
+                  <Icon name="Loader2" className="h-4 w-4 animate-spin" />
+                  <span>{t("funMeter.actions.loading", "Memuat...")}</span>
                 </>
               ) : cameraActive ? (
                 <>
-                  <Icon name="Square" className="h-4 w-4 mr-2" />
-                  {t("funMeter.actions.stopCamera", "Stop Camera")}
+                  <Icon name="Square" className="h-4 w-4" />
+                  <span>{t("funMeter.actions.stopCamera", "Hentikan Kamera")}</span>
                 </>
               ) : (
                 <>
-                  <Icon name="Play" className="h-4 w-4 mr-2" />
-                  {t("funMeter.actions.startCamera", "Start Camera")}
+                  <Icon name="Play" className="h-4 w-4" />
+                  <span>{t("funMeter.actions.startCamera", "Mulai Kamera")}</span>
                 </>
               )}
             </Button>
           </div>
 
           <p className="text-sm text-muted-foreground">
-            {t("funMeter.camera.help", "Press start to send frames to server.")}
+            {t("funMeter.camera.help", "Tekan mulai untuk mengirim frame ke server fun meter.")}
           </p>
         </div>
 
