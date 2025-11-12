@@ -28,9 +28,11 @@ export function ThemeProvider({
   storageKey = "app-theme" 
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Load theme from localStorage on mount
+    setMounted(true);
+    // Load theme from localStorage on mount (client-side only)
     // First try from settings (same as Vue original)
     try {
       const settingsStr = localStorage.getItem("settings");
@@ -53,6 +55,8 @@ export function ThemeProvider({
   }, [storageKey]);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     // Apply theme to document
     const root = document.documentElement;
     root.classList.remove("light", "dark");
@@ -70,7 +74,7 @@ export function ThemeProvider({
     } catch (e) {
       console.warn("Failed to save theme to settings", e);
     }
-  }, [theme, storageKey]);
+  }, [theme, storageKey, mounted]);
 
   // Listen to localStorage changes from other tabs only (same tab handled by setTheme)
   useEffect(() => {

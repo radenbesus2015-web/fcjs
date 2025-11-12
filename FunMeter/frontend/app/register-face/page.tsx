@@ -12,8 +12,9 @@ import { request, postForm } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { useConfirmDialog } from "@/components/providers/ConfirmDialogProvider";
+import { ClientOnly } from "@/components/providers/ClientOnly";
 
-export default function RegisterFacePage() {
+function RegisterFacePageContent() {
   const { t } = useI18n();
   const confirmDialog = useConfirmDialog();
   const { useSetting } = useSettings();
@@ -22,7 +23,6 @@ export default function RegisterFacePage() {
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  
   const [cameraActive, setCameraActive] = useState(false);
   const [statusText, setStatusText] = useState("");
   const [userName, setUserName] = useState("");
@@ -558,5 +558,15 @@ export default function RegisterFacePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterFacePage() {
+  const { t } = useI18n();
+  
+  return (
+    <ClientOnly loaderText={t("common.loading", "Memuat...")}>
+      <RegisterFacePageContent />
+    </ClientOnly>
   );
 }

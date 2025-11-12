@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable strict mode to prevent double rendering in development
-  reactStrictMode: false,
+  // Enable strict mode to catch potential issues early
+  // Fixed hydration issues in providers, so we can safely enable this
+  reactStrictMode: true,
   
   // Performance optimizations
   compress: true,
@@ -28,6 +29,13 @@ const nextConfig: NextConfig = {
     ],
     // Optimize CSS
     optimizeCss: true,
+  },
+  
+  // Prevent hydration errors
+  onDemandEntries: {
+    // Keep pages in memory longer to prevent hydration issues
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
   },
   
   // Allow images from Supabase Storage and localhost backend

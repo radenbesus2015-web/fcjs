@@ -35,21 +35,21 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { path: string[] }
+  { params }: { params: { path: string[] } }
 ) {
   return handleRequest(request, params);
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { path: string[] }
+  { params }: { params: { path: string[] } }
 ) {
   return handleRequest(request, params);
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { path: string[] }
+  { params }: { params: { path: string[] } }
 ) {
   return handleRequest(request, params);
 }

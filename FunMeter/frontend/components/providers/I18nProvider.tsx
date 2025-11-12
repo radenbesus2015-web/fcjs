@@ -73,13 +73,13 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children, initialLocale = FALLBACK_LOCALE }: I18nProviderProps) {
-  // Start with initialLocale for both server and client (avoid hydration mismatch)
-  const [locale, setLocaleState] = useState(resolveLocale(initialLocale));
-  const [isHydrated, setIsHydrated] = useState(false);
+  // Start with FALLBACK_LOCALE for both server and client (avoid hydration mismatch)
+  const [locale, setLocaleState] = useState(FALLBACK_LOCALE);
+  const [mounted, setMounted] = useState(false);
 
   // Load from localStorage AFTER hydration (client-only)
   useEffect(() => {
-    setIsHydrated(true);
+    setMounted(true);
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("settings");

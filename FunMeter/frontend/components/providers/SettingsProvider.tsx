@@ -153,16 +153,18 @@ function loadSettingsFromStorage(): SettingsState {
 }
 
 export function SettingsProvider({ children, initialSettings }: SettingsProviderProps) {
-  // Load initial settings from localStorage or use provided initialSettings
+  // Start with DEFAULT_SETTINGS to avoid hydration mismatch
   const [state, setState] = useState<SettingsState>(() => {
     if (initialSettings) return initialSettings;
-    return loadSettingsFromStorage();
+    return DEFAULT_SETTINGS; // Use default initially, load from localStorage after mount
   });
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<SettingsForm>(DEFAULT_FORM);
+  const [mounted, setMounted] = useState(false);
 
-  // Load settings from localStorage on mount (only if not using initialSettings)
+  // Load settings from localStorage on mount (client-side only)
   useEffect(() => {
+    setMounted(true);
     if (!initialSettings) {
       const loaded = loadSettingsFromStorage();
       // Only update if different to avoid unnecessary re-renders
@@ -174,16 +176,16 @@ export function SettingsProvider({ children, initialSettings }: SettingsProvider
     }
   }, [initialSettings]);
 
-  // Save settings to localStorage whenever state changes
+  // Save settings to localStorage whenever state changes (after mounting)
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!mounted || typeof window === "undefined") return;
     try {
       // Save the entire state object to localStorage
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.warn("Failed to save settings to localStorage", e);
     }
-  }, [state]);
+  }, [state, mounted]);
 
   // Listen to localStorage changes from other tabs only (same tab handled by setSetting)
   useEffect(() => {
