@@ -6,7 +6,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from auth.deps import require_user_token, require_admin_token
+from auth.deps import require_user_token, require_admin_token, require_owner_token
 from auth.users_repo import (
     register_user_account,
     list_users,
@@ -35,8 +35,8 @@ def _public_user_payload(entry: Dict[str, Any], include_api_key: bool = False) -
 
 
 @router.post("/promote")
-def auth_promote(payload: Promote, _admin=Depends(require_admin_token)):
-    actor = _admin["username"]
+def auth_promote(payload: Promote, _owner=Depends(require_owner_token)):
+    actor = _owner["username"]
     identifier = None
     target_username = None
 

@@ -5,7 +5,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useConfirmDialog } from "@/components/providers/ConfirmDialogProvider";
 import { request } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

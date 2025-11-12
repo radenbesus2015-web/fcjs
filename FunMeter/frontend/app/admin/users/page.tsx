@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { request } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,22 +41,16 @@ export default function AdminUsersPage() {
   // Permission helper functions based on RBAC
   const canPromote = (currentUser: CurrentUser | null, targetUser: User): boolean => {
     if (!currentUser) return false;
-    // Only Owner can promote user to admin
-    if (currentUser.is_owner) {
-      return !targetUser.is_admin && !targetUser.is_owner;
-    }
-    // Admin cannot promote anyone
-    return false;
+    // Admin tidak boleh menaikkan user menjadi admin; hanya owner yang bisa
+    if (!currentUser.is_owner) return false;
+    return !targetUser.is_admin && !targetUser.is_owner;
   };
   
   const canDemote = (currentUser: CurrentUser | null, targetUser: User): boolean => {
     if (!currentUser) return false;
-    // Only Owner can demote admin to user
-    if (currentUser.is_owner) {
-      return targetUser.is_admin && !targetUser.is_owner && !targetUser.is_current;
-    }
-    // Admin cannot demote anyone
-    return false;
+    // Admin tidak boleh menurunkan admin lain; hanya owner yang bisa
+    if (!currentUser.is_owner) return false;
+    return targetUser.is_admin && !targetUser.is_owner && !targetUser.is_current;
   };
   
   const canRotateApi = (currentUser: CurrentUser | null, targetUser: User): boolean => {
