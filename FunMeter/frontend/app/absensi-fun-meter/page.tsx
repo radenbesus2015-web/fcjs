@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
@@ -137,7 +137,7 @@ function AttendanceFunMeterPageContent() {
     load();
     return () => { cancelled = true; };
   }, []);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -224,8 +224,34 @@ function AttendanceFunMeterPageContent() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
-          const message = info.message || t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}{score}", { label, score });
+          const now = new Date();
+          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
+          const dayNames = locale === 'id' 
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const monthNames = locale === 'id'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = dayNames[now.getDay()];
+          const month = monthNames[now.getMonth()];
+          const year = String(now.getFullYear()).slice(-2);
+          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          const dateTime = `${day}/${month}/${year} ${time}`;
+          
+          // Build message with date and time
+          let message = t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label });
+          const details: string[] = [];
+          
+          if (dateTime) details.push(t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime }));
+          
+          if (details.length > 0) {
+            message += `\n${details.join(' • ')}`;
+          }
+          
           if (label) {
             console.log("[ATTENDANCE] Showing toast for:", label);
             toast.success(message, { duration: 5000 });
@@ -233,11 +259,29 @@ function AttendanceFunMeterPageContent() {
         }
         
         if (!markedInfo.length && marked.length > 0) {
+          const now = new Date();
+          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
+          const dayNames = locale === 'id' 
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const monthNames = locale === 'id'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = dayNames[now.getDay()];
+          const month = monthNames[now.getMonth()];
+          const year = String(now.getFullYear()).slice(-2);
+          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          const dateTime = `${day}/${month}/${year} ${time}`;
+          
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            toast.success(t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label }), {
-              duration: 5000,
-            });
+            let message = t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label });
+            message += `\n${t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime })}`;
+            toast.success(message, { duration: 5000 });
           }
         }
         
@@ -1499,7 +1543,7 @@ function AttendanceFunMeterPageContent() {
 }
 
 export default function AttendanceFunMeterPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   
   return (
     <ClientOnly loaderText={t("common.loading", "Memuat...")}>

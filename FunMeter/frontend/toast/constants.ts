@@ -1,4 +1,4 @@
-// lib/toast/constants.ts
+// toast/constants.ts
 // Constants untuk toast system
 
 "use client";
@@ -24,3 +24,4 @@ export const DEFAULTS: Required<ToastOptions> = {
   actionText: '',
   onAction: () => {},
 };
+

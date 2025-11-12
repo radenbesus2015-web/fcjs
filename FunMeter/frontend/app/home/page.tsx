@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import Image from "next/image";
 import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
 
@@ -239,15 +239,29 @@ export default function HomePage() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? (info.score * 100).toFixed(1) : null;
-          const timestamp = new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const now = new Date();
+          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
+          const dayNames = locale === 'id' 
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const monthNames = locale === 'id'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = dayNames[now.getDay()];
+          const month = monthNames[now.getMonth()];
+          const year = String(now.getFullYear()).slice(-2);
+          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          const dateTime = `${day}/${month}/${year} ${time}`;
           
           // Build detailed message
           let detailMessage = t("home.toast.attendanceSuccess", "Attendance success: {label}", { label });
           const details: string[] = [];
           
-          if (score) details.push(t("home.toast.score", "Score: {score}%", { score }));
-          if (timestamp) details.push(t("home.toast.time", "Time: {time}", { time: timestamp }));
+          if (dateTime) details.push(t("home.toast.dateTime", "Date & Time: {dateTime}", { dateTime }));
           
           // Safe access to optional properties
           const infoAny = info as Record<string, unknown>;
@@ -265,10 +279,27 @@ export default function HomePage() {
         }
         
         if (!markedInfo.length && marked.length > 0) {
-          const timestamp = new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const now = new Date();
+          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
+          const dayNames = locale === 'id' 
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const monthNames = locale === 'id'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = dayNames[now.getDay()];
+          const month = monthNames[now.getMonth()];
+          const year = String(now.getFullYear()).slice(-2);
+          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          const dateTime = `${day}/${month}/${year} ${time}`;
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            const message = t("home.toast.attendanceMarked", "Attendance success: {label}\nTime: {time}", { label, time: timestamp });
+            let message = t("home.toast.attendanceMarked", "Attendance success: {label}", { label });
+            message += `\n${t("home.toast.dateTime", "Date & Time: {dateTime}", { dateTime })}`;
             toast.success(message, { duration: 5000 });
           }
         }

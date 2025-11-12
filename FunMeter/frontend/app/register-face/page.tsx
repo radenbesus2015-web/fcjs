@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { request, postForm } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";

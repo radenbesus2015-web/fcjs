@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { request } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";

@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Icon } from "@/components/common/Icon";
 import { fmtAttendanceMultilingual } from "@/lib/format";
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
