@@ -1,4 +1,4 @@
-// app/absensi-fun-meter/page.tsx
+// app/attendance-fun-meter/page.tsx
 // Port dari src-vue-original/pages/default/AttendanceFunMeterPage.vue
 
 "use client";
@@ -224,64 +224,70 @@ function AttendanceFunMeterPageContent() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
+          const score = typeof info.score === "number" ? (info.score * 100).toFixed(1) : null;
+          
+          // Create compact timestamp format like reference: "Wed/Nov/25 01:19:14 PM"
           const now = new Date();
-          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
-          const dayNames = locale === 'id' 
-            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
-            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const monthNames = locale === 'id'
-            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const day = dayNames[now.getDay()];
-          const month = monthNames[now.getMonth()];
-          const year = String(now.getFullYear()).slice(-2);
-          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+          const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
+          const dayShort = now.toLocaleDateString(currentLocale, { weekday: 'short' });
+          const monthShort = now.toLocaleDateString(currentLocale, { month: 'short' });
+          const day = now.getDate().toString().padStart(2, '0');
+          const timeStr = now.toLocaleTimeString(currentLocale, { 
             hour: '2-digit', 
             minute: '2-digit', 
-            second: '2-digit' 
+            second: '2-digit',
+            hour12: locale !== 'id' 
           });
-          const dateTime = `${day}/${month}/${year} ${time}`;
           
-          // Build message with date and time
-          let message = t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label });
-          const details: string[] = [];
-          
-          if (dateTime) details.push(t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime }));
-          
-          if (details.length > 0) {
-            message += `\n${details.join(' • ')}`;
-          }
+          // Format like reference: "Wed/Nov/25 01:19:14 PM"
+          const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
           if (label) {
-            console.log("[ATTENDANCE] Showing toast for:", label);
-            toast.success(message, { duration: 5000 });
+            const details: string[] = [];
+            if (score) {
+              details.push(t("attendanceFunMeter.toast.score", "Score: {score}", { score: `${score}%` }));
+            }
+            details.push(t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }));
+
+            let message = t("attendanceFunMeter.toast.attendanceSuccess", "Attendance success: {label}", { label });
+            if (details.length > 0) {
+              message += `\n${details.join(" • ")}`;
+            }
+
+            console.log("[ATTENDANCE] Showing compact toast for:", label, info);
+            toast.success(message, { 
+              duration: 6000,
+              title: t("attendanceFunMeter.toast.title", "Success"),
+            });
           }
         }
         
         if (!markedInfo.length && marked.length > 0) {
+          // Fallback with compact format
           const now = new Date();
-          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
-          const dayNames = locale === 'id' 
-            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
-            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const monthNames = locale === 'id'
-            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const day = dayNames[now.getDay()];
-          const month = monthNames[now.getMonth()];
-          const year = String(now.getFullYear()).slice(-2);
-          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+          const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
+          const dayShort = now.toLocaleDateString(currentLocale, { weekday: 'short' });
+          const monthShort = now.toLocaleDateString(currentLocale, { month: 'short' });
+          const day = now.getDate().toString().padStart(2, '0');
+          const timeStr = now.toLocaleTimeString(currentLocale, { 
             hour: '2-digit', 
             minute: '2-digit', 
-            second: '2-digit' 
+            second: '2-digit',
+            hour12: locale !== 'id' 
           });
-          const dateTime = `${day}/${month}/${year} ${time}`;
+          
+          const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
           for (const label of marked) {
-            console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            let message = t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label });
-            message += `\n${t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime })}`;
-            toast.success(message, { duration: 5000 });
+            console.log("[ATTENDANCE] Showing compact toast for (fallback):", label);
+            const messageLines = [
+              t("attendanceFunMeter.toast.attendanceSuccess", "Attendance success: {label}", { label }),
+              t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }),
+            ];
+            toast.success(messageLines.join("\n"), {
+              duration: 5000,
+              title: t("attendanceFunMeter.toast.title", "Success"),
+            });
           }
         }
         
@@ -978,14 +984,16 @@ function AttendanceFunMeterPageContent() {
   }, [socket, funIntervalMs, pushFunFrame]);
 
     useEffect(() => {
-    const handleEsc = (event : KeyboardEvent) => {
+    const handleKeyPress = (event : KeyboardEvent) => {
       if (event.key === "Escape") {
         router.back(); // fungsi sama seperti klik tombol
+      } else if (event.key === "1") {
+        router.push("/home"); // redirect ke home saat tekan tombol 1
       }
     };
 
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [router]);
 
   // Emotion color mapping

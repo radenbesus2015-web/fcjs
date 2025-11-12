@@ -407,7 +407,7 @@ export default function AdminConfigPage() {
       <Dialog open={jsonModal.open} onOpenChange={(open) => { if (!open) setJsonModal(prev => ({ ...prev, open: false })); else setJsonModal(prev => ({ ...prev, open: true })); }}>
         <DialogContent 
           hideOverlay 
-          className="max-w-3xl max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" 
+          className="max-w-3xl max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" 
           onEscapeKeyDown={() => setJsonModal(prev => ({ ...prev, open: false }))} 
           onKeyDown={(e) => {
             if (e.key === 'Enter') {

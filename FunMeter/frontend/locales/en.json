@@ -595,6 +595,15 @@
     "idLabel": "ID:",
     "separator": "•"
   },
+  "pagination": {
+    "showing": "Showing {start}-{end} of {total} {items}",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of",
+    "first": "First",
+    "last": "Last"
+  },
   "adminDashboard": {
     "state": {
       "loading": "Loading dashboard…"

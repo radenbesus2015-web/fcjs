@@ -47,7 +47,7 @@ export default function GlobalConfirm() {
 
   return (
     <AlertDialog open={!!currentConfirm} onOpenChange={(open) => { if (!open) resolveCurrentConfirm(false); }}>
-      <AlertDialogContent className="w-[calc(100%-2rem)] max-w-lg mx-4 sm:mx-0">
+      <AlertDialogContent className="w-[calc(100%-2rem)] max-w-lg mx-4 sm:mx-0 border border-border bg-background rounded-2xl">
         {/* Close button (X) di pojok kanan atas */}
         <button
           onClick={handleCancel}

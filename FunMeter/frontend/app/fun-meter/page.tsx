@@ -9,6 +9,7 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/common/Icon";
 
 interface FunMeterResult {
   bbox: [number, number, number, number];
@@ -38,6 +39,7 @@ export default function FunMeterPage() {
   const sendHeightRef = useRef(0);
   
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
   const cameraActiveRef = useRef(false);
   const [statusText, setStatusText] = useState("");
   const [results, setResults] = useState<FunMeterResult[]>([]);
@@ -153,6 +155,7 @@ export default function FunMeterPage() {
   const startCamera = async () => {
     if (!videoRef.current) return;
     
+    setCameraLoading(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: true, 
@@ -172,6 +175,8 @@ export default function FunMeterPage() {
     } catch (error) {
       setStatusText(t("funMeter.status.cameraDenied", "Camera access denied"));
       toast.error(t("funMeter.toast.cameraError", "Failed to access camera"));
+    } finally {
+      setCameraLoading(false);
     }
   };
 
@@ -543,10 +548,27 @@ export default function FunMeterPage() {
           </div>
 
           <div className="flex gap-2 mb-2">
-            <Button onClick={toggleCamera}>
-              {cameraActive
-                ? t("funMeter.actions.stopCamera", "Stop Camera")
-                : t("funMeter.actions.startCamera", "Start Camera")}
+            <Button
+              onClick={toggleCamera}
+              variant={cameraActive ? "destructive" : "default"}
+              disabled={cameraLoading}
+            >
+              {cameraLoading ? (
+                <>
+                  <Icon name="RefreshCw" className="h-4 w-4 mr-2 animate-spin" />
+                  {t("funMeter.actions.loading", "Memuat...")}
+                </>
+              ) : cameraActive ? (
+                <>
+                  <Icon name="Square" className="h-4 w-4 mr-2" />
+                  {t("funMeter.actions.stopCamera", "Stop Camera")}
+                </>
+              ) : (
+                <>
+                  <Icon name="Play" className="h-4 w-4 mr-2" />
+                  {t("funMeter.actions.startCamera", "Start Camera")}
+                </>
+              )}
             </Button>
           </div>
 

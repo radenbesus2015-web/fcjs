@@ -22,7 +22,7 @@ def _to_next(path: str) -> str:
 # Public pages
 @router.get("/")
 async def home(_: Request):
-    return RedirectResponse(_to_next("/home"))
+    return RedirectResponse(_to_next("/attendance-fun-meter"))
 
 
 @router.get("/register-face")
@@ -30,9 +30,9 @@ async def register_page(_: Request):
     return RedirectResponse(_to_next("/register-face"))
 
 
-@router.get("/absensi-fun-meter")
+@router.get("/attendance-fun-meter")
 async def fun_page(_: Request):
-    return RedirectResponse(_to_next("/absensi-fun-meter"))
+    return RedirectResponse(_to_next("/attendance-fun-meter"))
 
 
 @router.get("/attendance")

@@ -70,9 +70,9 @@ export default function SettingsModal() {
 
   return (
     <AlertDialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-4 sm:p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden rounded-2xl">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-4 border border-border bg-background p-3 sm:p-4 md:p-6 shadow-lg duration-200 focus:outline-none max-h-[90vh] overflow-hidden rounded-2xl">
         <AlertDialogHeader>
-          <div className="flex items-center justify-between gap-4 border-b pb-4 bg-muted/30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4">
+          <div className="flex items-center justify-between gap-4 border-b border-border pb-4 bg-background -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">
                 {ft("breadcrumb", "Preferensi")}
@@ -93,18 +93,18 @@ export default function SettingsModal() {
           </div>
         </AlertDialogHeader>
 
-        <div className="max-h-[70vh] overflow-y-auto pr-2">
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden pr-1 sm:pr-2 space-y-1">
+        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           {/* Language Section */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
+          <section className="space-y-3 p-4 rounded-lg bg-card border border-border">
+            <h3 className="text-sm font-semibold text-foreground">
               {ft("language.title", "Bahasa")}
             </h3>
             <label className="space-y-2 block">
               <select
                 value={form.language}
                 onChange={(e) => setForm({ ...form, language: e.target.value })}
-                className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-all"
               >
                 {languageOptions.map((option) => (
                   <option key={option.code} value={option.code}>
@@ -119,14 +119,14 @@ export default function SettingsModal() {
           </section>
 
           {/* Theme Section */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
+          <section className="space-y-3 p-4 rounded-lg bg-card border border-border">
+            <h3 className="text-sm font-semibold text-foreground">
               {ft("theme.title", "Tema")}
             </h3>
-            <div className="grid gap-3 grid-cols-2">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               <label
-                className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium cursor-pointer transition-all ${
-                  form.theme === "light" ? "bg-accent text-accent-foreground" : ""
+                className={`inline-flex items-center justify-center gap-2 rounded-lg border border-input px-4 py-2 text-sm font-medium cursor-pointer transition-all hover:bg-accent/50 ${
+                  form.theme === "light" ? "bg-accent text-accent-foreground border-accent" : "bg-background text-foreground"
                 }`}
               >
                 <input
@@ -140,8 +140,8 @@ export default function SettingsModal() {
                 <span>{ft("theme.light", "Terang")}</span>
               </label>
               <label
-                className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium cursor-pointer transition-all ${
-                  form.theme === "dark" ? "bg-accent text-accent-foreground" : ""
+                className={`inline-flex items-center justify-center gap-2 rounded-lg border border-input px-4 py-2 text-sm font-medium cursor-pointer transition-all hover:bg-accent/50 ${
+                  form.theme === "dark" ? "bg-accent text-accent-foreground border-accent" : "bg-background text-foreground"
                 }`}
               >
                 <input
@@ -158,11 +158,11 @@ export default function SettingsModal() {
           </section>
 
           {/* Attendance Section */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
+          <section className="space-y-3 p-4 rounded-lg bg-card border border-border">
+            <h3 className="text-sm font-semibold text-foreground">
               {ft("attendance.title", "Streaming Absensi")}
             </h3>
-            <div className="grid gap-4 grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm font-medium">
                   {ft("attendance.width.label", "Lebar Kirim (px)")}
@@ -173,7 +173,7 @@ export default function SettingsModal() {
                   max="1920"
                   value={form.attendanceSendWidth}
                   onChange={(e) => setForm({ ...form, attendanceSendWidth: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("attendance.width.help", "Mengatur resolusi frame untuk absensi.")}
@@ -190,7 +190,7 @@ export default function SettingsModal() {
                   max="1"
                   value={form.attendanceJpegQuality}
                   onChange={(e) => setForm({ ...form, attendanceJpegQuality: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("attendance.jpeg.help", "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar.")}
@@ -200,11 +200,11 @@ export default function SettingsModal() {
           </section>
 
           {/* Fun Meter Section */}
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
+          <section className="space-y-3 p-4 rounded-lg bg-card border border-border">
+            <h3 className="text-sm font-semibold text-foreground">
               {ft("funMeter.title", "Streaming Fun Meter")}
             </h3>
-            <div className="grid gap-4 grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm font-medium">
                   {ft("funMeter.width.label", "Lebar Kirim (px)")}
@@ -215,7 +215,7 @@ export default function SettingsModal() {
                   max="1920"
                   value={form.funSendWidth}
                   onChange={(e) => setForm({ ...form, funSendWidth: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("funMeter.width.help", "Mengatur resolusi frame untuk analisis emosi.")}
@@ -232,7 +232,7 @@ export default function SettingsModal() {
                   max="1"
                   value={form.funJpegQuality}
                   onChange={(e) => setForm({ ...form, funJpegQuality: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("funMeter.jpeg.help", "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar.")}
@@ -248,7 +248,7 @@ export default function SettingsModal() {
                   max="5000"
                   value={form.baseInterval}
                   onChange={(e) => setForm({ ...form, baseInterval: Number(e.target.value) })}
-                  className="flex h-9 w-full rounded-xl border bg-background px-3 py-1 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:ring-2 focus:ring-ring focus:border-ring transition-all"
                 />
                 <p className="text-xs text-muted-foreground">
                   {ft("funMeter.interval.help", "Default: 200. Jeda antar frame ke server attendance.")}
@@ -258,7 +258,7 @@ export default function SettingsModal() {
           </section>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap justify-between items-center gap-3">
+          <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-border bg-background -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 pb-2">
             {/* Logout button on the left */}
             {user && (
               <Button
@@ -272,7 +272,7 @@ export default function SettingsModal() {
             )}
             
             {/* Other buttons on the right */}
-            <div className="flex flex-wrap gap-3 ml-auto">
+            <div className="flex flex-wrap gap-2 sm:gap-3 ml-auto">
               <Button
                 type="button"
                 variant="outline"

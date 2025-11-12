@@ -818,6 +818,15 @@
     "idLabel": "ID:",
     "separator": "•"
   },
+  "pagination": {
+    "showing": "Menampilkan {start}-{end} dari {total} {items}",
+    "previous": "Sebelumnya",
+    "next": "Selanjutnya",
+    "page": "Halaman",
+    "of": "dari",
+    "first": "Pertama",
+    "last": "Terakhir"
+  },
   "aside": {
     "brand": {
       "title": "Absensi Wajah"
