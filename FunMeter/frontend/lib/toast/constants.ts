@@ -1,7 +1,9 @@
 // lib/toast/constants.ts
 // Constants untuk toast system
 
-import { ToastOptions } from './types';
+"use client";
+
+import type { ToastOptions } from './types';
 
 // Mapping tipe toast ke metode sonner
 export const TYPE_METHOD = {
