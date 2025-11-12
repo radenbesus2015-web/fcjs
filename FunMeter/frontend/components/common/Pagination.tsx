@@ -142,11 +142,20 @@ export function Pagination({
               }
             }
 
-            // Add first page and ellipsis if needed
+            // Add first page and ellipsis if needed (more aggressive on mobile)
             if (startPage > 1) {
               pages.push(1);
-              if (startPage > 2) {
+              if (startPage > 2 && windowWidth >= 640) {
                 pages.push("...");
+              } else if (startPage > 2 && windowWidth < 640) {
+                // On mobile, skip ellipsis if too many pages to save space
+                if (startPage <= 4) {
+                  for (let i = 2; i < startPage; i++) {
+                    pages.push(i);
+                  }
+                } else {
+                  pages.push("...");
+                }
               }
             }
 

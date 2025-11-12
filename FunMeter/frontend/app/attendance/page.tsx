@@ -8,6 +8,7 @@ import { toast } from "@/lib/toast";
 import { request } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/common/Pagination";
+import { Icon } from "@/components/common/Icon";
 import { RefreshCw } from "lucide-react";
 import * as Cam from "@/lib/cameraManager";
 
@@ -723,7 +724,7 @@ export default function AttendancePage() {
           <div className="mb-2">
             <Button
               onClick={cameraActive ? stopCamera : startCamera}
-              variant={cameraActive ? "outline" : "default"}
+              variant={cameraActive ? "destructive" : "default"}
               disabled={cameraLoading}
             >
               {cameraLoading ? (
@@ -732,9 +733,15 @@ export default function AttendancePage() {
                   {t("attendance.actions.loading", "Memuat...")}
                 </>
               ) : cameraActive ? (
-                t("attendance.actions.stopCamera", "Stop Camera")
+                <>
+                  <Icon name="Square" className="h-4 w-4 mr-2" />
+                  {t("attendance.actions.stopCamera", "Stop Camera")}
+                </>
               ) : (
-                t("attendance.actions.startCamera", "Start Camera")
+                <>
+                  <Icon name="Play" className="h-4 w-4 mr-2" />
+                  {t("attendance.actions.startCamera", "Start Camera")}
+                </>
               )}
             </Button>
           </div>
