@@ -934,14 +934,16 @@ function AttendanceFunMeterPageContent() {
   }, [socket, funIntervalMs, pushFunFrame]);
 
     useEffect(() => {
-    const handleEsc = (event : KeyboardEvent) => {
+    const handleKeyPress = (event : KeyboardEvent) => {
       if (event.key === "Escape") {
         router.back(); // fungsi sama seperti klik tombol
+      } else if (event.key === "1") {
+        router.push("/home"); // redirect ke home saat tekan tombol 1
       }
     };
 
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [router]);
 
   // Emotion color mapping
