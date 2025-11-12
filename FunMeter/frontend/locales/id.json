@@ -1011,6 +1011,14 @@
         "faces": "Jumlah wajah: {count}",
         "error": "Kesalahan: {message}"
       }
+    },
+    "toast": {
+      "attendanceSuccess": "Absensi berhasil: {label}",
+      "attendanceMarked": "Absensi berhasil: {label}\nWaktu: {time}",
+      "score": "Skor: {score}%",
+      "time": "Waktu: {time}",
+      "id": "ID: {id}",
+      "temperature": "Suhu: {temp}°C"
     }
   },
   "registerFace": {
@@ -1146,8 +1154,15 @@
       "blockedReasonDefault": "Tidak bisa absen (aturan berlaku).",
       "blockedRetry": " • Coba lagi: {time}",
       "blockedFallback": "Tidak bisa absen (sudah absen hari ini atau masih dalam jeda).",
-      "cameraStopped": "Kamera dihentikan.",
-      "cameraError": "Gagal akses kamera: {message}",
+      "cameraStarting": "Memulai kamera...",
+      "cameraStarted": "✅ Kamera berhasil dimulai",
+      "cameraStopping": "Menghentikan kamera...",
+      "cameraStopped": "✅ Kamera berhasil dihentikan",
+      "cameraError": "❌ Gagal mengakses kamera: {error}",
+      "refreshSuccess": "Data absensi berhasil diperbarui",
+      "fetchError": "Gagal memuat data absensi",
+      "attendanceSuccess": "Absensi tercatat: {name} (skor {score}%)",
+      "attendanceMarked": "Absensi ditandai: {name}",
       "logError": "Gagal memuat Attendance Log. Coba lagi."
     },
     "labels": {
