@@ -21,6 +21,9 @@
     "attendanceFunMeter": {
       "title": "Absensi & Fun Meter"
     },
+    "attendance": {
+      "title": "Absensi"
+    },
     "funMeter": {
       "title": "Fun Meter"
     },

@@ -27,7 +27,7 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
   },
   "/attendance": {
     titleKey: "pages.attendance.title",
-    titleFallback: "Absensi",
+    titleFallback: "Attendance",
     navKey: "nav.attendance",
     navFallback: "Absensi",
   },
