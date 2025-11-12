@@ -7,7 +7,7 @@ export default function Page() {
   const router = useRouter();
   
   useEffect(() => {
-    router.replace("/absensi-fun-meter");
+    router.replace("/attendance-fun-meter");
   }, [router]);
 
   return (

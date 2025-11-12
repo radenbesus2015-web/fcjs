@@ -9,6 +9,7 @@ import { request } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
+import { Pagination } from "@/components/common/Pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface AttendanceMember {
@@ -345,34 +346,9 @@ export default function AdminAttendancePage() {
     return null;
   };
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const goTo = (page: number) => {
-      const clamped = Math.min(Math.max(1, page), totalPages);
-      fetchLogs(clamped, filters);
-    };
-
-    return (
-      <div className="flex items-center justify-between p-4 border-t">
-          <div className="text-sm text-muted-foreground">{t("adminAttendance.pagination.totalLabel", "Total")}: {totalRecords}</div>
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" onClick={() => goTo(1)} disabled={currentPage <= 1}>
-            <Icon name="ChevronsLeft" className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => goTo(currentPage - 1)} disabled={currentPage <= 1}>
-            <Icon name="ChevronLeft" className="h-4 w-4" />
-          </Button>
-          <span className="px-3 py-1 rounded-md bg-muted text-foreground text-sm">{currentPage}</span>
-          <Button variant="outline" size="sm" onClick={() => goTo(currentPage + 1)} disabled={currentPage >= totalPages}>
-            <Icon name="ChevronRight" className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => goTo(totalPages)} disabled={currentPage >= totalPages}>
-            <Icon name="ChevronsRight" className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
+  const handlePageChange = (page: number) => {
+    const clamped = Math.min(Math.max(1, page), totalPages);
+    fetchLogs(clamped, filters);
   };
 
   return (
@@ -600,7 +576,14 @@ export default function AdminAttendancePage() {
           </table>
         </div>
 
-        {renderPagination()}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalRecords}
+          itemsPerPage={filters.per_page || 10}
+          itemLabel="records"
+          onPageChange={handlePageChange}
+        />
       </div>
 
       {/* View Modal */}

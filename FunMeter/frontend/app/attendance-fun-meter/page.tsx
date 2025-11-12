@@ -1,4 +1,4 @@
-// app/absensi-fun-meter/page.tsx
+// app/attendance-fun-meter/page.tsx
 // Port dari src-vue-original/pages/default/AttendanceFunMeterPage.vue
 
 "use client";
@@ -137,7 +137,7 @@ function AttendanceFunMeterPageContent() {
     load();
     return () => { cancelled = true; };
   }, []);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -224,19 +224,69 @@ function AttendanceFunMeterPageContent() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? ` (${(info.score * 100).toFixed(1)}%)` : "";
-          const message = info.message || t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}{score}", { label, score });
+          const score = info.score ? (info.score * 100).toFixed(1) : null;
+          
+          // Create compact timestamp format like reference: "Wed/Nov/25 01:19:14 PM"
+          const now = new Date();
+          const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
+          const dayShort = now.toLocaleDateString(currentLocale, { weekday: 'short' });
+          const monthShort = now.toLocaleDateString(currentLocale, { month: 'short' });
+          const day = now.getDate().toString().padStart(2, '0');
+          const timeStr = now.toLocaleTimeString(currentLocale, { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: locale !== 'id' 
+          });
+          
+          // Format like reference: "Wed/Nov/25 01:19:14 PM"
+          const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
+          
+          // Build compact message like reference
+          let message = t("attendanceFunMeter.toast.attendanceSuccess", "Attendance success: {name}", { name: label });
+          
+          // Add similarity score if available
+          if (score) {
+            message += ` (${score}%)`;
+          }
+          
+          // Add compact time format
+          message += ` & Time: ${compactDateTime}`;
+          
           if (label) {
-            console.log("[ATTENDANCE] Showing toast for:", label);
-            toast.success(message, { duration: 5000 });
+            console.log("[ATTENDANCE] Showing compact toast for:", label, info);
+            toast.success(message, { 
+              duration: 6000,
+              title: t("attendanceFunMeter.toast.title", "Success"),
+            });
           }
         }
         
         if (!markedInfo.length && marked.length > 0) {
+          // Fallback with compact format
+          const now = new Date();
+          const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
+          const dayShort = now.toLocaleDateString(currentLocale, { weekday: 'short' });
+          const monthShort = now.toLocaleDateString(currentLocale, { month: 'short' });
+          const day = now.getDate().toString().padStart(2, '0');
+          const timeStr = now.toLocaleTimeString(currentLocale, { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: locale !== 'id' 
+          });
+          
+          const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
+          
           for (const label of marked) {
-            console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            toast.success(t("attendanceFunMeter.toast.attendanceSuccess", "✅ Absen berhasil: {label}", { label }), {
+            console.log("[ATTENDANCE] Showing compact toast for (fallback):", label);
+            const message = t("attendanceFunMeter.toast.basicSuccess", "Attendance success: {name} & Time: {time}", { 
+              name: label, 
+              time: compactDateTime
+            });
+            toast.success(message, {
               duration: 5000,
+              title: t("attendanceFunMeter.toast.title", "Success"),
             });
           }
         }

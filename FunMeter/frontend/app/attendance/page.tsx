@@ -7,7 +7,8 @@ import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/lib/toast";
 import { request } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { Pagination } from "@/components/common/Pagination";
+import { RefreshCw } from "lucide-react";
 import * as Cam from "@/lib/cameraManager";
 
 interface AttendanceRecord {
@@ -813,46 +814,14 @@ export default function AttendancePage() {
               </table>
             )}
           </div>
-          <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-            <div>
-              {t("attendance.pagination.totalLabel", "Total")} {logMeta.total || 0}
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refreshLog(1)}
-                disabled={logMeta.page <= 1}
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refreshLog(Math.max(1, logMeta.page - 1))}
-                disabled={logMeta.page <= 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="px-3 py-1 rounded-md bg-muted border text-foreground font-medium">{logMeta.page}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refreshLog(Math.min(logMeta.total_pages, logMeta.page + 1))}
-                disabled={logMeta.page >= logMeta.total_pages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refreshLog(logMeta.total_pages || 1)}
-                disabled={logMeta.page >= logMeta.total_pages}
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={logMeta.page}
+            totalPages={logMeta.total_pages}
+            totalItems={logMeta.total}
+            itemsPerPage={logMeta.per_page}
+            itemLabel="records"
+            onPageChange={(page) => refreshLog(page)}
+          />
         </div>
       </div>
     </div>

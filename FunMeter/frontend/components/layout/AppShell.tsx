@@ -48,14 +48,14 @@ const routes = [
     },
   },
   {
-    path: "/absensi-fun-meter",
+    path: "/attendance-fun-meter",
     name: "attendanceFunMeter",
     icon: "Camera",
     meta: {
       titleKey: "pages.attendanceFunMeter.title",
       navKey: "nav.attendanceFunMeter",
-      titleFallback: "Absensi Fun Meter",
-      navFallback: "Absensi Fun Meter",
+      titleFallback: "Attendance Fun Meter",
+      navFallback: "Attendance Fun Meter",
     },
   },
   {
@@ -195,8 +195,8 @@ export function AppShell({ children }: AppShellProps) {
   const { user } = useAuth();
   
 
-  // Hide chrome untuk halaman root dan absensi-fun-meter
-  const hideChrome = pathname === "/" || pathname.startsWith("/absensi-fun-meter");
+  // Hide chrome untuk halaman root dan attendance-fun-meter
+  const hideChrome = pathname === "/" || pathname.startsWith("/attendance-fun-meter");
 
   // Generate nav items berdasarkan user permissions
   const navItems: NavItem[] = React.useMemo(() => {

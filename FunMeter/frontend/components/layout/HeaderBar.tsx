@@ -37,11 +37,11 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
     navKey: "nav.funMeter",
     navFallback: "Fun Meter",
   },
-  "/absensi-fun-meter": {
+  "/attendance-fun-meter": {
     titleKey: "pages.attendanceFunMeter.title",
-    titleFallback: "attendance Fun Meter",
+    titleFallback: "Attendance Fun Meter",
     navKey: "nav.attendanceFunMeter",
-    navFallback: "Absensi Fun Meter",
+    navFallback: "Attendance Fun Meter",
   },
   "/register-face": {
     titleKey: "pages.registerFace.title",

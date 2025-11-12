@@ -10,6 +10,7 @@ import { request, resolveApi } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
+import { Pagination } from "@/components/common/Pagination";
 import Image from "next/image";
 
 interface FaceItem {
@@ -545,7 +546,7 @@ export default function AdminListMembersPage() {
     fetchMembers();
   }, []);
 
-  const photoUrl = (row: FaceItem, size?: "thumb" | "medium" | "large"): string => {
+  const photoUrl = (row: FaceItem, size?: "thumb" | "medium" | "large" | "edit"): string => {
     const p = row.photo_url || row.photo_path || "";
     if (!p) return "";
     const s = String(p).replace(/\\/g, "/");
@@ -563,28 +564,34 @@ export default function AdminListMembersPage() {
     // Add query parameter for image compression/resize only for local API
     try {
       const urlObj = new URL(url);
-      // Add size parameter for compression (backend can use this to resize)
+      // Aggressive compression for faster loading, except for edit mode
       if (size === "thumb") {
-        urlObj.searchParams.set("w", "128");
-        urlObj.searchParams.set("q", "80");
+        urlObj.searchParams.set("w", "96");   // Smaller for thumbnails
+        urlObj.searchParams.set("q", "70");   // Lower quality for faster loading
       } else if (size === "medium") {
-        urlObj.searchParams.set("w", "256");
-        urlObj.searchParams.set("q", "85");
-      } else {
-        // Default: optimize for display size
+        urlObj.searchParams.set("w", "200");  // Smaller medium size
+        urlObj.searchParams.set("q", "75");   // Lower quality for faster loading
+      } else if (size === "edit") {
+        // High quality for edit modal only
         urlObj.searchParams.set("w", "512");
-        urlObj.searchParams.set("q", "85");
+        urlObj.searchParams.set("q", "90");   // High quality for editing
+      } else {
+        // Default: aggressive compression for grid view
+        urlObj.searchParams.set("w", "300");  // Smaller default size
+        urlObj.searchParams.set("q", "70");   // Lower quality for faster loading
       }
       url = urlObj.toString();
     } catch {
       // If URL parsing fails, append query params manually
       const separator = url.includes("?") ? "&" : "?";
       if (size === "thumb") {
-        url = `${url}${separator}w=128&q=80`;
+        url = `${url}${separator}w=96&q=70`;
       } else if (size === "medium") {
-        url = `${url}${separator}w=256&q=85`;
+        url = `${url}${separator}w=200&q=75`;
+      } else if (size === "edit") {
+        url = `${url}${separator}w=512&q=90`;
       } else {
-        url = `${url}${separator}w=512&q=85`;
+        url = `${url}${separator}w=300&q=70`;
       }
     }
     
@@ -799,46 +806,14 @@ export default function AdminListMembersPage() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t">
-            <div className="text-sm text-muted-foreground">
-              {t("adminListMembers.pagination.info", "Menampilkan {start}-{end} dari {total} anggota", {
-                start: perPage === "all" ? 1 : (currentPage - 1) * perPage + 1,
-                end: perPage === "all" ? totalMembers : Math.min(currentPage * perPage, totalMembers),
-                total: totalMembers,
-              })}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchMembers(currentPage - 1, searchQuery)}
-                disabled={currentPage <= 1}
-              >
-                <Icon name="ChevronLeft" className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">{t("adminListMembers.pagination.previous", "Sebelumnya")}</span>
-              </Button>
-              
-              <span className="text-sm hidden md:inline">
-                {t("adminListMembers.pagination.current", "Halaman {page} dari {total}", {
-                  page: currentPage,
-                  total: totalPages,
-                })}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchMembers(currentPage + 1, searchQuery)}
-                disabled={currentPage >= totalPages}
-              >
-                <span className="hidden md:inline">{t("adminListMembers.pagination.next", "Selanjutnya")}</span>
-                <Icon name="ChevronRight" className="h-4 w-4 md:ml-2" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalMembers}
+          itemsPerPage={perPage}
+          itemLabel="members"
+          onPageChange={(page) => fetchMembers(page, searchQuery)}
+        />
       </div>
       ) : (
         <div className="border rounded-lg max-h-[70vh] overflow-auto">
@@ -872,10 +847,13 @@ export default function AdminListMembersPage() {
                     <Image 
                       src={photoUrl(row)} 
                       alt={row.label} 
-                      width={400} 
-                      height={400} 
+                      width={300} 
+                      height={300} 
                       className="w-full aspect-square rounded-b-lg object-cover transition-transform group-hover:scale-105" 
                       loading="lazy"
+                      priority={false}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rq5uEVdNXK22VyqMo4A9h6ixHhN0LkSKNuBWdKMo4A9h6ixHhN0LkSKNuBWdKMo4A9h6ixHhN0LkSKNuBWdKMo4A9h6ixHhN0LkSKNuBWdK"
                       unoptimized={photoUrl(row).startsWith('http://') || photoUrl(row).startsWith('https://')}
                       onError={(e) => {
                         console.error('[IMAGE] Failed to load photo for', row.label, ':', photoUrl(row));
@@ -930,54 +908,16 @@ export default function AdminListMembersPage() {
             </div>
           )}
           </div>
-        </div>
-      )}
 
-      {/* Pagination for Grid View */}
-      {viewMode === "grid" && (perPage === "all" || totalPages > 1) && (
-        <div className="flex items-center justify-between p-4 border-t bg-muted/30">
-          <div className="text-sm text-muted-foreground">
-              {perPage === "all" ? (
-                t("adminListMembers.pagination.infoAll", "Menampilkan semua {total} anggota", { total: totalMembers })
-              ) : (
-                t("adminListMembers.pagination.info", "Menampilkan {start}-{end} dari {total} anggota", {
-                  start: (currentPage - 1) * perPage + 1,
-                  end: Math.min(currentPage * perPage, totalMembers),
-                  total: totalMembers,
-                })
-              )}
-          </div>
-          
-          {perPage !== "all" && (
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchMembers(currentPage - 1, searchQuery)}
-                disabled={currentPage <= 1}
-              >
-                <Icon name="ChevronLeft" className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">{t("adminListMembers.pagination.previous", "Sebelumnya")}</span>
-              </Button>
-              
-              <span className="text-sm text-muted-foreground hidden md:inline">
-                {t("adminListMembers.pagination.current", "Halaman {page} dari {total}", {
-                  page: currentPage,
-                  total: totalPages,
-                })}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchMembers(currentPage + 1, searchQuery)}
-                disabled={currentPage >= totalPages}
-              >
-                <span className="hidden md:inline">{t("adminListMembers.pagination.next", "Selanjutnya")}</span>
-                <Icon name="ChevronRight" className="h-4 w-4 md:ml-2" />
-              </Button>
-            </div>
-          )}
+          {/* Pagination for Grid */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalMembers}
+            itemsPerPage={perPage}
+            itemLabel="members"
+            onPageChange={(page) => fetchMembers(page, searchQuery)}
+          />
         </div>
       )}
       </div>
@@ -1035,15 +975,15 @@ export default function AdminListMembersPage() {
                 
               {/* Current Photo Preview */}
                 <div className="flex items-center gap-4 mb-4">
-                  {photoUrl(editingItem, "medium") ? (
+                  {photoUrl(editingItem, "edit") ? (
                     <Image 
-                      src={photoUrl(editingItem, "medium")} 
+                      src={photoUrl(editingItem, "edit")} 
                       alt={editingItem.label} 
                       width={128} 
                       height={128} 
                       className="h-32 w-32 rounded-md object-cover border" 
                       loading="lazy"
-                      unoptimized={photoUrl(editingItem, "medium").startsWith('http://') || photoUrl(editingItem, "medium").startsWith('https://')}
+                      unoptimized={photoUrl(editingItem, "edit").startsWith('http://') || photoUrl(editingItem, "edit").startsWith('https://')}
                       onError={(e) => {
                         console.error('[IMAGE] Failed to load photo for edit modal:', editingItem.label);
                         e.currentTarget.style.display = 'none';
@@ -1245,10 +1185,11 @@ export default function AdminListMembersPage() {
                         <Image 
                           src={item.previewUrl} 
                           alt={item.name}
-                          width={64}
-                          height={64}
-                          className="w-16 h-16 object-cover rounded border"
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 object-cover rounded border"
                           loading="lazy"
+                          priority={false}
                           unoptimized={item.previewUrl.startsWith("blob:")}
                         />
 

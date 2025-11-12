@@ -498,7 +498,7 @@ export default function AdminSchedulePage() {
             </div>
       {/* Modals */}
       <Dialog open={modalView.open} onOpenChange={(open) => !open && setModalView({ open: false, ov: null })}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalView({ open: false, ov: null })}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalView({ open: false, ov: null })}>
           <DialogHeader>
             <DialogTitle>{t("adminSchedule.modals.view.title", "View Override")}</DialogTitle>
           </DialogHeader>
@@ -519,7 +519,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalEdit.open} onOpenChange={(open) => !open ? setModalEdit({ open: false, ov: null }) : null}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalEdit({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalEdit({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             saveEdit();
@@ -592,7 +592,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalDeleteOv.open} onOpenChange={(open) => !open && setModalDeleteOv({ open: false, ov: null })}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteOv({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteOv({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDeleteOverride();
@@ -612,7 +612,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalDeleteLog.open} onOpenChange={(open) => !open && setModalDeleteLog({ open: false, ov: null })}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteLog({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteLog({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDeleteLog();

@@ -117,12 +117,12 @@ export default function LoginModal() {
 
   return (
     <AlertDialog open={showModal} onOpenChange={(open) => !open && closeModal()}>
-      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-0 border bg-background p-0 shadow-lg duration-200 focus:outline-none overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4 max-h-[90vh] overflow-y-auto rounded-2xl">
+      <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 gap-0 border border-border bg-background p-0 shadow-lg duration-200 focus:outline-none overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4 max-h-[90vh] overflow-y-auto rounded-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Left welcome panel */}
           <div className="relative p-6 md:p-8 bg-background min-h-[360px] md:min-h-[420px] flex flex-col">
             <div className="flex items-center gap-2 text-lg font-semibold">
-              <div className="h-9 w-9 rounded-full grid place-items-center bg-orange-500 text-white">
+              <div className="h-9 w-9 rounded-full grid place-items-center bg-primary text-primary-foreground">
                 <Icon name="Smile" className="h-5 w-5" />
               </div>
               <span>{t("brand.title", "Absensi Wajah")}</span>
@@ -141,7 +141,7 @@ export default function LoginModal() {
           </div>
 
           {/* Right form panel */}
-          <div className="relative p-6 md:p-8 bg-muted/40 border-l">
+          <div className="relative p-6 md:p-8 bg-background border-l border-border">
             <AlertDialogHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -159,7 +159,7 @@ export default function LoginModal() {
 
             {/* Segmented switch */}
             <div
-              className="mt-4 mb-4 rounded-full bg-muted inline-flex p-1 w-full max-w-xs"
+              className="mt-4 mb-4 rounded-full bg-muted border border-border inline-flex p-1 w-full max-w-xs"
               role="tablist"
               aria-label={t("auth.tabs.label", "Pilih mode autentikasi")}
               onKeyDown={(e) => {
@@ -171,7 +171,7 @@ export default function LoginModal() {
                 type="button"
                 role="tab"
                 aria-selected={mode === "login"}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium ${mode === "login" ? "bg-background shadow" : "text-muted-foreground"}`}
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-all ${mode === "login" ? "bg-background text-foreground shadow border border-border" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={() => setMode("login")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -186,7 +186,7 @@ export default function LoginModal() {
                 type="button"
                 role="tab"
                 aria-selected={mode === "register"}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium ${mode === "register" ? "bg-background shadow" : "text-muted-foreground"}`}
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-all ${mode === "register" ? "bg-background text-foreground shadow border border-border" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={() => setMode("register")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -201,8 +201,11 @@ export default function LoginModal() {
 
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
               {error ? (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-600">
-                  {error}
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <div className="flex items-center gap-2">
+                    <Icon name="AlertCircle" className="h-4 w-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
                 </div>
               ) : null}
 
@@ -215,13 +218,16 @@ export default function LoginModal() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   ref={usernameRef}
-                  className={`w-full px-3 py-2 border rounded-xl transition-all ${fieldErrors.username ? "border-red-500 focus-visible:ring-red-500" : "focus:ring-2 focus:ring-primary/20"}`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground transition-all ${fieldErrors.username ? "border-destructive focus-visible:ring-destructive" : "border-input focus:ring-2 focus:ring-ring focus:border-ring"}`}
                   placeholder={t("auth.placeholders.username", "Masukkan nama pengguna atau email")}
                   required
                   autoComplete="username"
                 />
                 {fieldErrors.username && (
-                  <p className="mt-1 text-xs text-red-600">{fieldErrors.username}</p>
+                  <p className="mt-1 text-xs text-destructive flex items-center gap-1">
+                    <Icon name="AlertCircle" className="h-3 w-3 flex-shrink-0" />
+                    {fieldErrors.username}
+                  </p>
                 )}
               </div>
 
@@ -233,13 +239,16 @@ export default function LoginModal() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-xl transition-all ${fieldErrors.password ? "border-red-500 focus-visible:ring-red-500" : "focus:ring-2 focus:ring-primary/20"}`}
+                  className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground transition-all ${fieldErrors.password ? "border-destructive focus-visible:ring-destructive" : "border-input focus:ring-2 focus:ring-ring focus:border-ring"}`}
                   placeholder={t("auth.placeholders.password", "Masukkan kata sandi")}
                   required
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                 />
                 {fieldErrors.password && (
-                  <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
+                  <p className="mt-1 text-xs text-destructive flex items-center gap-1">
+                    <Icon name="AlertCircle" className="h-3 w-3 flex-shrink-0" />
+                    {fieldErrors.password}
+                  </p>
                 )}
               </div>
 
@@ -252,13 +261,16 @@ export default function LoginModal() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl transition-all ${fieldErrors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : "focus:ring-2 focus:ring-primary/20"}`}
+                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground transition-all ${fieldErrors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : "border-input focus:ring-2 focus:ring-ring focus:border-ring"}`}
                     placeholder={t("auth.placeholders.confirmPassword", "Ulangi kata sandi")}
                     required
                     autoComplete="new-password"
                   />
                   {fieldErrors.confirmPassword && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.confirmPassword}</p>
+                    <p className="mt-1 text-xs text-destructive flex items-center gap-1">
+                      <Icon name="AlertCircle" className="h-3 w-3 flex-shrink-0" />
+                      {fieldErrors.confirmPassword}
+                    </p>
                   )}
                 </div>
               )}
@@ -266,7 +278,7 @@ export default function LoginModal() {
               <div className="pt-2">
                 <Button
                   type="submit"
-                  className="w-full bg-orange-600 text-white hover:bg-orange-600/90"
+                  className="w-full"
                   disabled={isBusy}
                 >
                   {mode === "login"

@@ -48,7 +48,7 @@ export default function HomePage() {
   const DPRRef = useRef(1);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Ads list loaded like absensi-fun-meter (from localStorage or index.json)
+  // Ads list loaded like attendance-fun-meter (from localStorage or index.json)
   const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
     { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
     { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
@@ -200,7 +200,7 @@ export default function HomePage() {
     };
   }, [currentAdIndex, adMediaList, goToNextAd]);
 
-  // (Header/Footer strips removed; use static assets like absensi-fun-meter)
+  // (Header/Footer strips removed; use static assets like attendance-fun-meter)
 
   // Remove marquee measurement (ads now slideshow at bottom)
 
@@ -240,36 +240,63 @@ export default function HomePage() {
         for (const info of markedInfo) {
           const label = info.label || "";
           const score = info.score ? (info.score * 100).toFixed(1) : null;
-          const timestamp = new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           
-          // Build detailed message
-          let detailMessage = t("home.toast.attendanceSuccess", "Attendance success: {label}", { label });
-          const details: string[] = [];
+          // Create compact timestamp format like reference: "Wed/Nov/25 01:19:14 PM"
+          const now = new Date();
+          const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
+          const dayShort = now.toLocaleDateString(currentLocale, { weekday: 'short' });
+          const monthShort = now.toLocaleDateString(currentLocale, { month: 'short' });
+          const day = now.getDate().toString().padStart(2, '0');
+          const timeStr = now.toLocaleTimeString(currentLocale, { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: locale !== 'id' 
+          });
           
-          if (score) details.push(t("home.toast.score", "Score: {score}%", { score }));
-          if (timestamp) details.push(t("home.toast.time", "Time: {time}", { time: timestamp }));
+          // Format like reference: "Wed/Nov/25 01:19:14 PM"
+          const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
-          // Safe access to optional properties
-          const infoAny = info as Record<string, unknown>;
-          if (infoAny.person_id) details.push(t("home.toast.id", "ID: {id}", { id: infoAny.person_id }));
-          if (infoAny.temperature) details.push(t("home.toast.temperature", "Temp: {temp}°C", { temp: infoAny.temperature }));
+          // Build compact message like reference
+          let message = t("home.toast.attendanceSuccess", "Attendance success: {name}", { name: label });
           
-          if (details.length > 0) {
-            detailMessage += `\n${details.join(' • ')}`;
+          // Add similarity score if available
+          if (score) {
+            message += ` (${score}%)`;
           }
           
+          // Add compact time format
+          message += ` & Time: ${compactDateTime}`;
+          
           if (label) {
-            console.log("[ATTENDANCE] Showing detailed toast for:", label, info);
-            toast.success(detailMessage, { duration: 6000 });
+            console.log("[ATTENDANCE] Showing compact toast for:", label, info);
+            toast.success(message, { 
+              duration: 6000,
+              title: t("home.toast.title", "Success"),
+            });
           }
         }
         
         if (!markedInfo.length && marked.length > 0) {
-          const timestamp = new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          // Create detailed timestamp with day and time
+          const now = new Date();
+          const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
+          const dayName = now.toLocaleDateString(currentLocale, { weekday: 'long' });
+          const dateStr = now.toLocaleDateString(currentLocale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const timeStr = now.toLocaleTimeString(currentLocale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: locale !== 'id' });
+          
+          const compactDateTime = `${dayName}, ${dateStr} ${timeStr}`;
+          
           for (const label of marked) {
-            console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            const message = t("home.toast.attendanceMarked", "Attendance success: {label}\nTime: {time}", { label, time: timestamp });
-            toast.success(message, { duration: 5000 });
+            console.log("[ATTENDANCE] Showing compact toast for (fallback):", label);
+            const message = t("home.toast.basicSuccess", "Attendance success: {name} & Time: {time}", { 
+              name: label, 
+              time: compactDateTime
+            });
+            toast.success(message, {
+              duration: 5000,
+              title: t("home.toast.title", "Success"),
+            });
           }
         }
         
@@ -625,7 +652,7 @@ export default function HomePage() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-        // Samakan perilaku dengan halaman absensi: gunakan cover agar transform hitbox akurat
+        // Samakan perilaku dengan halaman attendance: gunakan cover agar transform hitbox akurat
         videoRef.current.style.objectFit = 'cover';
         videoRef.current.style.objectPosition = 'center center';
         console.log("[CAMERA] Camera started successfully");
@@ -752,7 +779,7 @@ export default function HomePage() {
 
   return (
     <div className="page-root">
-      {/* Header banner - same approach as absensi-fun-meter */}
+      {/* Header banner - same approach as attendance-fun-meter */}
       <section id="banner_top" className="relative w-full overflow-hidden bg-[#006CBB]" style={{ aspectRatio: '40/4' }}>
         <div className="relative w-full h-full">
               <Image
@@ -936,7 +963,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-      {/* Scoped styles matching absensi-fun-meter */}
+      {/* Scoped styles matching attendance-fun-meter */}
       <style jsx>{`
         .page-root {
           color: white;

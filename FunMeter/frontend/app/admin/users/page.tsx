@@ -526,7 +526,7 @@ export default function AdminUsersPage() {
 
       {/* Password Modal */}
       <Dialog open={passwordModal.open} onOpenChange={(open) => !open && closePasswordModal()}>
-        <DialogContent className="max-w-md" hideOverlay onEscapeKeyDown={() => closePasswordModal()}>
+        <DialogContent className="max-w-md border border-border bg-background rounded-2xl" hideOverlay onEscapeKeyDown={() => closePasswordModal()}>
           <DialogHeader>
             <DialogTitle>{t("adminUsers.passwordModal.title", "Setel Password")}</DialogTitle>
             <DialogDescription>
@@ -570,7 +570,7 @@ export default function AdminUsersPage() {
 
       {/* Confirm Modal */}
       <Dialog open={confirmModal.open} onOpenChange={(open) => setConfirmModal(prev => ({ ...prev, open }))}>
-        <DialogContent className="max-w-md" hideOverlay onEscapeKeyDown={() => setConfirmModal(prev => ({ ...prev, open: false }))}>
+        <DialogContent className="max-w-md border border-border bg-background rounded-2xl" hideOverlay onEscapeKeyDown={() => setConfirmModal(prev => ({ ...prev, open: false }))}>
           <DialogHeader>
             <DialogTitle>{confirmModal.title || t("adminUsers.confirm.title", "Konfirmasi")}</DialogTitle>
             <DialogDescription>{confirmModal.body}</DialogDescription>
@@ -600,7 +600,7 @@ export default function AdminUsersPage() {
 
       {/* JSON Modal */}
       <Dialog open={jsonModal.open} onOpenChange={(open) => setJsonModal(prev => ({ ...prev, open }))}>
-        <DialogContent className="max-w-3xl" hideOverlay onEscapeKeyDown={() => setJsonModal(prev => ({ ...prev, open: false }))}>
+        <DialogContent className="max-w-3xl border border-border bg-background rounded-2xl" hideOverlay onEscapeKeyDown={() => setJsonModal(prev => ({ ...prev, open: false }))}>
           <DialogHeader>
             <DialogTitle>{jsonModal.title}</DialogTitle>
             <DialogDescription>
