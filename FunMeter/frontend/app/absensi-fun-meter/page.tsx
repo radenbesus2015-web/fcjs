@@ -19,6 +19,7 @@ import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
+import { ClientOnly } from "@/components/providers/ClientOnly";
 
 interface AttendanceFunResult {
   // Attendance data
@@ -80,7 +81,7 @@ interface LastAttResults {
   results: AttendanceResult[];
 }
 
-export default function AttendanceFunMeterPage() {
+function AttendanceFunMeterPageContent() {
   // Dynamic Ads: load from localStorage override or public index.json, fallback to defaults
   const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
     { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
@@ -1494,5 +1495,15 @@ export default function AttendanceFunMeterPage() {
       </section>
       </div>
     </>
+  );
+}
+
+export default function AttendanceFunMeterPage() {
+  const { t } = useI18n();
+  
+  return (
+    <ClientOnly loaderText={t("common.loading", "Memuat...")}>
+      <AttendanceFunMeterPageContent />
+    </ClientOnly>
   );
 }

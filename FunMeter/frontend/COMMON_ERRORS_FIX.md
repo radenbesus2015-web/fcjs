@@ -81,15 +81,83 @@ export default function AdminLayout({ children }) {
 }
 ```
 
+**Improved Solution** ✅:
+```typescript
+// Separate component untuk hooks
+function AdminLayoutContent({ children }) {
+  const { status, user } = useAuth();
+  const { t } = useI18n();
+  // ... auth logic
+  return <>{children}</>;
+}
+
+// Main layout dengan mounted state
+export default function AdminLayout({ children }) {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  if (!mounted) return <LoadingSpinner />;
+  
+  return <AdminLayoutContent>{children}</AdminLayoutContent>;
+}
+```
+
 **Impact**:
 - ✅ Fixes **ALL** admin pages dengan single fix
+- ✅ `/admin` → redirect to `/admin/dashboard`
 - ✅ `/admin/dashboard` - Fixed
 - ✅ `/admin/users` - Fixed
 - ✅ `/admin/attendance` - Fixed
+- ✅ `/admin/schedule` - Fixed
 - ✅ `/admin/config` - Fixed
-- ✅ Dan semua admin pages lainnya
+- ✅ `/admin/list-members` - Fixed
+- ✅ `/admin/attendance-summary` - Fixed
+- ✅ `/admin/advertisement` - Fixed
 
-### 3. **Register Face Page Error**
+### 3. **Absensi Fun Meter Page Error**
+**Lokasi**: `app/absensi-fun-meter/page.tsx`
+
+**Error**:
+```
+Hydration mismatch
+WebSocket connection failed
+navigator.mediaDevices is not defined
+```
+
+**Penyebab**:
+- Page menggunakan **WebSocket**, **Camera API**, **localStorage** langsung
+- Tidak ada guard untuk menunggu client-side mounting
+- Browser APIs (Camera, WebSocket) tidak tersedia di SSR
+
+**Solusi** ✅:
+```typescript
+// BEFORE (❌ Error)
+export default function AttendanceFunMeterPage() {
+  const socket = useWs({ root: true }); // Langsung akses WebSocket
+  // ... camera access, localStorage, dll
+}
+
+// AFTER (✅ Fixed)
+function AttendanceFunMeterPageContent() {
+  const socket = useWs({ root: true });
+  // ... rest of code
+}
+
+export default function AttendanceFunMeterPage() {
+  const { t } = useI18n();
+  
+  return (
+    <ClientOnly loaderText={t("common.loading", "Memuat...")}>
+      <AttendanceFunMeterPageContent />
+    </ClientOnly>
+  );
+}
+```
+
+### 4. **Register Face Page Error**
 **Lokasi**: `app/register-face/page.tsx`
 
 **Error**:
@@ -251,15 +319,15 @@ export default function MyPage() {
 
 ### Fixed ✅
 1. `app/admin/page.tsx` - Changed to client-side redirect
-2. `app/admin/layout.tsx` - **Added mounted state** (fixes ALL admin pages)
+2. `app/admin/layout.tsx` - **Separated hooks into AdminLayoutContent** (fixes ALL admin pages)
 3. `app/register-face/page.tsx` - Wrapped dengan ClientOnly
-4. **All admin pages** (`/admin/*`) - Fixed via layout mounted state
+4. `app/absensi-fun-meter/page.tsx` - Wrapped dengan ClientOnly (WebSocket & Camera)
+5. **All admin pages** (`/admin/*`) - Fixed via layout mounted state pattern
 
 ### Potentially Need Fix (Check if errors occur)
-1. `app/absensi-fun-meter/page.tsx` - Uses WebSocket & Camera
-2. `app/attendance/page.tsx` - Uses Camera
-3. `app/fun-meter/page.tsx` - Uses Camera & WebSocket
-4. `app/home/page.tsx` - Check if uses browser APIs
+1. `app/attendance/page.tsx` - Check if uses Camera
+2. `app/fun-meter/page.tsx` - Check if uses Camera & WebSocket
+3. `app/home/page.tsx` - Check if uses browser APIs
 
 ## Quick Fix Pattern
 

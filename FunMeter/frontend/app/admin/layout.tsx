@@ -7,19 +7,13 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { toast } from "@/lib/toast";
 import { Icon } from "@/components/common/Icon";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { status, user } = useAuth();
   const { t } = useI18n();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     if (status === "idle" || status === "loading") return;
     const allowed = !!user && (user.is_admin || user.is_owner);
     if (!allowed) {
@@ -29,19 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.replace("/");
       }
     }
-  }, [mounted, status, user, router, pathname, t]);
-
-  // Wait for client-side mount
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Icon name="Loader2" className="h-5 w-5 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  }, [status, user, router, pathname, t]);
 
   // While determining auth or redirecting, render loading
   if (status === "idle" || status === "loading") {
@@ -58,4 +40,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user || !(user.is_admin || user.is_owner)) return null;
 
   return <>{children}</>;
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Wait for client-side mount before rendering anything that uses hooks
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Icon name="Loader2" className="h-5 w-5 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <AdminLayoutContent>{children}</AdminLayoutContent>;
 }
