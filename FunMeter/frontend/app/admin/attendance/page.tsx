@@ -588,7 +588,7 @@ export default function AdminAttendancePage() {
 
       {/* View Modal */}
       <Dialog open={showViewModal && !!selectedLog} onOpenChange={(open)=> !open && setShowViewModal(false)}>
-        <DialogContent hideOverlay className="max-w-md max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" onEscapeKeyDown={() => setShowViewModal(false)} onKeyDown={(e) => {
+        <DialogContent hideOverlay className="max-w-lg max-h-[85vh] overflow-auto bg-background rounded-xl m-auto" onEscapeKeyDown={() => setShowViewModal(false)} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             setShowViewModal(false);
@@ -598,38 +598,49 @@ export default function AdminAttendancePage() {
             <DialogTitle>{t("adminAttendance.view.title", "Detail Absensi")}</DialogTitle>
           </DialogHeader>
           {selectedLog && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.member", "Member")}</label>
-                <p className="text-sm">ID: {selectedLog.person_id || selectedLog.member?.id || "-"}</p>
-                <p className="text-sm font-medium">{selectedLog.label || selectedLog.member?.name || "-"}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.date", "Tanggal")}</label>
-                <p className="text-sm">{formatDate(selectedLog.date)}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.checkIn", "Check In")}</label>
-                  <p className="text-sm">{formatTime(selectedLog.check_in)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.checkOut", "Check Out")}</label>
-                  <p className="text-sm">{formatTime(selectedLog.check_out)}</p>
+            <div className="space-y-4">
+              {/* Anggota Section */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.member", "Anggota")}</h4>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">ID: {selectedLog.person_id || selectedLog.member?.id || "-"}</p>
+                  <p className="text-base font-medium text-foreground">{selectedLog.label || selectedLog.member?.name || "-"}</p>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.schedule", "Schedule")}</label>
-                <div className="mt-1">{getScheduleBadge(selectedLog as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; day?: string })}</div>
+
+              {/* Tanggal Section */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.date", "Tanggal")}</h4>
+                <p className="text-base text-foreground">{formatDate(selectedLog.date)}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">{t("adminAttendance.view.status", "Status")}</label>
-                <div className="mt-1">{getStatusBadge(selectedLog.status)}</div>
+
+              {/* Jam Masuk & Pulang Section */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.checkIn", "Jam Masuk")}</h4>
+                  <p className="text-base font-medium text-foreground">{formatTime(selectedLog.check_in)}</p>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.checkOut", "Jam Pulang")}</h4>
+                  <p className="text-base font-medium text-foreground">{formatTime(selectedLog.check_out)}</p>
+                </div>
+              </div>
+
+              {/* Jadwal Section */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.schedule", "Jadwal")}</h4>
+                <div>{getScheduleBadge(selectedLog as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; day?: string })}</div>
+              </div>
+
+              {/* Status Section */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.status", "Status")}</h4>
+                <div>{getStatusBadge(selectedLog.status)}</div>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowViewModal(false)}>{t("common.close", "Tutup")}</Button>
+            <Button variant="outline" onClick={() => setShowViewModal(false)}>{t("common.cancel", "Cancel")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

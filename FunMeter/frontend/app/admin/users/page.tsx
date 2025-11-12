@@ -41,21 +41,21 @@ export default function AdminUsersPage() {
   // Permission helper functions based on RBAC
   const canPromote = (currentUser: CurrentUser | null, targetUser: User): boolean => {
     if (!currentUser) return false;
-    // Owner can promote user to admin
-    // Admin can promote user to admin
-    if (currentUser.is_owner || currentUser.is_admin) {
+    // Only Owner can promote user to admin
+    if (currentUser.is_owner) {
       return !targetUser.is_admin && !targetUser.is_owner;
     }
+    // Admin cannot promote anyone
     return false;
   };
   
   const canDemote = (currentUser: CurrentUser | null, targetUser: User): boolean => {
     if (!currentUser) return false;
-    // Owner can demote admin to user
-    // Admin can demote admin to user
-    if (currentUser.is_owner || currentUser.is_admin) {
+    // Only Owner can demote admin to user
+    if (currentUser.is_owner) {
       return targetUser.is_admin && !targetUser.is_owner && !targetUser.is_current;
     }
+    // Admin cannot demote anyone
     return false;
   };
   
@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
     if (currentUser.is_owner) {
       return !targetUser.is_owner;
     }
-    // Admin can delete user only (not owner, not admin)
+    // Admin can only delete users (not owner, not other admin)
     if (currentUser.is_admin) {
       return !targetUser.is_owner && !targetUser.is_admin;
     }
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
     if (!currentUser) return false;
     // Owner can edit all passwords
     if (currentUser.is_owner) return true;
-    // Admin can edit self password and users (not owner, not other admin)
+    // Admin can only edit self password and users (not owner, not other admin)
     if (currentUser.is_admin) {
       if (targetUser.is_current) return true; // own account
       return !targetUser.is_owner && !targetUser.is_admin; // only users

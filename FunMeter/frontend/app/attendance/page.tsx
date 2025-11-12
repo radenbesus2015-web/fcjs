@@ -726,21 +726,26 @@ export default function AttendancePage() {
               onClick={cameraActive ? stopCamera : startCamera}
               variant={cameraActive ? "destructive" : "default"}
               disabled={cameraLoading}
+              className={`flex items-center gap-2 ${
+                cameraActive 
+                  ? "bg-red-600 hover:bg-red-700 text-white" 
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground"
+              } ${cameraLoading ? "opacity-75 cursor-not-allowed" : ""}`}
             >
               {cameraLoading ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  {t("attendance.actions.loading", "Memuat...")}
+                  <Icon name="Loader2" className="h-4 w-4 animate-spin" />
+                  <span>{t("attendance.actions.loading", "Memuat...")}</span>
                 </>
               ) : cameraActive ? (
                 <>
-                  <Icon name="Square" className="h-4 w-4 mr-2" />
-                  {t("attendance.actions.stopCamera", "Stop Camera")}
+                  <Icon name="Square" className="h-4 w-4" />
+                  <span>{t("attendance.actions.stopCamera", "Hentikan Kamera")}</span>
                 </>
               ) : (
                 <>
-                  <Icon name="Play" className="h-4 w-4 mr-2" />
-                  {t("attendance.actions.startCamera", "Start Camera")}
+                  <Icon name="Play" className="h-4 w-4" />
+                  <span>{t("attendance.actions.startCamera", "Mulai Kamera")}</span>
                 </>
               )}
             </Button>
