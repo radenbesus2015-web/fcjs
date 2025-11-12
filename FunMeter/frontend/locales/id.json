@@ -1011,6 +1011,14 @@
         "faces": "Jumlah wajah: {count}",
         "error": "Kesalahan: {message}"
       }
+    },
+    "toast": {
+      "attendanceSuccess": "Absensi berhasil: {label}",
+      "attendanceMarked": "Absensi berhasil: {label}\nWaktu: {time}",
+      "score": "Skor: {score}%",
+      "time": "Waktu: {time}",
+      "id": "ID: {id}",
+      "temperature": "Suhu: {temp}°C"
     }
   },
   "registerFace": {

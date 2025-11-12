@@ -15,7 +15,7 @@ import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
 type AdMedia = { src: string; type: 'image' | 'video' };
 
 export default function HomePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const router = useRouter();
   
@@ -240,19 +240,19 @@ export default function HomePage() {
         for (const info of markedInfo) {
           const label = info.label || "";
           const score = info.score ? (info.score * 100).toFixed(1) : null;
-          const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const timestamp = new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           
           // Build detailed message
-          let detailMessage = `Attendance success: ${label}`;
+          let detailMessage = t("home.toast.attendanceSuccess", "Attendance success: {label}", { label });
           const details: string[] = [];
           
-          if (score) details.push(`Score: ${score}%`);
-          if (timestamp) details.push(`Time: ${timestamp}`);
+          if (score) details.push(t("home.toast.score", "Score: {score}%", { score }));
+          if (timestamp) details.push(t("home.toast.time", "Time: {time}", { time: timestamp }));
           
           // Safe access to optional properties
           const infoAny = info as Record<string, unknown>;
-          if (infoAny.person_id) details.push(`ID: ${infoAny.person_id}`);
-          if (infoAny.temperature) details.push(`Temp: ${infoAny.temperature}°C`);
+          if (infoAny.person_id) details.push(t("home.toast.id", "ID: {id}", { id: infoAny.person_id }));
+          if (infoAny.temperature) details.push(t("home.toast.temperature", "Temp: {temp}°C", { temp: infoAny.temperature }));
           
           if (details.length > 0) {
             detailMessage += `\n${details.join(' • ')}`;
@@ -265,10 +265,11 @@ export default function HomePage() {
         }
         
         if (!markedInfo.length && marked.length > 0) {
-          const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const timestamp = new Date().toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing toast for (fallback):", label);
-            toast.success(`Attendance success: ${label}\nTime: ${timestamp}`, { duration: 5000 });
+            const message = t("home.toast.attendanceMarked", "Attendance success: {label}\nTime: {time}", { label, time: timestamp });
+            toast.success(message, { duration: 5000 });
           }
         }
         

@@ -1019,6 +1019,14 @@
         "faces": "Number of faces: {count}",
         "error": "Error: {message}"
       }
+    },
+    "toast": {
+      "attendanceSuccess": "Attendance success: {label}",
+      "attendanceMarked": "Attendance success: {label}\nTime: {time}",
+      "score": "Score: {score}%",
+      "time": "Time: {time}",
+      "id": "ID: {id}",
+      "temperature": "Temp: {temp}°C"
     }
   },
   "registerFace": {
