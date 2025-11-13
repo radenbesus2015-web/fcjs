@@ -32,6 +32,7 @@ interface AttResultData {
   marked?: string[];
   marked_info?: Array<{
     label?: string;
+    name?: string;
     score?: number;
     message?: string;
   }>;
@@ -152,7 +153,8 @@ export default function AttendancePage() {
         
         // Show toast notifications for marked attendance
         for (const info of markedInfo) {
-          const label = info.label || "";
+          // Use name if available, otherwise fallback to label
+          const name = info.name || info.label || "";
           const now = new Date();
           // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
           const dayNames = locale === 'id' 
@@ -172,7 +174,7 @@ export default function AttendancePage() {
           const dateTime = `${day}/${month}/${year} ${time}`;
           
           // Build message with date and time
-          let message = t("attendance.toast.attendanceSuccess", "Attendance recorded: {name}", { name: label });
+          let message = t("attendance.toast.attendanceSuccess", "Attendance recorded: {name}", { name });
           const details: string[] = [];
           
           if (dateTime) details.push(t("attendance.toast.dateTime", "Date & Time: {dateTime}", { dateTime }));
@@ -181,7 +183,7 @@ export default function AttendancePage() {
             message += `\n${details.join(' • ')}`;
           }
           
-          if (label) {
+          if (name) {
             console.log("[ATTENDANCE] Backend message (ignored):", info.message);
             console.log("[ATTENDANCE] Using translated message:", message);
             toast.success(message, { duration: 5000 });
@@ -898,7 +900,7 @@ export default function AttendancePage() {
                         <td className="p-3">{no}</td>
                         <td className="p-3">{item.label || "-"}</td>
                         <td className="p-3">{formatDateTime(item.ts)}</td>
-                        <td className="p-3 text-right font-mono">{(item.score || 0).toFixed(3)}</td>
+                        <td className="p-3 text-right font-mono">{((item.score || 0) * 100).toFixed(1)}%</td>
                       </tr>
                     );
                   })}

@@ -1022,8 +1022,8 @@
       }
     },
     "toast": {
-      "attendanceSuccess": "Absensi berhasil: {label}",
-      "attendanceMarked": "Absensi berhasil: {label}",
+      "attendanceSuccess": "Absensi berhasil: {name}",
+      "attendanceMarked": "Absensi berhasil: {name}",
       "score": "Skor: {score}",
       "dateTime": "Tanggal & Waktu: {dateTime}",
       "id": "ID: {id}",
@@ -1181,7 +1181,7 @@
       "no": "No",
       "name": "Nama",
       "dateTime": "Waktu & tanggal",
-      "score": "Skor",
+      "score": "Kemiripan",
       "empty": "Belum ada data absensi."
     },
     "pagination": {
