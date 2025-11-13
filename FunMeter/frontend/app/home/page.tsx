@@ -48,14 +48,7 @@ export default function HomePage() {
   const DPRRef = useRef(1);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Ads list loaded like attendance-fun-meter (from localStorage or index.json)
-  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
-    { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-    { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-    { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-    { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-    { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-  ]);
+  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   
   // Debug: log when adMediaList changes
@@ -126,31 +119,14 @@ export default function HomePage() {
         
         console.log('[HOME] Loaded advertisements:', list.length, list);
         
-        if (list.length && !cancelled) {
+        if (!cancelled) {
           setAdMediaList(list);
-          // Reset to first ad when list changes
           setCurrentAdIndex(0);
-        } else if (!cancelled) {
-          // Fallback to default ads if no active ads found
-          setAdMediaList([
-            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-          ]);
         }
       } catch (e) {
         console.warn('[ADS] Failed to load ads from backend, using defaults', e);
         if (!cancelled) {
-          // Fallback to default ads on error
-          setAdMediaList([
-            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-          ]);
+          setAdMediaList([]);
         }
       }
     };

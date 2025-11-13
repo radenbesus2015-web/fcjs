@@ -82,14 +82,7 @@ interface LastAttResults {
 }
 
 function AttendanceFunMeterPageContent() {
-  // Dynamic Ads: load from localStorage override or public index.json, fallback to defaults
-  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
-    { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-    { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-    { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-    { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-    { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-  ]);
+  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,29 +101,13 @@ function AttendanceFunMeterPageContent() {
             type: ad.type as 'image' | 'video',
           }));
         
-        if (list.length && !cancelled) {
+        if (!cancelled) {
           setAdMediaList(list);
-        } else if (!cancelled) {
-          // Fallback to default ads if no active ads found
-          setAdMediaList([
-            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-          ]);
         }
       } catch (e) {
         console.warn('[ADS] Failed to load ads from backend, using defaults', e);
         if (!cancelled) {
-          // Fallback to default ads on error
-          setAdMediaList([
-            { src: "/assets/advertisements/images/upskilling.png", type: 'image' },
-            { src: "/assets/advertisements/images/nobox.jpg", type: 'image' },
-            { src: "/assets/advertisements/videos/iklan.mp4", type: 'video' },
-            { src: "/assets/advertisements/images/karyasmk.jpg", type: 'image' },
-            { src: "/assets/advertisements/images/expo.jpg", type: 'image' },
-          ]);
+          setAdMediaList([]);
         }
       }
     };
