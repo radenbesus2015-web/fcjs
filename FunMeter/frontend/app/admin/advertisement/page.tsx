@@ -57,6 +57,8 @@ export default function AdminAdvertisementPage() {
   const [editingReplaceFile, setEditingReplaceFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
+  const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
   
   // View mode state (grid or list)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -163,10 +165,18 @@ export default function AdminAdvertisementPage() {
   }, [items, startIndex, endIndex, viewMode]);
 
   // Load advertisements from backend API
-  const load = useCallback(async () => {
+  const load = useCallback(async (showToast = true) => {
+    // Prevent double execution
+    if (isLoadingRef.current) return;
+    
+    isLoadingRef.current = true;
     setLoading(true);
     setError("");
-    toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
+    const isInitialLoad = !hasLoadedRef.current;
+    
+    if (showToast && isInitialLoad) {
+      toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
+    }
     
     try {
       const data = await fetchAllAdvertisements();
@@ -188,17 +198,28 @@ export default function AdminAdvertisementPage() {
       // Sort by display_order
       items.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
       setItems(items);
-      toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
+      
+      if (showToast && isInitialLoad) {
+        toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
+      }
+      hasLoadedRef.current = true;
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Failed to load advertisements list.";
       setError(error);
-      toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
+      if (showToast) {
+        toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
+      }
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }, [t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!hasLoadedRef.current && !isLoadingRef.current) {
+      void load();
+    }
+  }, [load]);
 
   const save = async (silent?: boolean) => {
     try {
