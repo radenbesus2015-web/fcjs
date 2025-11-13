@@ -92,10 +92,10 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
     navFallback: "Konfigurasi Sistem",
   },
   "/admin/advertisement": {
-    titleKey: "pages.adminAdvertisement.headerTitle",
-    titleFallback: "Kelola Iklan",
+    titleKey: "pages.adminAdvertisement.title",
+    titleFallback: "Manage Advertisements",
     navKey: "nav.adminAdvertisement",
-    navFallback: "Kelola Iklan",
+    navFallback: "Manage Advertisements",
   },
 };
 
