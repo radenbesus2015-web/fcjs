@@ -3,13 +3,12 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { request } from "@/lib/api";
 import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
-import { Pagination } from "@/components/common/Pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface AttendanceMember {
@@ -76,6 +75,10 @@ interface AttendanceFilters {
   date_to?: string;
 }
 
+type AttendancePaginationItem =
+  | { type: "page"; page: number }
+  | { type: "ellipsis"; key: "left" | "right" }
+  | { type: "last"; page: number };
 export default function AdminAttendancePage() {
   const { t, locale } = useI18n();
   
@@ -88,6 +91,42 @@ export default function AdminAttendancePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const perPageValue = filters.per_page && filters.per_page > 0 ? filters.per_page : 10;
+  const { startItem, endItem } = useMemo(() => {
+    if (totalRecords === 0) {
+      return { startItem: 0, endItem: 0 };
+    }
+    const start = (currentPage - 1) * perPageValue + 1;
+    const end = Math.min(totalRecords, start + perPageValue - 1);
+    return { startItem: start, endItem: end };
+  }, [currentPage, perPageValue, totalRecords]);
+  const paginationItems = useMemo<AttendancePaginationItem[]>(() => {
+    if (totalPages <= 1) {
+      return [];
+    }
+
+    const items: AttendancePaginationItem[] = [
+      { type: "page", page: 1 },
+    ];
+
+    if (currentPage > 1) {
+      items.push({ type: "ellipsis", key: "left" });
+    }
+
+    if (currentPage > 1 && currentPage < totalPages) {
+      items.push({ type: "page", page: currentPage });
+    }
+
+    if (currentPage < totalPages) {
+      items.push({ type: "ellipsis", key: "right" });
+    }
+
+    if (totalPages > 1) {
+      items.push({ type: "last", page: totalPages });
+    }
+
+    return items;
+  }, [currentPage, totalPages]);
   
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -576,14 +615,106 @@ export default function AdminAttendancePage() {
           </table>
         </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalRecords}
-          itemsPerPage={filters.per_page || 10}
-          itemLabel="records"
-          onPageChange={handlePageChange}
-        />
+        {totalRecords > 0 && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t pt-4 mt-4">
+            <div className="text-sm text-muted-foreground">
+              {t("adminAttendance.pagination.range", "{start}-{end} {records}", {
+                start: startItem,
+                end: endItem,
+                records: t("adminAttendance.pagination.recordsLabel", "records"),
+              })}
+            </div>
+            <div className="flex items-center gap-1 self-end sm:self-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage <= 1}
+                title={t("adminAttendance.pagination.first", "First page")}
+                aria-label={t("adminAttendance.pagination.first", "First page")}
+              >
+                <Icon name="ChevronsLeft" className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage <= 1}
+                title={t("adminAttendance.pagination.prev", "Previous")}
+                aria-label={t("adminAttendance.pagination.prev", "Previous")}
+              >
+                <Icon name="ChevronLeft" className="h-4 w-4" />
+              </Button>
+              {paginationItems.map((item, idx) => {
+                if (item.type === "ellipsis") {
+                  return (
+                    <span
+                      key={`ellipsis-${item.key}-${idx}`}
+                      className="px-2 text-sm text-muted-foreground select-none"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+
+                if (item.type === "page") {
+                  const isActive = item.page === currentPage;
+                  return (
+                    <Button
+                      key={`page-${item.page}`}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(item.page)}
+                      disabled={isActive}
+                      title={t("adminAttendance.pagination.goToPage", "Go to page {page}", { page: item.page })}
+                      aria-label={t("adminAttendance.pagination.goToPage", "Go to page {page}", { page: item.page })}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {item.page}
+                    </Button>
+                  );
+                }
+
+                const isLastActive = currentPage === item.page;
+                const lastLabel = String(item.page);
+                return (
+                  <Button
+                    key={`last-${item.page}`}
+                    variant={isLastActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(item.page)}
+                    disabled={isLastActive}
+                    title={t("adminAttendance.pagination.goToLast", "Go to last page")}
+                    aria-label={t("adminAttendance.pagination.goToLast", "Go to last page")}
+                    aria-current={isLastActive ? "page" : undefined}
+                  >
+                    {lastLabel}
+                  </Button>
+                );
+              })}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage >= totalPages}
+                title={t("adminAttendance.pagination.next", "Next")}
+                aria-label={t("adminAttendance.pagination.next", "Next")}
+              >
+                <Icon name="ChevronRight" className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage >= totalPages}
+                title={t("adminAttendance.pagination.last", "Last page")}
+                aria-label={t("adminAttendance.pagination.last", "Last page")}
+              >
+                <Icon name="ChevronsRight" className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* View Modal */}

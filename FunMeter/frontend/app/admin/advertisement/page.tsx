@@ -629,10 +629,10 @@ export default function AdminAdvertisementPage() {
         <CardHeader className="flex sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1.5">
             <CardTitle className="text-2xl font-bold">
-              {t("pages.adminAdvertisement.title", "Kelola Iklan")}
+              {t("adminAds.title", "Advertisements")}
             </CardTitle>
             <CardDescription>
-              {t("pages.adminAdvertisement.subtitle", "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter.")}
+              {t("adminAds.subtitle", "Configure advertisements displayed on the Attendance Fun Meter page.")}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">

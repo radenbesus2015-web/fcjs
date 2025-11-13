@@ -57,8 +57,8 @@
     }
   },
   "adminAds": {
-    "title": "Manage Advertisements (Attendance Fun Meter)",
-    "subtitle": "Configure ads displayed on the Attendance Fun Meter page.",
+    "title": "Advertisements",
+    "subtitle": "Configure advertisements displayed on the Attendance Fun Meter page.",
     "empty": "No advertisement media found.",
     "view": {
       "grid": "Grid View",
@@ -1362,7 +1362,11 @@
       "first": "First page",
       "last": "Last page",
       "totalLabel": "Total",
-      "pageStatus": "Page {page} / {total}"
+      "pageStatus": "Page {page} / {total}",
+      "range": "{start}-{end} {records}",
+      "recordsLabel": "records",
+      "goToPage": "Go to page {page}",
+      "goToLast": "Go to last page"
     },
     "state": {
       "loading": "Loading attendance data..."

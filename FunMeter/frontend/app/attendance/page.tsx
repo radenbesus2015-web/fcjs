@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
 import { toast } from "@/toast";
 import { request } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/common/Pagination";
 import { Icon } from "@/components/common/Icon";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import * as Cam from "@/lib/cameraManager";
 
 interface AttendanceRecord {
@@ -46,6 +45,11 @@ interface AttLogSnapshotData {
   [key: string]: unknown;
 }
 
+type AttendancePaginationItem =
+  | { type: "page"; page: number }
+  | { type: "ellipsis"; key: "left" | "right" }
+  | { type: "last"; page: number };
+
 export default function AttendancePage() {
   const { t, locale } = useI18n();
   const { useSetting } = useSettings();
@@ -77,6 +81,44 @@ export default function AttendancePage() {
   const [perPage, setPerPage] = useState<number>(10);
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Pagination calculations
+  const { startItem, endItem } = useMemo(() => {
+    if (logMeta.total === 0) {
+      return { startItem: 0, endItem: 0 };
+    }
+    const start = (logMeta.page - 1) * logMeta.per_page + 1;
+    const end = Math.min(logMeta.total, start + logMeta.per_page - 1);
+    return { startItem: start, endItem: end };
+  }, [logMeta.page, logMeta.per_page, logMeta.total]);
+
+  const paginationItems = useMemo<AttendancePaginationItem[]>(() => {
+    if (logMeta.total_pages <= 1) {
+      return [];
+    }
+
+    const items: AttendancePaginationItem[] = [
+      { type: "page", page: 1 },
+    ];
+
+    if (logMeta.page > 1) {
+      items.push({ type: "ellipsis", key: "left" });
+    }
+
+    if (logMeta.page > 1 && logMeta.page < logMeta.total_pages) {
+      items.push({ type: "page", page: logMeta.page });
+    }
+
+    if (logMeta.page < logMeta.total_pages) {
+      items.push({ type: "ellipsis", key: "right" });
+    }
+
+    if (logMeta.total_pages > 1) {
+      items.push({ type: "last", page: logMeta.total_pages });
+    }
+
+    return items;
+  }, [logMeta.page, logMeta.total_pages]);
 
   // Settings
   type SettingBinding = { model: number; setModel: (v: number) => void };
@@ -864,14 +906,111 @@ export default function AttendancePage() {
               </table>
             )}
           </div>
-          <Pagination
-            currentPage={logMeta.page}
-            totalPages={logMeta.total_pages}
-            totalItems={logMeta.total}
-            itemsPerPage={logMeta.per_page}
-            itemLabel="records"
-            onPageChange={(page) => refreshLog(page)}
-          />
+          {logMeta.total > 0 && logMeta.total_pages > 1 && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t pt-4 mt-4">
+              <div className="text-sm text-muted-foreground">
+                {t("adminAttendance.pagination.range", "{start}-{end} {records}", {
+                  start: startItem,
+                  end: endItem,
+                  records: t("adminAttendance.pagination.recordsLabel", "records"),
+                })}
+              </div>
+              <div className="flex items-center gap-0.5 self-end sm:self-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(1)}
+                  disabled={logMeta.page <= 1}
+                  title={t("adminAttendance.pagination.first", "First page")}
+                  aria-label={t("adminAttendance.pagination.first", "First page")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronsLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(Math.max(1, logMeta.page - 1))}
+                  disabled={logMeta.page <= 1}
+                  title={t("adminAttendance.pagination.prev", "Previous")}
+                  aria-label={t("adminAttendance.pagination.prev", "Previous")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                {paginationItems.map((item, idx) => {
+                  if (item.type === "ellipsis") {
+                    return (
+                      <span
+                        key={`ellipsis-${item.key}-${idx}`}
+                        className="px-1 text-xs text-muted-foreground select-none"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  if (item.type === "page") {
+                    const isActive = item.page === logMeta.page;
+                    return (
+                      <Button
+                        key={`page-${item.page}`}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => refreshLog(item.page)}
+                        disabled={isActive}
+                        title={t("adminAttendance.pagination.goToPage", "Go to page {page}", { page: item.page })}
+                        aria-label={t("adminAttendance.pagination.goToPage", "Go to page {page}", { page: item.page })}
+                        aria-current={isActive ? "page" : undefined}
+                        className="h-7 min-w-7 px-2 text-xs"
+                      >
+                        {item.page}
+                      </Button>
+                    );
+                  }
+
+                  const isLastActive = logMeta.page === item.page;
+                  return (
+                    <Button
+                      key={`last-${item.page}`}
+                      variant={isLastActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => refreshLog(item.page)}
+                      disabled={isLastActive}
+                      title={t("adminAttendance.pagination.goToLast", "Go to last page")}
+                      aria-label={t("adminAttendance.pagination.goToLast", "Go to last page")}
+                      aria-current={isLastActive ? "page" : undefined}
+                      className="h-7 min-w-7 px-2 text-xs"
+                    >
+                      {item.page}
+                    </Button>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(Math.min(logMeta.total_pages, logMeta.page + 1))}
+                  disabled={logMeta.page >= logMeta.total_pages}
+                  title={t("adminAttendance.pagination.next", "Next")}
+                  aria-label={t("adminAttendance.pagination.next", "Next")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(logMeta.total_pages)}
+                  disabled={logMeta.page >= logMeta.total_pages}
+                  title={t("adminAttendance.pagination.last", "Last page")}
+                  aria-label={t("adminAttendance.pagination.last", "Last page")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronsRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

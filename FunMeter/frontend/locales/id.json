@@ -57,8 +57,8 @@
     }
   },
   "adminAds": {
-    "title": "Kelola Iklan (Absensi Fun Meter)",
-    "subtitle": "Atur iklan yang muncul pada halaman Absensi Fun Meter.",
+    "title": "Iklan",
+    "subtitle": "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter.",
     "empty": "Tidak ada media iklan ditemukan.",
     "view": {
       "grid": "Tampilan Grid",
@@ -1354,7 +1354,11 @@
       "first": "Halaman pertama",
       "last": "Halaman terakhir",
       "totalLabel": "Total",
-      "pageStatus": "Halaman {page} / {total}"
+      "pageStatus": "Halaman {page} / {total}",
+      "range": "{start}-{end} {records}",
+      "recordsLabel": "data",
+      "goToPage": "Ke halaman {page}",
+      "goToLast": "Ke halaman terakhir"
     },
     "state": {
       "loading": "Memuat data attendance..."
