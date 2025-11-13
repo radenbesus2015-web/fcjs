@@ -68,6 +68,9 @@
       "show": "Tampilkan",
       "select": "Pilih iklan"
     },
+    "selectAll": "Pilih semua",
+    "selected": "dipilih",
+    "totalItems": "{total} iklan",
     "table": {
       "preview": "Preview",
       "fileName": "Nama File",
@@ -1506,6 +1509,8 @@
       "replacePhoto": "Ganti foto",
       "delete": "Hapus"
     },
+    "selectAll": "Pilih semua",
+    "selected": "{count} item dipilih",
     "bulk": {
       "title": "Upload Massal",
       "description": "Unggah banyak foto sekaligus",

@@ -57,8 +57,6 @@ export default function AdminAdvertisementPage() {
   const [editingReplaceFile, setEditingReplaceFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
-  const hasLoadedRef = useRef(false);
-  const isLoadingRef = useRef(false);
   
   // View mode state (grid or list)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -165,18 +163,10 @@ export default function AdminAdvertisementPage() {
   }, [items, startIndex, endIndex, viewMode]);
 
   // Load advertisements from backend API
-  const load = useCallback(async (showToast = true) => {
-    // Prevent double execution
-    if (isLoadingRef.current) return;
-    
-    isLoadingRef.current = true;
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    const isInitialLoad = !hasLoadedRef.current;
-    
-    if (showToast && isInitialLoad) {
-      toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
-    }
+    toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
     
     try {
       const data = await fetchAllAdvertisements();
@@ -198,28 +188,17 @@ export default function AdminAdvertisementPage() {
       // Sort by display_order
       items.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
       setItems(items);
-      
-      if (showToast && isInitialLoad) {
-        toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
-      }
-      hasLoadedRef.current = true;
+      toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Failed to load advertisements list.";
       setError(error);
-      if (showToast) {
-        toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
-      }
+      toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
     } finally {
       setLoading(false);
-      isLoadingRef.current = false;
     }
   }, [t]);
 
-  useEffect(() => {
-    if (!hasLoadedRef.current && !isLoadingRef.current) {
-      void load();
-    }
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const save = async (silent?: boolean) => {
     try {
@@ -581,25 +560,16 @@ export default function AdminAdvertisementPage() {
     }
   };
 
-  // Select all advertisements (improved to work with all data, not just current page)
+  // Toggle select all advertisements
   const toggleSelectAll = () => {
-    if (selected.length === items.length) {
-      // Deselect all
-      setSelected([]);
+    if (selected.length === paginatedItems.length && paginatedItems.length > 0) {
+      // Deselect all items on current page
+      const pageSrcs = new Set(paginatedItems.map((it) => it.src));
+      setSelected((prev) => prev.filter((s) => !pageSrcs.has(s)));
     } else {
-      // Select all items (across all pages)
-      setSelected(items.map(item => item.src));
+      // Select all items on current page
+      setSelected((prev) => [...new Set([...prev, ...paginatedItems.map((it) => it.src)])]);
     }
-  };
-
-  // Helper function to check if all visible items are selected
-  const isAllVisibleSelected = () => {
-    return paginatedItems.length > 0 && paginatedItems.every(item => selected.includes(item.src));
-  };
-
-  // Helper function to check if some visible items are selected (for indeterminate state)
-  const isSomeVisibleSelected = () => {
-    return paginatedItems.length > 0 && paginatedItems.some(item => selected.includes(item.src)) && !isAllVisibleSelected();
   };
 
   // Delete selected ads
@@ -770,15 +740,16 @@ export default function AdminAdvertisementPage() {
                           <input
                             type="checkbox"
                             className="h-4 w-4"
-                            checked={isAllVisibleSelected()}
-                            ref={(el) => {
-                              if (el) {
-                                el.indeterminate = isSomeVisibleSelected();
+                            checked={paginatedItems.length > 0 && paginatedItems.every((it) => selected.includes(it.src))}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelected((prev) => [...new Set([...prev, ...paginatedItems.map((it) => it.src)])]);
+                              } else {
+                                const pageSrcs = new Set(paginatedItems.map((it) => it.src));
+                                setSelected((prev) => prev.filter((s) => !pageSrcs.has(s)));
                               }
                             }}
-                            onChange={toggleSelectAll}
                             aria-label="Select all"
-                            title={isAllVisibleSelected() ? t("adminAds.selectAll.deselectAll", "Batalkan pilih semua") : t("adminAds.selectAll.selectAll", "Pilih semua")}
                           />
                         </th>
                         <th className="text-left p-3 font-medium w-24">{t("adminAds.table.preview", "Preview")}</th>
@@ -972,43 +943,29 @@ export default function AdminAdvertisementPage() {
                 </div>
               ) : (
                 /* Grid View */
-                <div className="space-y-4">
-                  {/* Grid Header with Select All */}
-                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                <>
+                  {/* Grid Controls */}
+                  <div className="flex items-center justify-between mb-4 p-3 bg-muted/30 rounded-lg border">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
-                        className="h-4 w-4"
-                        checked={isAllVisibleSelected()}
-                        ref={(el) => {
-                          if (el) {
-                            el.indeterminate = isSomeVisibleSelected();
-                          }
-                        }}
+                        className="h-4 w-4 rounded"
+                        checked={paginatedItems.length > 0 && paginatedItems.every((it) => selected.includes(it.src))}
                         onChange={toggleSelectAll}
-                        aria-label="Select all"
-                        title={isAllVisibleSelected() ? t("adminAds.selectAll.deselectAll", "Batalkan pilih semua") : t("adminAds.selectAll.selectAll", "Pilih semua")}
+                        aria-label={t("adminAds.selectAll", "Pilih semua")}
                       />
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {selected.length > 0 
-                          ? t("adminAds.selected.count", "{count} item dipilih", { count: selected.length })
-                          : t("adminAds.selectAll.selectAll", "Pilih semua")
-                        }
+                      <span className="text-sm font-medium">
+                        {t("adminAds.selectAll", "Pilih semua")}
                       </span>
+                      {selected.length > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          ({selected.length} {t("adminAds.selected", "dipilih")})
+                        </span>
+                      )}
                     </div>
-                    {selected.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          onClick={deleteSelected} 
-                          variant="destructive" 
-                          size="sm"
-                          disabled={loading || deleting || !!error}
-                        >
-                          <Icon name="Trash2" className="h-4 w-4 md:mr-2" />
-                          <span className="hidden md:inline">{t("common.delete", "Delete")} ({selected.length})</span>
-                        </Button>
-                      </div>
-                    )}
+                    <div className="text-sm text-muted-foreground">
+                      {t("adminAds.totalItems", "{total} iklan", { total: items.length })}
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -1169,8 +1126,8 @@ export default function AdminAdvertisementPage() {
                       </div>
                     );
                   })}
-                  </div>
                 </div>
+                </>
               )}
               
               

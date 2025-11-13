@@ -526,25 +526,13 @@ export default function AdminListMembersPage() {
     );
   };
 
-  // Select all members (improved to work with all data, not just current page)
+  // Select all members
   const toggleSelectAll = () => {
     if (selectedMembers.length === items.length) {
-      // Deselect all
       setSelectedMembers([]);
     } else {
-      // Select all items (across all pages)
       setSelectedMembers(items.map(m => String(m.id)));
     }
-  };
-
-  // Helper function to check if all visible items are selected
-  const isAllVisibleSelected = () => {
-    return items.length > 0 && items.every(item => selectedMembers.includes(String(item.id)));
-  };
-
-  // Helper function to check if some visible items are selected (for indeterminate state)
-  const isSomeVisibleSelected = () => {
-    return items.length > 0 && items.some(item => selectedMembers.includes(String(item.id))) && !isAllVisibleSelected();
   };
 
   // Search members
@@ -722,15 +710,9 @@ export default function AdminListMembersPage() {
                 <th className="w-12 p-4">
                   <input
                     type="checkbox"
-                    checked={isAllVisibleSelected()}
-                    ref={(el) => {
-                      if (el) {
-                        el.indeterminate = isSomeVisibleSelected();
-                      }
-                    }}
+                    checked={selectedMembers.length === items.length && items.length > 0}
                     onChange={toggleSelectAll}
                     className="rounded"
-                    title={isAllVisibleSelected() ? t("adminListMembers.selectAll.deselectAll", "Batalkan pilih semua") : t("adminListMembers.selectAll.selectAll", "Pilih semua")}
                   />
                 </th>
                 <th className="text-left p-4 font-medium">{t("adminListMembers.table.label", "Label")}</th>
