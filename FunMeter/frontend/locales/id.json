@@ -309,6 +309,8 @@
         "loading": "Memuat daftar wajah..."
       },
       "empty": "Belum ada override tanggal khusus.",
+      "saved": "Override tersimpan.",
+      "deleted": "Override dihapus.",
       "modal": {
         "title": "Override Jadwal",
         "description": "Tentukan rentang tanggal dan jam kerja yang menimpa jadwal mingguan."
@@ -334,6 +336,10 @@
         "graceOut": "Grace Pulang (menit)",
         "notes": "Catatan"
       }
+    },
+    "logs": {
+      "deleted": "Log dihapus.",
+      "deleteFailed": "Gagal menghapus log."
     },
     "sidebar": {
       "daysTitle": "Hari",
@@ -752,6 +758,7 @@
       "loading": "Memuat data pengguna…"
     },
     "confirm": {
+      "title": "Konfirmasi",
       "promote": "Promosikan \"{user}\" menjadi admin?",
       "demote": "Cabut peran admin dari \"{user}\"?",
       "delete": "Hapus user \"{user}\"?",
@@ -1024,7 +1031,7 @@
     "toast": {
       "attendanceSuccess": "Absensi berhasil: {name}",
       "attendanceMarked": "Absensi berhasil: {name}",
-      "score": "Skor: {score}",
+      "score": "Kemiripan: {score}",
       "dateTime": "Tanggal & Waktu: {dateTime}",
       "id": "ID: {id}",
       "temperature": "Suhu: {temp}°C"
@@ -1252,7 +1259,7 @@
       "cameraAccessError": "Gagal mengakses kamera.",
       "funError": "Kesalahan Fun: {message}",
       "attendanceSuccess": "Absen berhasil: {label}",
-      "score": "Skor: {score}",
+      "score": "Kemiripan: {score}",
       "dateTime": "Tanggal & Waktu: {dateTime}",
       "attendanceBlocked": "{label}: Tidak bisa absen. Coba lagi pada {time}.",
       "attendanceBlockedNoTime": "{label}: Tidak bisa absen.",

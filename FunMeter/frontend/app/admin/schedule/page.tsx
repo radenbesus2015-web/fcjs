@@ -452,23 +452,23 @@ export default function AdminSchedulePage() {
       return next;
     });
     setModalEdit({ open: false, ov: null });
-    toast.success(t("adminSchedule.overrides.saved", "Override tersimpan."));
+    toast.success(t("adminSchedule.overrides.saved", "Override saved."));
   };
 
   const confirmDeleteOverride = (): void => {
     const id = modalDeleteOv.ov?.id;
     if (id) deleteOverride(id);
     setModalDeleteOv({ open: false, ov: null });
-    toast.success(t("adminSchedule.overrides.deleted", "Override dihapus."));
+    toast.success(t("adminSchedule.overrides.deleted", "Override removed."));
   };
 
   const confirmDeleteLog = async (): Promise<void> => {
     try {
       // Placeholder: implement real endpoint if available
       // await request("/admin/attendance/logs", { method: "DELETE", body: { override_id: modalDeleteLog.ov?.id } });
-      toast.success(t("adminSchedule.logs.deleted", "Log dihapus."));
+      toast.success(t("adminSchedule.logs.deleted", "Log deleted."));
     } catch {
-      toast.error(t("adminSchedule.logs.deleteFailed", "Gagal menghapus log."));
+      toast.error(t("adminSchedule.logs.deleteFailed", "Failed to delete log."));
     } finally {
       setModalDeleteLog({ open: false, ov: null });
     }
@@ -541,17 +541,30 @@ export default function AdminSchedulePage() {
                   <Input type="date" value={modalEdit.ov.singleDay ? modalEdit.ov.start_date : modalEdit.ov.end_date} disabled={!!modalEdit.ov.singleDay} onChange={(e)=> updateModalEdit(() => ({ end_date: e.target.value }))} />
                 </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold flex items-center gap-2">
-                  <input type="checkbox" checked={!!modalEdit.ov.singleDay} onChange={(e)=> updateModalEdit((ov) => ({ singleDay: e.target.checked, end_date: e.target.checked ? (ov.start_date || "") : (ov.end_date || ov.start_date || "") }))} />
-                  {t("adminSchedule.overrides.form.singleDay", "Single Day")}
-                </Label>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-3 mt-6">
-                  <span className="text-xs text-muted-foreground">{t("adminSchedule.common.offLabel", "Hari Libur")}</span>
-                  <input type="checkbox" className="h-4 w-4" checked={!!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ enabled: e.target.checked }))} />
-                  <span className="text-xs text-muted-foreground">{t("adminSchedule.common.onLabel", "Hari Masuk")}</span>
+              <div className="space-y-1 sm:col-span-2">
+                <div className="flex items-center gap-6">
+                  <Label className="text-xs font-semibold flex items-center gap-2">
+                    <input type="checkbox" checked={!!modalEdit.ov.singleDay} onChange={(e)=> updateModalEdit((ov) => ({ singleDay: e.target.checked, end_date: e.target.checked ? (ov.start_date || "") : (ov.end_date || ov.start_date || "") }))} />
+                    {t("adminSchedule.overrides.form.singleDay", "Single Day")}
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Label className="text-xs font-semibold flex items-center gap-2">
+                      <input type="checkbox" className="h-4 w-4" checked={!modalEdit.ov.enabled} onChange={(e)=> {
+                        if (e.target.checked) {
+                          updateModalEdit(() => ({ enabled: false }));
+                        }
+                      }} />
+                      {t("adminSchedule.common.offLabel", "Holiday")}
+                    </Label>
+                    <Label className="text-xs font-semibold flex items-center gap-2">
+                      <input type="checkbox" className="h-4 w-4" checked={!!modalEdit.ov.enabled} onChange={(e)=> {
+                        if (e.target.checked) {
+                          updateModalEdit(() => ({ enabled: true }));
+                        }
+                      }} />
+                      {t("adminSchedule.common.onLabel", "Working Day")}
+                    </Label>
+                  </div>
                 </div>
               </div>
               <div className="space-y-1">
@@ -602,7 +615,7 @@ export default function AdminSchedulePage() {
             <DialogTitle>{t("adminSchedule.modals.deleteOverride.title", "Delete Override?")}</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-muted-foreground">
-            {t("adminSchedule.modals.deleteOverride.body", "Tindakan ini akan menghapus override terpilih. Lanjutkan?")}
+            {t("adminSchedule.modals.deleteOverride.body", "This action will delete the selected override. Continue?")}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalDeleteOv({ open: false, ov: null })}>{t("common.cancel", "Cancel")}</Button>
@@ -622,7 +635,7 @@ export default function AdminSchedulePage() {
             <DialogTitle>{t("adminSchedule.modals.deleteLog.title", "Delete Log?")}</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-muted-foreground">
-            {t("adminSchedule.modals.deleteLog.body", "Tindakan ini akan menghapus log terkait jadwal ini. Lanjutkan?")}
+            {t("adminSchedule.modals.deleteLog.body", "This action will delete the log related to this schedule. Continue?")}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalDeleteLog({ open: false, ov: null })}>{t("common.cancel", "Cancel")}</Button>
