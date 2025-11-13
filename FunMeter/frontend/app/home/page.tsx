@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import Image from "next/image";
 import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
 
@@ -239,7 +239,7 @@ export default function HomePage() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? (info.score * 100).toFixed(1) : null;
+          const score = typeof info.score === "number" ? (info.score * 100).toFixed(1) : null;
           
           // Create compact timestamp format like reference: "Wed/Nov/25 01:19:14 PM"
           const now = new Date();
@@ -257,18 +257,18 @@ export default function HomePage() {
           // Format like reference: "Wed/Nov/25 01:19:14 PM"
           const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
-          // Build compact message like reference
-          let message = t("home.toast.attendanceSuccess", "Attendance success: {name}", { name: label });
-          
-          // Add similarity score if available
-          if (score) {
-            message += ` (${score}%)`;
-          }
-          
-          // Add compact time format
-          message += ` & Time: ${compactDateTime}`;
-          
           if (label) {
+            const details: string[] = [];
+            if (score) {
+              details.push(t("home.toast.score", "Score: {score}", { score: `${score}%` }));
+            }
+            details.push(t("home.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }));
+
+            let message = t("home.toast.attendanceSuccess", "Attendance success: {name}", { name: label });
+            if (details.length > 0) {
+              message += `\n${details.join(" • ")}`;
+            }
+            
             console.log("[ATTENDANCE] Showing compact toast for:", label, info);
             toast.success(message, { 
               duration: 6000,
@@ -281,19 +281,20 @@ export default function HomePage() {
           // Create detailed timestamp with day and time
           const now = new Date();
           const currentLocale = locale === 'id' ? 'id-ID' : 'en-US';
-          const dayName = now.toLocaleDateString(currentLocale, { weekday: 'long' });
-          const dateStr = now.toLocaleDateString(currentLocale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const dayShort = now.toLocaleDateString(currentLocale, { weekday: 'short' });
+          const monthShort = now.toLocaleDateString(currentLocale, { month: 'short' });
+          const day = now.getDate().toString().padStart(2, '0');
           const timeStr = now.toLocaleTimeString(currentLocale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: locale !== 'id' });
           
-          const compactDateTime = `${dayName}, ${dateStr} ${timeStr}`;
+          const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing compact toast for (fallback):", label);
-            const message = t("home.toast.basicSuccess", "Attendance success: {name} & Time: {time}", { 
-              name: label, 
-              time: compactDateTime
-            });
-            toast.success(message, {
+            const messageLines = [
+              t("home.toast.attendanceMarked", "Attendance success: {label}", { label }),
+              t("home.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }),
+            ];
+            toast.success(messageLines.join("\n"), {
               duration: 5000,
               title: t("home.toast.title", "Success"),
             });

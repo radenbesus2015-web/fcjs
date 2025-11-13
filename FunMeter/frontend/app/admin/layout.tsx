@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Icon } from "@/components/common/Icon";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {

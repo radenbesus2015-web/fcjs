@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
@@ -224,7 +224,7 @@ function AttendanceFunMeterPageContent() {
         
         for (const info of markedInfo) {
           const label = info.label || "";
-          const score = info.score ? (info.score * 100).toFixed(1) : null;
+          const score = typeof info.score === "number" ? (info.score * 100).toFixed(1) : null;
           
           // Create compact timestamp format like reference: "Wed/Nov/25 01:19:14 PM"
           const now = new Date();
@@ -242,18 +242,18 @@ function AttendanceFunMeterPageContent() {
           // Format like reference: "Wed/Nov/25 01:19:14 PM"
           const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
-          // Build compact message like reference
-          let message = t("attendanceFunMeter.toast.attendanceSuccess", "Attendance success: {name}", { name: label });
-          
-          // Add similarity score if available
-          if (score) {
-            message += ` (${score}%)`;
-          }
-          
-          // Add compact time format
-          message += ` & Time: ${compactDateTime}`;
-          
           if (label) {
+            const details: string[] = [];
+            if (score) {
+              details.push(t("attendanceFunMeter.toast.score", "Score: {score}", { score: `${score}%` }));
+            }
+            details.push(t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }));
+
+            let message = t("attendanceFunMeter.toast.attendanceSuccess", "Attendance success: {label}", { label });
+            if (details.length > 0) {
+              message += `\n${details.join(" • ")}`;
+            }
+
             console.log("[ATTENDANCE] Showing compact toast for:", label, info);
             toast.success(message, { 
               duration: 6000,
@@ -280,11 +280,11 @@ function AttendanceFunMeterPageContent() {
           
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing compact toast for (fallback):", label);
-            const message = t("attendanceFunMeter.toast.basicSuccess", "Attendance success: {name} & Time: {time}", { 
-              name: label, 
-              time: compactDateTime
-            });
-            toast.success(message, {
+            const messageLines = [
+              t("attendanceFunMeter.toast.attendanceSuccess", "Attendance success: {label}", { label }),
+              t("attendanceFunMeter.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }),
+            ];
+            toast.success(messageLines.join("\n"), {
               duration: 5000,
               title: t("attendanceFunMeter.toast.title", "Success"),
             });
@@ -1551,7 +1551,7 @@ function AttendanceFunMeterPageContent() {
 }
 
 export default function AttendanceFunMeterPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   
   return (
     <ClientOnly loaderText={t("common.loading", "Memuat...")}>

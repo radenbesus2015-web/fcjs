@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useConfirmDialog } from "@/components/providers/ConfirmDialogProvider";
 import { request, resolveApi } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { Pagination } from "@/components/common/Pagination";

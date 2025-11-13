@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { request } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/common/Pagination";
 import { Icon } from "@/components/common/Icon";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import * as Cam from "@/lib/cameraManager";
 
 interface AttendanceRecord {
@@ -46,6 +45,11 @@ interface AttLogSnapshotData {
   [key: string]: unknown;
 }
 
+type AttendancePaginationItem =
+  | { type: "page"; page: number }
+  | { type: "ellipsis"; key: "left" | "right" }
+  | { type: "last"; page: number };
+
 export default function AttendancePage() {
   const { t, locale } = useI18n();
   const { useSetting } = useSettings();
@@ -77,6 +81,44 @@ export default function AttendancePage() {
   const [perPage, setPerPage] = useState<number>(10);
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Pagination calculations
+  const { startItem, endItem } = useMemo(() => {
+    if (logMeta.total === 0) {
+      return { startItem: 0, endItem: 0 };
+    }
+    const start = (logMeta.page - 1) * logMeta.per_page + 1;
+    const end = Math.min(logMeta.total, start + logMeta.per_page - 1);
+    return { startItem: start, endItem: end };
+  }, [logMeta.page, logMeta.per_page, logMeta.total]);
+
+  const paginationItems = useMemo<AttendancePaginationItem[]>(() => {
+    if (logMeta.total_pages <= 1) {
+      return [];
+    }
+
+    const items: AttendancePaginationItem[] = [
+      { type: "page", page: 1 },
+    ];
+
+    if (logMeta.page > 1) {
+      items.push({ type: "ellipsis", key: "left" });
+    }
+
+    if (logMeta.page > 1 && logMeta.page < logMeta.total_pages) {
+      items.push({ type: "page", page: logMeta.page });
+    }
+
+    if (logMeta.page < logMeta.total_pages) {
+      items.push({ type: "ellipsis", key: "right" });
+    }
+
+    if (logMeta.total_pages > 1) {
+      items.push({ type: "last", page: logMeta.total_pages });
+    }
+
+    return items;
+  }, [logMeta.page, logMeta.total_pages]);
 
   // Settings
   type SettingBinding = { model: number; setModel: (v: number) => void };
@@ -111,13 +153,34 @@ export default function AttendancePage() {
         // Show toast notifications for marked attendance
         for (const info of markedInfo) {
           const label = info.label || "";
-          const scorePercent = info.score ? (info.score * 100).toFixed(1) : "0.0";
-          // Always use translated message, ignore backend message
-          const message = t(
-            "attendance.toast.attendanceSuccess",
-            "Attendance recorded: {name} (score {score}%)",
-            { name: label, score: scorePercent }
-          );
+          const now = new Date();
+          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
+          const dayNames = locale === 'id' 
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const monthNames = locale === 'id'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = dayNames[now.getDay()];
+          const month = monthNames[now.getMonth()];
+          const year = String(now.getFullYear()).slice(-2);
+          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          const dateTime = `${day}/${month}/${year} ${time}`;
+          
+          // Build message with date and time
+          let message = t("attendance.toast.attendanceSuccess", "Attendance recorded: {name}", { name: label });
+          const details: string[] = [];
+          
+          if (dateTime) details.push(t("attendance.toast.dateTime", "Date & Time: {dateTime}", { dateTime }));
+          
+          if (details.length > 0) {
+            message += `\n${details.join(' • ')}`;
+          }
+          
           if (label) {
             console.log("[ATTENDANCE] Backend message (ignored):", info.message);
             console.log("[ATTENDANCE] Using translated message:", message);
@@ -127,12 +190,29 @@ export default function AttendancePage() {
         
         // Fallback: show toast for marked labels without detailed info
         if (!markedInfo.length && marked.length > 0) {
+          const now = new Date();
+          // Format tanggal singkat: hari singkat/bulan singkat/tahun 2 digit
+          const dayNames = locale === 'id' 
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const monthNames = locale === 'id'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = dayNames[now.getDay()];
+          const month = monthNames[now.getMonth()];
+          const year = String(now.getFullYear()).slice(-2);
+          const time = now.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          const dateTime = `${day}/${month}/${year} ${time}`;
+          
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing success toast for (fallback):", label);
-            toast.success(
-              t("attendance.toast.attendanceMarked", "Attendance marked: {name}", { name: label }),
-              { duration: 5000 }
-            );
+            let message = t("attendance.toast.attendanceMarked", "Attendance marked: {name}", { name: label });
+            message += `\n${t("attendance.toast.dateTime", "Date & Time: {dateTime}", { dateTime })}`;
+            toast.success(message, { duration: 5000 });
           }
         }
         
@@ -826,14 +906,111 @@ export default function AttendancePage() {
               </table>
             )}
           </div>
-          <Pagination
-            currentPage={logMeta.page}
-            totalPages={logMeta.total_pages}
-            totalItems={logMeta.total}
-            itemsPerPage={logMeta.per_page}
-            itemLabel="records"
-            onPageChange={(page) => refreshLog(page)}
-          />
+          {logMeta.total > 0 && logMeta.total_pages > 1 && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t pt-4 mt-4">
+              <div className="text-sm text-muted-foreground">
+                {t("adminAttendance.pagination.range", "{start}-{end} {records}", {
+                  start: startItem,
+                  end: endItem,
+                  records: t("adminAttendance.pagination.recordsLabel", "records"),
+                })}
+              </div>
+              <div className="flex items-center gap-0.5 self-end sm:self-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(1)}
+                  disabled={logMeta.page <= 1}
+                  title={t("adminAttendance.pagination.first", "First page")}
+                  aria-label={t("adminAttendance.pagination.first", "First page")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronsLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(Math.max(1, logMeta.page - 1))}
+                  disabled={logMeta.page <= 1}
+                  title={t("adminAttendance.pagination.prev", "Previous")}
+                  aria-label={t("adminAttendance.pagination.prev", "Previous")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                {paginationItems.map((item, idx) => {
+                  if (item.type === "ellipsis") {
+                    return (
+                      <span
+                        key={`ellipsis-${item.key}-${idx}`}
+                        className="px-1 text-xs text-muted-foreground select-none"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  if (item.type === "page") {
+                    const isActive = item.page === logMeta.page;
+                    return (
+                      <Button
+                        key={`page-${item.page}`}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => refreshLog(item.page)}
+                        disabled={isActive}
+                        title={t("adminAttendance.pagination.goToPage", "Go to page {page}", { page: item.page })}
+                        aria-label={t("adminAttendance.pagination.goToPage", "Go to page {page}", { page: item.page })}
+                        aria-current={isActive ? "page" : undefined}
+                        className="h-7 min-w-7 px-2 text-xs"
+                      >
+                        {item.page}
+                      </Button>
+                    );
+                  }
+
+                  const isLastActive = logMeta.page === item.page;
+                  return (
+                    <Button
+                      key={`last-${item.page}`}
+                      variant={isLastActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => refreshLog(item.page)}
+                      disabled={isLastActive}
+                      title={t("adminAttendance.pagination.goToLast", "Go to last page")}
+                      aria-label={t("adminAttendance.pagination.goToLast", "Go to last page")}
+                      aria-current={isLastActive ? "page" : undefined}
+                      className="h-7 min-w-7 px-2 text-xs"
+                    >
+                      {item.page}
+                    </Button>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(Math.min(logMeta.total_pages, logMeta.page + 1))}
+                  disabled={logMeta.page >= logMeta.total_pages}
+                  title={t("adminAttendance.pagination.next", "Next")}
+                  aria-label={t("adminAttendance.pagination.next", "Next")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshLog(logMeta.total_pages)}
+                  disabled={logMeta.page >= logMeta.total_pages}
+                  title={t("adminAttendance.pagination.last", "Last page")}
+                  aria-label={t("adminAttendance.pagination.last", "Last page")}
+                  className="h-7 px-1.5"
+                >
+                  <ChevronsRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

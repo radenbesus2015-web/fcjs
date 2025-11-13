@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { api, setAuthHeader, setQueryToken } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 
 export type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 

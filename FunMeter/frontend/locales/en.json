@@ -57,8 +57,8 @@
     }
   },
   "adminAds": {
-    "title": "Manage Advertisements (Attendance Fun Meter)",
-    "subtitle": "Configure ads displayed on the Attendance Fun Meter page.",
+    "title": "Advertisements",
+    "subtitle": "Configure advertisements displayed on the Attendance Fun Meter page.",
     "empty": "No advertisement media found.",
     "view": {
       "grid": "Grid View",
@@ -1031,9 +1031,9 @@
     },
     "toast": {
       "attendanceSuccess": "Attendance success: {label}",
-      "attendanceMarked": "Attendance success: {label}\nTime: {time}",
-      "score": "Score: {score}%",
-      "time": "Time: {time}",
+      "attendanceMarked": "Attendance success: {label}",
+      "score": "Score: {score}",
+      "dateTime": "Date & Time: {dateTime}",
       "id": "ID: {id}",
       "temperature": "Temp: {temp}°C"
     }
@@ -1178,7 +1178,7 @@
       "cameraError": "❌ Failed to access camera: {error}",
       "refreshSuccess": "Attendance data refreshed successfully",
       "fetchError": "Failed to load attendance data",
-      "attendanceSuccess": "Attendance recorded: {name} (score {score}%)",
+      "attendanceSuccess": "Attendance recorded: {name}",
       "attendanceMarked": "Attendance marked: {name}",
       "logError": "Failed to load Attendance Log. Please try again."
     },
@@ -1260,6 +1260,8 @@
       "cameraAccessError": "Failed to access camera.",
       "funError": "Fun error: {message}",
       "attendanceSuccess": "Attendance success: {label}",
+      "score": "Score: {score}",
+      "dateTime": "Date & Time: {dateTime}",
       "attendanceBlocked": "{label}: Cannot record attendance. Try again at {time}.",
       "attendanceBlockedNoTime": "{label}: Cannot record attendance.",
       "attendanceError": "Error processing attendance.",
@@ -1360,7 +1362,11 @@
       "first": "First page",
       "last": "Last page",
       "totalLabel": "Total",
-      "pageStatus": "Page {page} / {total}"
+      "pageStatus": "Page {page} / {total}",
+      "range": "{start}-{end} {records}",
+      "recordsLabel": "records",
+      "goToPage": "Go to page {page}",
+      "goToLast": "Go to last page"
     },
     "state": {
       "loading": "Loading attendance data..."

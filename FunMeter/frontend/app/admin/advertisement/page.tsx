@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/lib/toast";
+import { toast } from "@/toast";
 import { Icon } from "@/components/common/Icon";
 import { fmtAttendanceMultilingual } from "@/lib/format";
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
@@ -628,11 +628,9 @@ export default function AdminAdvertisementPage() {
       <Card>
         <CardHeader className="flex sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1.5">
-            <CardTitle className="text-2xl font-bold">
-              {t("pages.adminAdvertisement.title", "Kelola Iklan")}
-            </CardTitle>
+            <CardTitle>{t("pages.adminAdvertisement.title", "Kelola Iklan")}</CardTitle>
             <CardDescription>
-              {t("pages.adminAdvertisement.subtitle", "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter.")}
+              {t("adminAds.subtitle", "Configure advertisements displayed on the Attendance Fun Meter page.")}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">

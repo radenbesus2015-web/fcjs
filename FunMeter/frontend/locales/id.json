@@ -57,8 +57,8 @@
     }
   },
   "adminAds": {
-    "title": "Daftar Iklan (Absensi Fun Meter)",
-    "subtitle": "Atur iklan yang muncul pada halaman Absensi Fun Meter.",
+    "title": "Iklan",
+    "subtitle": "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter.",
     "empty": "Tidak ada media iklan ditemukan.",
     "view": {
       "grid": "Tampilan Grid",
@@ -1023,9 +1023,9 @@
     },
     "toast": {
       "attendanceSuccess": "Absensi berhasil: {label}",
-      "attendanceMarked": "Absensi berhasil: {label}\nWaktu: {time}",
-      "score": "Skor: {score}%",
-      "time": "Waktu: {time}",
+      "attendanceMarked": "Absensi berhasil: {label}",
+      "score": "Skor: {score}",
+      "dateTime": "Tanggal & Waktu: {dateTime}",
       "id": "ID: {id}",
       "temperature": "Suhu: {temp}°C"
     }
@@ -1170,7 +1170,7 @@
       "cameraError": "❌ Gagal mengakses kamera: {error}",
       "refreshSuccess": "Data absensi berhasil diperbarui",
       "fetchError": "Gagal memuat data absensi",
-      "attendanceSuccess": "Absensi tercatat: {name} (skor {score}%)",
+      "attendanceSuccess": "Absensi tercatat: {name}",
       "attendanceMarked": "Absensi ditandai: {name}",
       "logError": "Gagal memuat Attendance Log. Coba lagi."
     },
@@ -1252,6 +1252,8 @@
       "cameraAccessError": "Gagal mengakses kamera.",
       "funError": "Kesalahan Fun: {message}",
       "attendanceSuccess": "Absen berhasil: {label}",
+      "score": "Skor: {score}",
+      "dateTime": "Tanggal & Waktu: {dateTime}",
       "attendanceBlocked": "{label}: Tidak bisa absen. Coba lagi pada {time}.",
       "attendanceBlockedNoTime": "{label}: Tidak bisa absen.",
       "attendanceError": "Terjadi kesalahan saat memproses absen.",
@@ -1352,7 +1354,11 @@
       "first": "Halaman pertama",
       "last": "Halaman terakhir",
       "totalLabel": "Total",
-      "pageStatus": "Halaman {page} / {total}"
+      "pageStatus": "Halaman {page} / {total}",
+      "range": "{start}-{end} {records}",
+      "recordsLabel": "data",
+      "goToPage": "Ke halaman {page}",
+      "goToLast": "Ke halaman terakhir"
     },
     "state": {
       "loading": "Memuat data attendance..."
