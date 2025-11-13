@@ -33,11 +33,6 @@ interface AdItem extends Advertisement {
 
 // LS_KEY removed - now using backend API
 
-function truncateAfter(input: string, max: number): string {
-  if (!input) return "";
-  return input.length > max ? input.slice(0, max) + "..." : input;
-}
-
 export default function AdminAdvertisementPage() {
   const { t, locale } = useI18n();
   const confirm = useConfirmDialog();
@@ -633,7 +628,9 @@ export default function AdminAdvertisementPage() {
       <Card>
         <CardHeader className="flex sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1.5">
-            <CardTitle>{t("pages.adminAdvertisement.title", "Advertisement")}</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {t("adminAds.title", "Advertisements")}
+            </CardTitle>
             <CardDescription>
               {t("adminAds.subtitle", "Configure advertisements displayed on the Attendance Fun Meter page.")}
             </CardDescription>
@@ -723,8 +720,8 @@ export default function AdminAdvertisementPage() {
                   {t("adminAds.empty", "No advertisement media found.")}
                 </div>
               ) : viewMode === 'list' ? (
-                <div className="rounded-lg border overflow-x-auto">
-                  <table className="w-full min-w-[1000px]">
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="w-full">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left p-3 font-medium w-12">
@@ -847,8 +844,8 @@ export default function AdminAdvertisementPage() {
                                   />
                                 </div>
                               ) : (
-                                <div className="text-sm font-medium max-w-xs" title={(it.title || it.file_name || it.src.split('/').pop() || 'Unknown')}>
-                                  {truncateAfter(it.title || it.file_name || it.src.split('/').pop() || "Unknown", 10)}
+                                <div className="text-sm font-medium truncate max-w-xs">
+                                  {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
                                 </div>
                               )}
                             </td>
@@ -1035,8 +1032,8 @@ export default function AdminAdvertisementPage() {
                         {/* Card Footer with Info */}
                         <div className="p-3 space-y-2">
                           <div className="flex items-center gap-2">
-                            <div className="text-sm font-medium flex-1" title={(it.title || it.file_name || it.src.split('/').pop() || 'Unknown')}>
-                              {truncateAfter(it.title || it.file_name || it.src.split('/').pop() || "Unknown", 10)}
+                            <div className="text-sm font-medium truncate flex-1">
+                              {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
                             </div>
                             <Button
                               variant="ghost"

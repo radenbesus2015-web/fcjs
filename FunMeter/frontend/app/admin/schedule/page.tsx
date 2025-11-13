@@ -683,15 +683,15 @@ export default function AdminSchedulePage() {
                       <div className="flex items-center gap-2">
                         <div className="font-semibold uppercase">{ov.label}</div>
                         {!ov.enabled && (
-                          <span className="text-[10px] px-2 py-1 rounded-full bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-400 dark:border-red-500/30">{t("adminSchedule.overrides.offSummary", "Off / Holiday")}</span>
+                          <span className="text-[10px] px-2 py-1 rounded-full bg-red-500 dark:bg-red-600 text-white">{t("adminSchedule.overrides.offSummary", "Off / Holiday")}</span>
                         )}
                       </div>
                     </td>
                     <td className="p-2">
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         ov.enabled 
-                          ? "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30" 
-                          : "bg-slate-200 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300 border border-slate-400 dark:border-slate-500/30"
+                          ? "bg-green-500 dark:bg-green-600 text-white" 
+                          : "bg-blue-500 dark:bg-blue-600 text-white"
                       }`}>
                         {ov.enabled ? t("adminSchedule.common.onLabel", "Hari Masuk") : t("adminSchedule.common.offLabel", "Hari Libur")}
                       </span>
@@ -773,8 +773,8 @@ export default function AdminSchedulePage() {
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                     r?.enabled 
-                      ? "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30" 
-                      : "bg-slate-200 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300 border border-slate-400 dark:border-slate-500/30"
+                      ? "bg-green-500 dark:bg-green-600 text-white" 
+                      : "bg-blue-500 dark:bg-blue-600 text-white"
                   }`}>{badge}</span>
                 </button>
               );

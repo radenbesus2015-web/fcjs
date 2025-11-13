@@ -52,7 +52,7 @@
       "title": "Konfigurasi Sistem"
     },
     "adminAdvertisement": {
-      "title": "Daftar Iklan",
+      "title": "Kelola Iklan",
       "subtitle": "Atur iklan yang ditampilkan pada halaman Absensi Fun Meter."
     }
   },
@@ -823,7 +823,8 @@
     "reload": "Muat Ulang",
     "import": "Import",
     "idLabel": "ID:",
-    "separator": "•"
+    "separator": "•",
+    "confirmDelete": "Konfirmasi Hapus"
   },
   "pagination": {
     "showing": "Menampilkan {start}-{end} dari {total} {items}",
@@ -863,9 +864,6 @@
     },
     "title": {
       "default": "Pengenalan Wajah"
-    },
-    "routes": {
-      "adminAdvertisementTitle": "Kelola Iklan"
     }
   },
   "auth": {
@@ -1285,6 +1283,8 @@
       "breadcrumb": "Dashboard > Absensi",
       "title": "Absensi"
     },
+    "title": "Data Absensi",
+    "subtitle": "Lihat dan kelola data absensi anggota.",
     "filters": {
       "searchName": "Pencarian",
       "searchPlaceholder": "Cari nama anggota...",
@@ -1436,7 +1436,10 @@
     },
     "confirm": {
       "removeOverride": "Hapus override untuk {label} pada {date}?",
-      "deleteLog": "Hapus log untuk {label} pada {date}?"
+      "deleteLog": "Hapus log untuk {label} pada {date}?",
+      "deleteText": "Apakah Anda yakin ingin menghapus {what} untuk {name} (ID: {id}) pada tanggal {date}?",
+      "log": "log absensi",
+      "override": "override"
     },
     "override": {
       "startRequired": "Tanggal mulai wajib diisi.",
@@ -1447,7 +1450,15 @@
     "schedule": {
       "off": "Libur",
       "type": "Tipe Jadwal",
-      "saved": "Jadwal tersimpan"
+      "saved": "Jadwal tersimpan",
+      "note": "Catatan",
+      "notePlaceholder": "Catatan opsional...",
+      "custom": "Jadwal Khusus",
+      "editOverride": "Edit Override",
+      "workday": "Jam Kerja Normal",
+      "halfday": "Shift Pagi",
+      "evening": "Shift Sore",
+      "wfh": "WFH Fleksibel"
     },
     "error": {
       "fetch": "Gagal memuat data absensi",

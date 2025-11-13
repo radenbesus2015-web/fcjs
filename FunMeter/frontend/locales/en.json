@@ -52,7 +52,7 @@
       "title": "System Configuration"
     },
     "adminAdvertisement": {
-      "title": "Advertisements",
+      "title": "Manage Advertisements",
       "subtitle": "Configure advertisements displayed on the Attendance Fun Meter page."
     }
   },
@@ -611,7 +611,8 @@
     "view": "View",
     "save": "Save",
     "idLabel": "ID:",
-    "separator": "•"
+    "separator": "•",
+    "confirmDelete": "Confirm Delete"
   },
   "pagination": {
     "showing": "Showing {start}-{end} of {total} {items}",
@@ -889,9 +890,6 @@
     },
     "title": {
       "default": "Untitled"
-    },
-    "routes": {
-      "adminAdvertisementTitle": "Manage Advertisements"
     }
   },
   "auth": {
@@ -1311,6 +1309,8 @@
       "breadcrumb": "Dashboard > Attendance",
       "title": "Attendance"
     },
+    "title": "Attendance Data",
+    "subtitle": "View and manage member attendance records.",
     "filters": {
       "searchName": "Search",
       "searchPlaceholder": "Search member name...",
@@ -1459,15 +1459,40 @@
         "allSelected": "All members have been selected."
       }
     },
+    "view": {
+      "title": "Attendance Details",
+      "member": "Member",
+      "date": "Date",
+      "checkIn": "Check In",
+      "checkOut": "Check Out",
+      "schedule": "Schedule",
+      "status": "Status"
+    },
     "confirm": {
       "removeOverride": "Remove override for {label} on {date}?",
-      "deleteLog": "Delete log for {label} on {date}?"
+      "deleteLog": "Delete log for {label} on {date}?",
+      "deleteText": "Are you sure you want to delete {what} for {name} (ID: {id}) on {date}?",
+      "log": "attendance log",
+      "override": "override"
     },
     "override": {
       "startRequired": "Start date is required.",
       "checkInFormat": "Check-in time must be in HH:MM format.",
       "checkOutFormat": "Check-out time must be in HH:MM format.",
       "checkOrder": "Check-out time must be greater than check-in time."
+    },
+    "schedule": {
+      "off": "Off",
+      "type": "Schedule Type",
+      "saved": "Schedule saved",
+      "note": "Notes",
+      "notePlaceholder": "Optional notes...",
+      "custom": "Custom Schedule",
+      "editOverride": "Edit Override",
+      "workday": "Normal Working Hours",
+      "halfday": "Morning Shift",
+      "evening": "Evening Shift",
+      "wfh": "WFH Flexible"
     },
     "error": {
       "fetchDaily": "Failed to load daily attendance data.",

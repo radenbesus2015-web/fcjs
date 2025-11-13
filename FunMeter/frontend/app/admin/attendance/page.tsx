@@ -351,17 +351,17 @@ export default function AdminAttendancePage() {
     const key = mapStatusKey(status);
     switch (key) {
       case "present":
-        return <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.present", "Hadir")}</span>;
+        return <span className="bg-green-500 dark:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.present", "Hadir")}</span>;
       case "late":
-        return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.late", "Terlambat")}</span>;
+        return <span className="bg-yellow-500 dark:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.late", "Terlambat")}</span>;
       case "early":
-        return <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.early", "Pulang Awal")}</span>;
+        return <span className="bg-orange-500 dark:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.early", "Pulang Awal")}</span>;
       case "mixed":
-        return <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.mixed", "Terlambat & Pulang Awal")}</span>;
+        return <span className="bg-red-500 dark:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.mixed", "Terlambat & Pulang Awal")}</span>;
       case "off":
-        return <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.off", "Libur")}</span>;
+        return <span className="bg-blue-500 dark:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">{t("adminAttendance.table.status.off", "Libur")}</span>;
       default:
-        return <span className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">{key}</span>;
+        return <span className="bg-slate-500 dark:bg-slate-600 text-white px-2 py-1 rounded text-xs font-medium">{key}</span>;
     }
   };
 
@@ -393,8 +393,13 @@ export default function AdminAttendancePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        {/* header action buttons removed as requested */}
+      <div className="space-y-1.5">
+        <h1 className="text-2xl font-bold">
+          {t("adminAttendance.title", "Attendance Data")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t("adminAttendance.subtitle", "View and manage member attendance records.")}
+        </p>
       </div>
 
       {/* Filters */}
@@ -726,47 +731,47 @@ export default function AdminAttendancePage() {
           }
         }}>
           <DialogHeader>
-            <DialogTitle>{t("adminAttendance.view.title", "Detail Absensi")}</DialogTitle>
+            <DialogTitle>{t("adminAttendance.view.title", "Attendance Details")}</DialogTitle>
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
               {/* Anggota Section */}
-              <div className="bg-muted/30 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.member", "Anggota")}</h4>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">ID: {selectedLog.person_id || selectedLog.member?.id || "-"}</p>
-                  <p className="text-base font-medium text-foreground">{selectedLog.label || selectedLog.member?.name || "-"}</p>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.member", "Member")}</label>
+                <div className="text-sm bg-muted p-2 rounded">
+                  <div className="text-xs text-muted-foreground">ID: {selectedLog.person_id || selectedLog.member?.id || "-"}</div>
+                  <div className="font-medium text-foreground">{selectedLog.label || selectedLog.member?.name || "-"}</div>
                 </div>
               </div>
 
               {/* Tanggal Section */}
-              <div className="bg-muted/30 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.date", "Tanggal")}</h4>
-                <p className="text-base text-foreground">{formatDate(selectedLog.date)}</p>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.date", "Date")}</label>
+                <p className="text-sm bg-muted p-2 rounded text-foreground">{formatDate(selectedLog.date)}</p>
               </div>
 
               {/* Jam Masuk & Pulang Section */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.checkIn", "Jam Masuk")}</h4>
-                  <p className="text-base font-medium text-foreground">{formatTime(selectedLog.check_in)}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.checkIn", "Check In")}</label>
+                  <p className="text-sm bg-muted p-2 rounded text-foreground">{formatTime(selectedLog.check_in)}</p>
                 </div>
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.checkOut", "Jam Pulang")}</h4>
-                  <p className="text-base font-medium text-foreground">{formatTime(selectedLog.check_out)}</p>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.checkOut", "Check Out")}</label>
+                  <p className="text-sm bg-muted p-2 rounded text-foreground">{formatTime(selectedLog.check_out)}</p>
                 </div>
               </div>
 
               {/* Jadwal Section */}
-              <div className="bg-muted/30 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.schedule", "Jadwal")}</h4>
-                <div>{getScheduleBadge(selectedLog as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; day?: string })}</div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.schedule", "Schedule")}</label>
+                <div className="bg-muted p-2 rounded">{getScheduleBadge(selectedLog as AttendanceLog & { schedule_source?: string; schedule_detail?: ScheduleDetail; day?: string })}</div>
               </div>
 
               {/* Status Section */}
-              <div className="bg-muted/30 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-foreground mb-2">{t("adminAttendance.view.status", "Status")}</h4>
-                <div>{getStatusBadge(selectedLog.status)}</div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.status", "Status")}</label>
+                <div className="bg-muted p-2 rounded">{getStatusBadge(selectedLog.status)}</div>
               </div>
             </div>
           )}
@@ -791,29 +796,29 @@ export default function AdminAttendancePage() {
           {selectedLog && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.view.member", "Member")}</label>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.member", "Member")}</label>
                 <div className="text-sm bg-muted p-2 rounded">
                   <div className="text-xs text-muted-foreground">ID: {selectedLog.person_id || selectedLog.member?.id || "-"}</div>
-                  <div className="font-medium">{selectedLog.label || selectedLog.member?.name || "-"}</div>
+                  <div className="font-medium text-foreground">{selectedLog.label || selectedLog.member?.name || "-"}</div>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.view.date", "Tanggal")}</label>
-                <p className="text-sm bg-muted p-2 rounded">{formatDate(selectedLog.date)}</p>
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.date", "Tanggal")}</label>
+                <p className="text-sm bg-muted p-2 rounded text-foreground">{formatDate(selectedLog.date)}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.view.checkIn", "Check In")}</label>
-                  <input type="time" className="w-full px-3 py-2 border rounded-md text-sm bg-muted" defaultValue={selectedLog.check_in ? formatTime(selectedLog.check_in) : ""} />
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.checkIn", "Check In")}</label>
+                  <input type="time" className="w-full px-3 py-2 border rounded-md text-sm bg-muted text-foreground" defaultValue={selectedLog.check_in ? formatTime(selectedLog.check_in) : ""} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.view.checkOut", "Check Out")}</label>
-                  <input type="time" className="w-full px-3 py-2 border rounded-md text-sm bg-muted" defaultValue={selectedLog.check_out ? formatTime(selectedLog.check_out) : ""} />
+                  <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.view.checkOut", "Check Out")}</label>
+                  <input type="time" className="w-full px-3 py-2 border rounded-md text-sm bg-muted text-foreground" defaultValue={selectedLog.check_out ? formatTime(selectedLog.check_out) : ""} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.schedule.type", "Schedule Type")}</label>
-                <select className="w-full px-3 py-2 border rounded-md text-sm bg-muted">
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.schedule.type", "Schedule Type")}</label>
+                <select className="w-full px-3 py-2 border rounded-md text-sm bg-muted text-foreground">
                   <option value="workday">{t("adminAttendance.schedule.workday", "Jam Kerja Normal")}</option>
                   <option value="halfday">{t("adminAttendance.schedule.halfday", "Shift Pagi")}</option>
                   <option value="evening">{t("adminAttendance.schedule.evening", "Shift Sore")}</option>
@@ -822,8 +827,8 @@ export default function AdminAttendancePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.schedule.note", "Catatan")}</label>
-                <textarea className="w-full px-3 py-2 border rounded-md text-sm bg-muted" rows={3} placeholder="Catatan opsional..." />
+                <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.schedule.note", "Catatan")}</label>
+                <textarea className="w-full px-3 py-2 border rounded-md text-sm bg-muted text-foreground" rows={3} placeholder={t("adminAttendance.schedule.notePlaceholder", "Catatan opsional...")} />
               </div>
             </div>
           )}
@@ -843,16 +848,16 @@ export default function AdminAttendancePage() {
           }
         }}>
           <DialogHeader>
-            <DialogTitle>{t("common.confirmDelete", "Konfirmasi Hapus")}</DialogTitle>
+            <DialogTitle>{t("common.confirmDelete", "Confirm Delete")}</DialogTitle>
           </DialogHeader>
           {selectedLog && (
             <div className="mb-6">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-foreground">
                 {t(
                   "adminAttendance.confirm.deleteText",
-                  "Apakah Anda yakin ingin menghapus {what} untuk {name} (ID: {id}) pada tanggal {date}?",
+                  "Are you sure you want to delete {what} for {name} (ID: {id}) on {date}?",
                   {
-                    what: deleteType === 'log' ? t("adminAttendance.confirm.log", "log absensi") : t("adminAttendance.confirm.override", "override"),
+                    what: deleteType === 'log' ? t("adminAttendance.confirm.log", "attendance log") : t("adminAttendance.confirm.override", "override"),
                     name: selectedLog.label || selectedLog.member?.name || '-',
                     id: selectedLog.person_id || selectedLog.member?.id || '-',
                     date: formatDate(selectedLog.date),
@@ -862,8 +867,8 @@ export default function AdminAttendancePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="destructive" onClick={confirmDelete} className="flex-1">{t("common.delete", "Hapus")}</Button>
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">{t("common.cancel", "Batal")}</Button>
+            <Button variant="destructive" onClick={confirmDelete} className="flex-1">{t("common.delete", "Delete")}</Button>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">{t("common.cancel", "Cancel")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -883,12 +888,12 @@ export default function AdminAttendancePage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.filters.startDate", "Tanggal Mulai")}</label>
-              <input type="date" value={filters.date_from || ""} onChange={(e) => setFilters(prev => ({ ...prev, date_from: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm" />
+              <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.filters.startDate", "Tanggal Mulai")}</label>
+              <input type="date" value={filters.date_from || ""} onChange={(e) => setFilters(prev => ({ ...prev, date_from: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t("adminAttendance.filters.endDate", "Tanggal Akhir")}</label>
-              <input type="date" value={filters.date_to || ""} onChange={(e) => setFilters(prev => ({ ...prev, date_to: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm" />
+              <label className="block text-sm font-medium text-foreground mb-2">{t("adminAttendance.filters.endDate", "Tanggal Akhir")}</label>
+              <input type="date" value={filters.date_to || ""} onChange={(e) => setFilters(prev => ({ ...prev, date_to: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
             </div>
           </div>
           <DialogFooter>
