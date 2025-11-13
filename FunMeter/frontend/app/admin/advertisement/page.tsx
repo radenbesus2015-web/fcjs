@@ -33,6 +33,19 @@ interface AdItem extends Advertisement {
 
 // LS_KEY removed - now using backend API
 
+// Helper function to truncate file name with minimum 10 characters before showing ellipsis
+const truncateFileName = (fileName: string, maxLength: number = 30) => {
+  // Don't truncate if less than or equal to 10 characters
+  if (fileName.length <= 10) return fileName;
+  
+  // Don't truncate if within max length
+  if (fileName.length <= maxLength) return fileName;
+  
+  // Only truncate if longer than 10 characters and exceeds max length
+  // Show first (maxLength - 3) characters + "..."
+  return fileName.substring(0, Math.max(10, maxLength - 3)) + '...';
+};
+
 export default function AdminAdvertisementPage() {
   const { t, locale } = useI18n();
   const confirm = useConfirmDialog();
@@ -166,7 +179,7 @@ export default function AdminAdvertisementPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
+    toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 1000 });
     
     try {
       const data = await fetchAllAdvertisements();
@@ -188,7 +201,11 @@ export default function AdminAdvertisementPage() {
       // Sort by display_order
       items.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
       setItems(items);
-      toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
+      // Show success toast for successful loading
+      // Delay success toast slightly to ensure it appears after loading toast
+      setTimeout(() => {
+        toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
+      }, 100);
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Failed to load advertisements list.";
       setError(error);
@@ -198,7 +215,17 @@ export default function AdminAdvertisementPage() {
     }
   }, [t]);
 
-  useEffect(() => { void load(); }, [load]);
+  // Load data on mount only
+  useEffect(() => { 
+    void load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Manual reload - load() already shows success toast
+  const manualReload = async () => {
+    await load();
+    // No additional toast needed since load() already shows success
+  };
 
   const save = async (silent?: boolean) => {
     try {
@@ -689,7 +716,7 @@ export default function AdminAdvertisementPage() {
                 <Icon name="LayoutList" className="h-4 w-4" />
               </Button>
             </div>
-            <Button variant="outline" size="icon" onClick={() => void load()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")} disabled={loading}>
+            <Button variant="outline" size="icon" onClick={() => void manualReload()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")} disabled={loading}>
               <Icon name="RefreshCw" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
             <input
@@ -856,8 +883,8 @@ export default function AdminAdvertisementPage() {
                                   />
                                 </div>
                               ) : (
-                                <div className="text-sm font-medium truncate max-w-xs">
-                                  {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                                <div className="text-sm font-medium max-w-xs">
+                                  {truncateFileName(it.title || it.file_name || it.src.split('/').pop() || 'Unknown', 25)}
                                 </div>
                               )}
                             </td>
@@ -1069,8 +1096,8 @@ export default function AdminAdvertisementPage() {
                         {/* Card Footer with Info */}
                         <div className="p-3 space-y-2">
                           <div className="flex items-center gap-2">
-                            <div className="text-sm font-medium truncate flex-1">
-                              {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                            <div className="text-sm font-medium flex-1">
+                              {truncateFileName(it.title || it.file_name || it.src.split('/').pop() || 'Unknown', 35)}
                             </div>
                             <Button
                               variant="ghost"

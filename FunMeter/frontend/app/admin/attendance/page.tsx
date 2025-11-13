@@ -3,7 +3,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { request } from "@/lib/api";
 import { toast } from "@/toast";
@@ -187,11 +187,7 @@ export default function AdminAttendancePage() {
     }
   }, [filters, t]);
 
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
-
-  // Auto-refresh when filters change (e.g., order newest/oldest, per_page, status, search)
+  // Load data on mount and when filters change
   useEffect(() => {
     fetchLogs(1, filters);
   }, [filters, fetchLogs]);
