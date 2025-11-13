@@ -1030,8 +1030,8 @@
       }
     },
     "toast": {
-      "attendanceSuccess": "Attendance success: {label}",
-      "attendanceMarked": "Attendance success: {label}",
+      "attendanceSuccess": "Attendance success: {name}",
+      "attendanceMarked": "Attendance success: {name}",
       "score": "Score: {score}",
       "dateTime": "Date & Time: {dateTime}",
       "id": "ID: {id}",
@@ -1189,7 +1189,7 @@
       "no": "No",
       "name": "Name",
       "dateTime": "Time & Date",
-      "score": "Score",
+      "score": "Similarity",
       "empty": "No attendance data available."
     },
     "pagination": {

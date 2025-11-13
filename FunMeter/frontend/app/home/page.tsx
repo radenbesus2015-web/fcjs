@@ -208,7 +208,7 @@ export default function HomePage() {
   type AttResultPayload = {
     results?: Array<{ bbox?: number[]; box?: number[]; label?: string; name?: string }>;
     marked?: string[];
-    marked_info?: Array<{ label?: string; score?: number; message?: string }>;
+    marked_info?: Array<{ label?: string; name?: string; score?: number; message?: string }>;
   };
   type FunResultPayload = {
     results?: Array<{ bbox?: number[]; top?: { label?: string }; expression?: string; emotion?: string; label?: string; name?: string }>;
@@ -238,8 +238,11 @@ export default function HomePage() {
         console.log("[ATTENDANCE] Marked:", marked, "MarkedInfo:", markedInfo);
         
         for (const info of markedInfo) {
-          const label = info.label || "";
+          // Use name if available, otherwise fallback to label
+          const name = info.name || info.label || "";
           const score = typeof info.score === "number" ? (info.score * 100).toFixed(1) : null;
+          
+          console.log("[ATTENDANCE] Info object:", info, "Extracted name:", name);
           
           // Create compact timestamp format like reference: "Wed/Nov/25 01:19:14 PM"
           const now = new Date();
@@ -257,20 +260,21 @@ export default function HomePage() {
           // Format like reference: "Wed/Nov/25 01:19:14 PM"
           const compactDateTime = `${dayShort}/${monthShort}/${day} ${timeStr}`;
           
-          if (label) {
+          if (name) {
             const details: string[] = [];
             if (score) {
               details.push(t("home.toast.score", "Score: {score}", { score: `${score}%` }));
             }
             details.push(t("home.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }));
 
-            let message = t("home.toast.attendanceSuccess", "Attendance success: {name}", { name: label });
-            if (details.length > 0) {
-              message += `\n${details.join(" • ")}`;
-            }
+            const message = t("home.toast.attendanceSuccess", "Attendance success: {name}", { name });
+            console.log("[ATTENDANCE] Final message:", message, "Name value:", name);
             
-            console.log("[ATTENDANCE] Showing compact toast for:", label, info);
-            toast.success(message, { 
+            const fullMessage = details.length > 0 
+              ? `${message}\n${details.join(" • ")}`
+              : message;
+            
+            toast.success(fullMessage, { 
               duration: 6000,
               title: t("home.toast.title", "Success"),
             });
@@ -291,7 +295,7 @@ export default function HomePage() {
           for (const label of marked) {
             console.log("[ATTENDANCE] Showing compact toast for (fallback):", label);
             const messageLines = [
-              t("home.toast.attendanceMarked", "Attendance success: {label}", { label }),
+              t("home.toast.attendanceMarked", "Attendance success: {name}", { name: label }),
               t("home.toast.dateTime", "Date & Time: {dateTime}", { dateTime: compactDateTime }),
             ];
             toast.success(messageLines.join("\n"), {
