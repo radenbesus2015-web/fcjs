@@ -126,7 +126,7 @@ export default function AdminUsersPage() {
     setConfirmModal({
       open: true,
       processing: false,
-      title: opts.title || t("adminUsers.confirm.title", "Konfirmasi"),
+      title: opts.title || t("adminUsers.confirm.title", "Confirm"),
       body: opts.body,
       confirmLabel: opts.confirmLabel,
       variant: opts.variant || "default",
@@ -148,7 +148,7 @@ export default function AdminUsersPage() {
 
   const openPasswordModal = (userToEdit: User) => {
     if (!canEditPassword(state.currentUser, userToEdit)) {
-      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+      return toast.error(t("adminUsers.toast.noPermission", "You do not have permission to perform this action."));
     }
     if (!userToEdit?.username) return;
     setPasswordModal({
@@ -212,13 +212,13 @@ export default function AdminUsersPage() {
 
   const promoteUser = async (userToPromote: User) => {
     if (!canPromote(state.currentUser, userToPromote)) {
-      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+      return toast.error(t("adminUsers.toast.noPermission", "You do not have permission to perform this action."));
     }
     if (!userToPromote?.username) return;
     
     openConfirm({
-      body: t("adminUsers.confirm.promote", 'Promosikan "{user}" menjadi admin?', { user: userToPromote.username }),
-      confirmLabel: t("adminUsers.actions.promote", "Naikkan"),
+      body: t("adminUsers.confirm.promote", 'Promote "{user}" to admin?', { user: userToPromote.username }),
+      confirmLabel: t("adminUsers.actions.promote", "Promote"),
       onConfirm: async () => {
         await withReload(async () => {
           const payload = {
@@ -227,7 +227,7 @@ export default function AdminUsersPage() {
             is_admin: true,
           };
           await request("/auth/promote", { method: "POST", body: payload });
-          toast.success(t("adminUsers.toast.promoted", "{user} kini admin.", { user: userToPromote.username }));
+          toast.success(t("adminUsers.toast.promoted", "{user} is now an admin.", { user: userToPromote.username }));
         });
       },
     });
@@ -235,18 +235,18 @@ export default function AdminUsersPage() {
 
   const demoteUser = async (userToDemote: User) => {
     if (!canDemote(state.currentUser, userToDemote)) {
-      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+      return toast.error(t("adminUsers.toast.noPermission", "You do not have permission to perform this action."));
     }
     if (!userToDemote?.username) return;
     
     if (state.currentUser?.promoted_by && state.currentUser.promoted_by === userToDemote.username) {
-      toast.error(t("adminUsers.toast.cannotDemotePromoter", "Tidak boleh mendemote admin yang mempromosikan kamu."));
+      toast.error(t("adminUsers.toast.cannotDemotePromoter", "Cannot demote the admin who promoted you."));
       return;
     }
     
     openConfirm({
-      body: t("adminUsers.confirm.demote", 'Cabut peran admin dari "{user}"?', { user: userToDemote.username }),
-      confirmLabel: t("adminUsers.actions.demote", "Turunkan"),
+      body: t("adminUsers.confirm.demote", 'Remove admin role from "{user}"?', { user: userToDemote.username }),
+      confirmLabel: t("adminUsers.actions.demote", "Demote"),
       variant: "destructive",
       onConfirm: async () => {
         await withReload(async () => {
@@ -256,7 +256,7 @@ export default function AdminUsersPage() {
             is_admin: false,
           };
           await request("/auth/promote", { method: "POST", body: payload });
-          toast.success(t("adminUsers.toast.demoted", "{user} diturunkan.", { user: userToDemote.username }));
+          toast.success(t("adminUsers.toast.demoted", "{user} has been demoted.", { user: userToDemote.username }));
         });
       },
     });
@@ -264,23 +264,23 @@ export default function AdminUsersPage() {
 
   const deleteUser = async (userToDelete: User) => {
     if (!canDelete(state.currentUser, userToDelete)) {
-      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+      return toast.error(t("adminUsers.toast.noPermission", "You do not have permission to perform this action."));
     }
     if (!userToDelete?.username) return;
     
     if (!userToDelete.is_current && state.currentUser?.promoted_by && state.currentUser.promoted_by === userToDelete.username) {
-      toast.error(t("adminUsers.toast.cannotDeletePromoter", "Tidak boleh menghapus orang yang mempromosikan kamu."));
+      toast.error(t("adminUsers.toast.cannotDeletePromoter", "Cannot delete the user who promoted you."));
       return;
     }
     
     openConfirm({
-      body: t("adminUsers.confirm.delete", 'Hapus user "{user}"?', { user: userToDelete.username }),
-      confirmLabel: t("adminUsers.actions.delete", "Hapus"),
+      body: t("adminUsers.confirm.delete", 'Delete user "{user}"?', { user: userToDelete.username }),
+      confirmLabel: t("adminUsers.actions.delete", "Delete"),
       variant: "destructive",
       onConfirm: async () => {
         await withReload(async () => {
           await request(`/admin/users/${encodeURIComponent(userToDelete.id)}`, { method: "DELETE" });
-          toast.success(t("adminUsers.toast.deleted", "{user} dihapus.", { user: userToDelete.username }));
+          toast.success(t("adminUsers.toast.deleted", "{user} has been deleted.", { user: userToDelete.username }));
         });
       },
     });
@@ -288,7 +288,7 @@ export default function AdminUsersPage() {
 
   const rotateApiKey = async (userToRotate: User) => {
     if (!canRotateApi(state.currentUser, userToRotate)) {
-      return toast.error(t("adminUsers.toast.noPermission", "Anda tidak memiliki izin untuk melakukan aksi ini."));
+      return toast.error(t("adminUsers.toast.noPermission", "You do not have permission to perform this action."));
     }
     if (!userToRotate?.username) return;
     
@@ -475,7 +475,7 @@ export default function AdminUsersPage() {
                             {canPromote(state.currentUser, userItem) && (
                               <Button size="sm" onClick={() => promoteUser(userItem)} className="gap-2">
                                 <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
-                                <span className="hidden sm:inline">{t("adminUsers.actions.promote", "Naikkan")}</span>
+                                <span className="hidden sm:inline">{t("adminUsers.actions.promote", "Promote")}</span>
                               </Button>
                             )}
                             
@@ -487,7 +487,7 @@ export default function AdminUsersPage() {
                                 className="gap-2"
                               >
                                 <Icon name="Crown" className="h-4 w-4 flex-shrink-0" />
-                                <span className="hidden sm:inline">{t("adminUsers.actions.demote", "Turunkan")}</span>
+                                <span className="hidden sm:inline">{t("adminUsers.actions.demote", "Demote")}</span>
                               </Button>
                             )}
                             
@@ -566,7 +566,7 @@ export default function AdminUsersPage() {
       <Dialog open={confirmModal.open} onOpenChange={(open) => setConfirmModal(prev => ({ ...prev, open }))}>
         <DialogContent className="max-w-md border border-border bg-background rounded-2xl" hideOverlay onEscapeKeyDown={() => setConfirmModal(prev => ({ ...prev, open: false }))}>
           <DialogHeader>
-            <DialogTitle>{confirmModal.title || t("adminUsers.confirm.title", "Konfirmasi")}</DialogTitle>
+            <DialogTitle>{confirmModal.title || t("adminUsers.confirm.title", "Confirm")}</DialogTitle>
             <DialogDescription>{confirmModal.body}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-wrap gap-2">

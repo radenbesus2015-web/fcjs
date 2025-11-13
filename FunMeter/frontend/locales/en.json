@@ -310,6 +310,8 @@
         "loading": "Loading face registry..."
       },
       "empty": "No override dates yet.",
+      "saved": "Override saved.",
+      "deleted": "Override removed.",
       "modal": {
         "title": "Schedule Override",
         "description": "Pick a date range and working hours to override weekly schedule.",
@@ -377,6 +379,10 @@
         "activeLabel": "Holiday (Off) / Working Day (On)"
       }
     },
+    "logs": {
+      "deleted": "Log deleted.",
+      "deleteFailed": "Failed to delete log."
+    },
     "sidebar": {
       "daysTitle": "Days",
       "noSchedule": "No schedule",
@@ -437,6 +443,18 @@
       "loadConfig": "Failed to load schedule configuration.",
       "saveConfig": "Failed to save schedule.",
       "loadPeople": "Failed to load face registry."
+    },
+    "modals": {
+      "view": { "title": "View Override" },
+      "edit": { "title": "Edit Override" },
+      "deleteOverride": {
+        "title": "Delete Override?",
+        "body": "This action will delete the selected override. Continue?"
+      },
+      "deleteLog": {
+        "title": "Delete Log?",
+        "body": "This action will delete the log related to this schedule. Continue?"
+      }
     },
     "toast": {
       "overrideSaved": "Override saved.",
@@ -700,6 +718,7 @@
       "generic": "Something went wrong."
     },
     "confirm": {
+      "title": "Confirm",
       "promote": "Promote \"{user}\" to admin?",
       "demote": "Remove admin role from \"{user}\"?",
       "delete": "Delete user \"{user}\"?",
@@ -830,6 +849,12 @@
       "login": "Sign in",
       "logout": "Sign out",
       "note": "Change language & theme from Settings."
+    },
+    "logout": {
+      "title": "Confirm Logout",
+      "description": "Are you sure you want to log out of your account?",
+      "confirm": "Yes, Logout",
+      "cancel": "Cancel"
     }
   },
   "footer": {
@@ -1032,7 +1057,7 @@
     "toast": {
       "attendanceSuccess": "Attendance success: {name}",
       "attendanceMarked": "Attendance success: {name}",
-      "score": "Score: {score}",
+      "score": "Similarity: {score}",
       "dateTime": "Date & Time: {dateTime}",
       "id": "ID: {id}",
       "temperature": "Temp: {temp}°C"
@@ -1260,7 +1285,7 @@
       "cameraAccessError": "Failed to access camera.",
       "funError": "Fun error: {message}",
       "attendanceSuccess": "Attendance success: {label}",
-      "score": "Score: {score}",
+      "score": "Similarity: {score}",
       "dateTime": "Date & Time: {dateTime}",
       "attendanceBlocked": "{label}: Cannot record attendance. Try again at {time}.",
       "attendanceBlockedNoTime": "{label}: Cannot record attendance.",

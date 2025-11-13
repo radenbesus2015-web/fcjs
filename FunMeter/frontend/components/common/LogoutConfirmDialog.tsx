@@ -66,7 +66,7 @@ export function LogoutConfirmDialog({
         <button
           onClick={handleCancel}
           className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-          aria-label={t("common.close", "Tutup")}
+          aria-label={t("common.close", "Close")}
         >
           <Icon name="X" className="h-4 w-4" />
         </button>
@@ -74,22 +74,22 @@ export function LogoutConfirmDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <Icon name="LogOut" className="h-5 w-5 text-destructive" />
-            {t("avatar.logout.title", "Konfirmasi Keluar")}
+            {t("avatar.logout.title", "Confirm Logout")}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {t("avatar.logout.description", "Apakah Anda yakin ingin keluar dari akun Anda?")}
+            {t("avatar.logout.description", "Are you sure you want to log out of your account?")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel}>
-            {t("avatar.logout.cancel", "Batal")}
+            {t("avatar.logout.cancel", "Cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             <Icon name="LogOut" className="h-4 w-4 mr-2" />
-            {t("avatar.logout.confirm", "Ya, Keluar")}
+            {t("avatar.logout.confirm", "Yes, Logout")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
