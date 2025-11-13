@@ -92,10 +92,10 @@ const routeMetadata: Record<string, { titleKey?: string; titleFallback?: string;
     navFallback: "Konfigurasi Sistem",
   },
   "/admin/advertisement": {
-    titleKey: "pages.adminAdvertisement.title",
+    titleKey: "header.routes.adminAdvertisementTitle",
     titleFallback: "Manage Advertisements",
     navKey: "nav.adminAdvertisement",
-    navFallback: "Manage Advertisements",
+    navFallback: "Manage Ads",
   },
 };
 
@@ -131,7 +131,7 @@ export function HeaderBar({ hidden = false, onHeightChange }: HeaderBarProps) {
   const title = titleKey ? t(titleKey, titleFallback) : titleFallback;
 
   const headerClass = cn(
-    "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all",
+    "sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all",
     hidden ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
   );
 

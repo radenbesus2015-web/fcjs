@@ -889,6 +889,9 @@
     },
     "title": {
       "default": "Untitled"
+    },
+    "routes": {
+      "adminAdvertisementTitle": "Manage Advertisements"
     }
   },
   "auth": {

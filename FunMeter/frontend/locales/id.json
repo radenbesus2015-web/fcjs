@@ -863,6 +863,9 @@
     },
     "title": {
       "default": "Pengenalan Wajah"
+    },
+    "routes": {
+      "adminAdvertisementTitle": "Kelola Iklan"
     }
   },
   "auth": {
