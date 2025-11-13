@@ -560,6 +560,27 @@ export default function AdminAdvertisementPage() {
     }
   };
 
+  // Select all advertisements (improved to work with all data, not just current page)
+  const toggleSelectAll = () => {
+    if (selected.length === items.length) {
+      // Deselect all
+      setSelected([]);
+    } else {
+      // Select all items (across all pages)
+      setSelected(items.map(item => item.src));
+    }
+  };
+
+  // Helper function to check if all visible items are selected
+  const isAllVisibleSelected = () => {
+    return paginatedItems.length > 0 && paginatedItems.every(item => selected.includes(item.src));
+  };
+
+  // Helper function to check if some visible items are selected (for indeterminate state)
+  const isSomeVisibleSelected = () => {
+    return paginatedItems.length > 0 && paginatedItems.some(item => selected.includes(item.src)) && !isAllVisibleSelected();
+  };
+
   // Delete selected ads
   const deleteSelected = async () => {
     try {
@@ -728,16 +749,15 @@ export default function AdminAdvertisementPage() {
                           <input
                             type="checkbox"
                             className="h-4 w-4"
-                            checked={paginatedItems.length > 0 && paginatedItems.every((it) => selected.includes(it.src))}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelected((prev) => [...new Set([...prev, ...paginatedItems.map((it) => it.src)])]);
-                              } else {
-                                const pageSrcs = new Set(paginatedItems.map((it) => it.src));
-                                setSelected((prev) => prev.filter((s) => !pageSrcs.has(s)));
+                            checked={isAllVisibleSelected()}
+                            ref={(el) => {
+                              if (el) {
+                                el.indeterminate = isSomeVisibleSelected();
                               }
                             }}
+                            onChange={toggleSelectAll}
                             aria-label="Select all"
+                            title={isAllVisibleSelected() ? t("adminAds.selectAll.deselectAll", "Batalkan pilih semua") : t("adminAds.selectAll.selectAll", "Pilih semua")}
                           />
                         </th>
                         <th className="text-left p-3 font-medium w-24">{t("adminAds.table.preview", "Preview")}</th>
@@ -931,7 +951,46 @@ export default function AdminAdvertisementPage() {
                 </div>
               ) : (
                 /* Grid View */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="space-y-4">
+                  {/* Grid Header with Select All */}
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={isAllVisibleSelected()}
+                        ref={(el) => {
+                          if (el) {
+                            el.indeterminate = isSomeVisibleSelected();
+                          }
+                        }}
+                        onChange={toggleSelectAll}
+                        aria-label="Select all"
+                        title={isAllVisibleSelected() ? t("adminAds.selectAll.deselectAll", "Batalkan pilih semua") : t("adminAds.selectAll.selectAll", "Pilih semua")}
+                      />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {selected.length > 0 
+                          ? t("adminAds.selected.count", "{count} item dipilih", { count: selected.length })
+                          : t("adminAds.selectAll.selectAll", "Pilih semua")
+                        }
+                      </span>
+                    </div>
+                    {selected.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          onClick={deleteSelected} 
+                          variant="destructive" 
+                          size="sm"
+                          disabled={loading || deleting || !!error}
+                        >
+                          <Icon name="Trash2" className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">{t("common.delete", "Delete")} ({selected.length})</span>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {paginatedItems.map((it, localIdx) => {
                     const globalIdx = startIndex + localIdx;
                     const isSelected = selected.includes(it.src);
@@ -1089,6 +1148,7 @@ export default function AdminAdvertisementPage() {
                       </div>
                     );
                   })}
+                  </div>
                 </div>
               )}
               
