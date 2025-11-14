@@ -31,6 +31,7 @@ function RegisterFacePageContent() {
   const [facesCount, setFacesCount] = useState(0);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string>("");
+  const [uploadPreviewSrc, setUploadPreviewSrc] = useState<string>("");
   const [freeze, setFreeze] = useState(false);
   const [previewLoading] = useState(false);
   const [previewToken, setPreviewToken] = useState<string>("");
@@ -397,9 +398,27 @@ function RegisterFacePageContent() {
   const resetRegistration = () => {
     setUserName("");
     setUploadFile(null);
+    setUploadPreviewSrc("");
     setIsRegistering(false);
     setFaceDetected(false);
     setFacesCount(0);
+  };
+
+  // Handle file upload and create preview
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setUploadFile(file);
+    
+    // Create preview
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadPreviewSrc(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setUploadPreviewSrc("");
+    }
   };
 
   // Auto-start camera on mount
@@ -523,7 +542,7 @@ function RegisterFacePageContent() {
               <label className="block text-sm font-medium mb-2">
                 {t("registerFace.fields.upload", "Unggah Gambar")}
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-3">
                 <Button
                   type="button"
                   variant="outline"
@@ -535,11 +554,20 @@ function RegisterFacePageContent() {
                   {uploadFile?.name || t("registerFace.fields.noFile", "Tidak ada berkas yang dipilih")}
                 </span>
               </div>
+              {uploadPreviewSrc && (
+                <div className="mt-3">
+                  <img
+                    src={uploadPreviewSrc}
+                    alt={t("registerFace.fields.preview", "Preview gambar")}
+                    className="w-full max-w-md h-auto rounded-lg border border-border object-contain"
+                  />
+                </div>
+              )}
               <input
                 ref={uploadInputRef}
                 type="file"
                 accept="image/*"
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                onChange={handleFileChange}
                 className="sr-only"
                 aria-label={t("registerFace.fields.upload", "Unggah Gambar")}
               />
