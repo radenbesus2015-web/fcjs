@@ -1052,10 +1052,37 @@ function AttendanceFunMeterPageContent() {
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
+        /* Aspect Ratio Utility Classes - Padding-Top Hack Implementation */
+        .aspect-ratio-container {
+          position: relative;
+          width: 100%;
+          height: 0;
+          overflow: hidden;
+        }
+        
+        .aspect-ratio-content {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+        
+        /* Common aspect ratios using padding-top hack */
+        .aspect-1-1 { padding-top: 100%; }      /* 1:1 = 1/1 = 100% */
+        .aspect-4-3 { padding-top: 75%; }       /* 4:3 = 3/4 = 75% */
+        .aspect-3-2 { padding-top: 66.67%; }    /* 3:2 = 2/3 = 66.67% */
+        .aspect-16-9 { padding-top: 56.25%; }   /* 16:9 = 9/16 = 56.25% */
+        .aspect-21-9 { padding-top: 42.86%; }   /* 21:9 = 9/21 = 42.86% */
+        .aspect-40-4 { padding-top: 10%; }      /* 40:4 = 4/40 = 10% (header) */
+        .aspect-40-2 { padding-top: 5%; }       /* 40:2 = 2/40 = 5% (footer) */
+        .aspect-24-3 { padding-top: 12.5%; }    /* 24:3 = 3/24 = 12.5% (landscape header) */
+        .aspect-24-2 { padding-top: 8.33%; }    /* 24:2 = 2/24 = 8.33% (landscape footer) */
+        
         /* Layout grid: 3 bagian - header, video+iklan overlay, footer */
         .page-root {
           /* Aspect ratio based layout - menyesuaikan exact dengan image dimensions */
-          /* Header dan Footer menggunakan aspect ratio inline style */
+          /* Header dan Footer menggunakan aspect ratio containers */
           /* Video: menggunakan sisa space yang ada dengan iklan overlay */
           
           color: white;
@@ -1081,7 +1108,8 @@ function AttendanceFunMeterPageContent() {
         }
         
         #camera-host {
-          background: #000;
+          background: #000 !important;
+          background-color: #000 !important;
         }
 
         /* Section styles - masing-masing independent */
@@ -1098,53 +1126,108 @@ function AttendanceFunMeterPageContent() {
           z-index: 100;
         }
 
-        /* Landscape mode - header lebih pendek dan lebar */
+        /* Banner Top - Responsive Aspect Ratio Implementation */
+        .banner-top-container {
+          width: 100%;
+          position: relative;
+        }
+        
+        /* Landscape mode - header aspect ratio 24:3 */
         @media (orientation: landscape) {
-          #banner_top {
-            aspect-ratio: 24 / 3 !important;
-            min-height: 50px;
-            max-height: 80px;
+          .banner-top-container {
+            padding-top: 8%; /* 24:3 = 3/24 = 12.5% */
+          }
+          
+          .banner-top-container::after {
+            content: '';
+            display: block;
+            padding-top: 0;
           }
         }
 
-        /* Portrait mode - height mengikuti proporsi image header (40:4 = 10:1) */
+        /* Portrait mode - header aspect ratio 40:4 */
         @media (orientation: portrait) {
-          #banner_top {
-            aspect-ratio: 40 / 4 !important;
-            min-height: auto;
-            max-height: none;
+          .banner-top-container {
+            padding-top: 10%; /* 40:4 = 4/40 = 10% */
           }
         }
 
-        /* Narrow screens - tetap proporsi image header */
+        /* Responsive breakpoints for different screen sizes */
         @media (orientation: portrait) and (max-width: 640px) {
-          #banner_top {
-            aspect-ratio: 40 / 4 !important;
+          .banner-top-container {
+            padding-top: 10%; /* Maintain 40:4 ratio */
           }
         }
 
-        /* Very narrow screens - tetap proporsi image header */
         @media (orientation: portrait) and (max-width: 480px) {
-          #banner_top {
-            aspect-ratio: 40 / 4 !important;
+          .banner-top-container {
+            padding-top: 10%; /* Maintain 40:4 ratio */
           }
         }
 
-        /* Extra narrow screens - tetap proporsi image header */
         @media (orientation: portrait) and (max-width: 360px) {
-          #banner_top {
-            aspect-ratio: 40 / 4 !important;
+          .banner-top-container {
+            padding-top: 10%; /* Maintain 40:4 ratio */
           }
         }
 
         /* Header image styling - always contain untuk menampilkan semua konten */
-        #banner_top img {
+        .banner-top-container img {
           object-fit: contain !important;
           object-position: center !important;
         }
         
         #camera {
           z-index: 10;
+          background: #000 !important;
+          background-color: #000 !important;
+          /* Video section menggunakan flex-grow untuk mengisi sisa ruang */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        /* Video container dengan aspect ratio responsif */
+        .video-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #000;
+        }
+        
+        /* Video responsive sizing dengan maintain aspect ratio */
+        .video-container video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center center;
+          background: #000;
+        }
+        
+        /* Landscape mode - video optimal untuk landscape */
+        @media (orientation: landscape) {
+          .video-container {
+            /* Maintain 16:9 aspect ratio untuk landscape */
+            aspect-ratio: 16 / 9;
+          }
+        }
+        
+        /* Portrait mode - video optimal untuk portrait */
+        @media (orientation: portrait) {
+          .video-container {
+            /* Maintain 9:16 aspect ratio untuk portrait */
+            aspect-ratio: 9 / 16;
+          }
+        }
+        
+        /* Ultra-wide screens */
+        @media (min-aspect-ratio: 21/9) {
+          .video-container {
+            aspect-ratio: 21 / 9;
+          }
         }
 
         #ads {
@@ -1155,22 +1238,36 @@ function AttendanceFunMeterPageContent() {
           z-index: 100;
         }
 
-        /* Landscape mode - footer lebih pendek dan lebar, sama dengan header */
+        /* Banner Bottom - Responsive Aspect Ratio Implementation */
+        .banner-bottom-container {
+          width: 100%;
+          position: relative;
+        }
+        
+        /* Landscape mode - footer aspect ratio 24:2 */
         @media (orientation: landscape) {
-          #banner_bottom {
-            aspect-ratio: 24 / 2 !important;
-            min-height: 50px;
-            max-height: 50px;
+          .banner-bottom-container {
+            padding-top: 3%; /* 24:2 = 2/24 = 8.33% */
+          }
+          
+          .banner-bottom-container::after {
+            content: '';
+            display: block;
+            padding-top: 0;
           }
         }
 
-        /* Portrait mode - footer mengikuti proporsi image footer (40:2 = 20:1) */
+        /* Portrait mode - footer aspect ratio 40:2 */
         @media (orientation: portrait) {
-          #banner_bottom {
-            aspect-ratio: 40 / 2 !important;
-            min-height: auto;
-            max-height: none;
+          .banner-bottom-container {
+            padding-top: 5%; /* 40:2 = 2/40 = 5% */
           }
+        }
+        
+        /* Footer image styling */
+        .banner-bottom-container img {
+          object-fit: contain !important;
+          object-position: center !important;
         }
 
 
@@ -1190,19 +1287,76 @@ function AttendanceFunMeterPageContent() {
         }
 
 
-        /* Background colors for sections */
+        /* Background colors for sections - ensure no white backgrounds */
         #ads {
           background-color: transparent;
         }
         
-        /* Advertisement overlay responsive sizing - fixed width untuk repeat */
+        /* Ensure no white backgrounds anywhere */
+        .ad-overlay-container,
+        .ad-overlay-container *,
+        #camera-host,
+        #camera-host * {
+          background-color: transparent !important;
+          background: transparent !important;
+        }
+        
+        /* Advertisement positioning - tepat di atas footer */
+        .ad-overlay-wrapper {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 30;
+          display: flex;
+          align-items: end;
+          justify-content: center;
+          pointer-events: none;
+          overflow: hidden;
+          /* Positioning tepat di atas footer dengan transform */
+          transform: translateY(-100%);
+          transition: transform 0.3s ease;
+        }
+        
+        /* Responsive positioning untuk different orientations */
+        @media (orientation: landscape) {
+          .ad-overlay-wrapper {
+            /* Di landscape, iklan lebih dekat ke footer */
+            transform: translateY(-50%);
+          }
+        }
+        
+        @media (orientation: portrait) {
+          .ad-overlay-wrapper {
+            /* Di portrait, iklan tepat di atas footer */
+            transform: translateY(-80%);
+          }
+        }
+        
+        /* Advertisement overlay responsive sizing dengan aspect ratio */
         .ad-overlay-container {
+          position: relative;
           width: 280px;
           min-width: 280px;
+          /* Aspect ratio 4:3 untuk iklan (standar advertising) */
+          padding-top: 75%; /* 4:3 = 3/4 = 75% */
           /* Hardware acceleration untuk smooth rendering */
           will-change: transform;
           transform: translateZ(0);
           backface-visibility: hidden;
+          /* Ensure no white background */
+          background: transparent !important;
+          background-color: transparent !important;
+        }
+        
+        /* Content positioning dalam aspect ratio container */
+        .ad-overlay-container > * {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
         
         /* Video optimization */
@@ -1213,21 +1367,32 @@ function AttendanceFunMeterPageContent() {
           /* Disable anti-aliasing untuk performa */
           image-rendering: -webkit-optimize-contrast;
           image-rendering: crisp-edges;
+          /* Ensure no white background */
+          background: transparent !important;
+          background-color: transparent !important;
         }
         
-        /* Portrait mode - smaller ads */
+        /* Image optimization - no white backgrounds */
+        .ad-overlay-container img {
+          background: transparent !important;
+          background-color: transparent !important;
+        }
+        
+        /* Portrait mode - smaller ads dengan aspect ratio konsisten */
         @media (orientation: portrait) {
           .ad-overlay-container {
             width: 240px;
             min-width: 240px;
+            padding-top: 75%; /* Maintain 4:3 aspect ratio */
           }
         }
         
-        /* Landscape mode - medium ads */
+        /* Landscape mode - medium ads dengan aspect ratio konsisten */
         @media (orientation: landscape) {
           .ad-overlay-container {
             width: 350px;
             min-width: 350px;
+            padding-top: 75%; /* Maintain 4:3 aspect ratio */
           }
         }
         
@@ -1236,6 +1401,7 @@ function AttendanceFunMeterPageContent() {
           .ad-overlay-container {
             width: 450px;
             min-width: 450px;
+            padding-top: 75%; /* Maintain 4:3 aspect ratio */
           }
         }
         
@@ -1244,9 +1410,102 @@ function AttendanceFunMeterPageContent() {
           .ad-overlay-container {
             width: 600px;
             min-width: 600px;
+            padding-top: 75%; /* Maintain 4:3 aspect ratio */
+          }
+        }
+        
+        /* Alternative aspect ratios untuk different ad formats */
+        .ad-overlay-container.aspect-16-9 {
+          padding-top: 56.25%; /* 16:9 = 9/16 = 56.25% */
+        }
+        
+        .ad-overlay-container.aspect-1-1 {
+          padding-top: 100%; /* 1:1 = 1/1 = 100% */
+        }
+        
+        .ad-overlay-container.aspect-3-2 {
+          padding-top: 66.67%; /* 3:2 = 2/3 = 66.67% */
+        }
+        
+        /* Dynamic aspect ratio berdasarkan content */
+        .ad-overlay-container.auto-aspect {
+          padding-top: 0;
+          height: auto;
+        }
+        
+        .ad-overlay-container.auto-aspect > * {
+          position: static;
+          width: 100%;
+          height: auto;
+        }
+        
+        /* Fallback untuk browser yang tidak support aspect-ratio */
+        @supports not (aspect-ratio: 1) {
+          .video-container {
+            padding-top: 56.25%; /* 16:9 fallback */
+            height: 0;
+          }
+          
+          .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
           }
         }
 
+        /* Advanced responsive optimizations */
+        
+        /* Prevent layout shift dengan aspect ratio containers */
+        .aspect-ratio-container,
+        .banner-top-container,
+        .banner-bottom-container,
+        .ad-overlay-container {
+          contain: layout style;
+          will-change: auto;
+        }
+        
+        /* Performance optimizations untuk smooth rendering */
+        .page-root {
+          contain: layout;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+        }
+        
+        /* Optimize untuk different pixel densities */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+          .banner-top-container img,
+          .banner-bottom-container img {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+          }
+        }
+        
+        /* Reduce motion untuk accessibility */
+        @media (prefers-reduced-motion: reduce) {
+          .ad-overlay-container,
+          .video-container {
+            will-change: auto;
+            transform: none;
+          }
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+          .page-root {
+            background: #000;
+          }
+          
+          #banner_top {
+            border-bottom: 2px solid #fff;
+          }
+          
+          #banner_bottom {
+            border-top: 2px solid #fff;
+          }
+        }
+        
         /* Responsive - aspect ratio calculation otomatis untuk semua device */
         /* Tidak perlu media queries karena calculation sudah proporsional */
 
@@ -1346,20 +1605,22 @@ function AttendanceFunMeterPageContent() {
       <div className="page-root">
       {/* Header banner - Section 1 */}
       <section id="banner_top" className="relative w-screen overflow-hidden bg-[#006CBB]">
-        <div className="relative w-full h-full">
-          <Image 
-            src="/assets/header/header.png"
-            alt="Header"
-            fill
-            priority
-            className="object-contain select-none pointer-events-none"
-            sizes="100vw" />
+        <div className="banner-top-container">
+          <div className="aspect-ratio-content">
+            <Image 
+              src="/assets/header/header.png"
+              alt="Header"
+              fill
+              priority
+              className="object-contain select-none pointer-events-none"
+              sizes="100vw" />
+          </div>
         </div>
       </section>
       
       {/* Video Section with Advertisement Overlay - Section 2 */}
-      <section id="camera" className="relative w-screen overflow-hidden">
-        <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center">
+      <section id="camera" className="relative w-screen overflow-hidden bg-black">
+        <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center bg-black">
           <video 
             ref={videoRef} 
             id="video" 
@@ -1372,7 +1633,7 @@ function AttendanceFunMeterPageContent() {
           
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
           {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
-          <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none overflow-hidden">
+          <div className="ad-overlay-wrapper">
             <div className="flex items-end gap-0">
               {/* Repeat ke kiri */}
               {Array.from({ length: repeatCount }).reverse().map((_, index) => (
@@ -1512,14 +1773,18 @@ function AttendanceFunMeterPageContent() {
       
       {/* Footer Section - Section 4 */}
       <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]">
-        <div className="relative w-full h-full">
-          <Image 
-            src="/assets/footer/footer.png" 
-            alt="Footer" 
-            fill
-            priority 
-            className="object-contain select-none pointer-events-none"
-            sizes="20vw" />
+        <div className="banner-bottom-container">
+          <div className="aspect-ratio-content">
+            <Image 
+              src="/assets/footer/footer.png" 
+              alt="Footer" 
+              fill
+              priority 
+              quality={100}
+              unoptimized={false}
+              className="object-contain select-none pointer-events-none"
+              sizes="100vw" />
+          </div>
         </div>
       </section>
       </div>
