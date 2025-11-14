@@ -82,14 +82,27 @@ interface LastAttResults {
 }
 
 function AttendanceFunMeterPageContent() {
-  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([]);
+  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
+    // Default ads untuk testing - akan di-replace oleh backend data
+    {
+      src: 'https://via.placeholder.com/600x400/FF6B6B/FFFFFF?text=Test+Ad+1',
+      type: 'image'
+    },
+    {
+      src: 'https://via.placeholder.com/600x400/4ECDC4/FFFFFF?text=Test+Ad+2', 
+      type: 'image'
+    }
+  ]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
+        console.log('[ADS] Loading advertisements from backend...');
         // Load active advertisements from backend API
         const data = await fetchActiveAdvertisements();
+        console.log('[ADS] Raw data from backend:', data);
+        
         if (cancelled) return;
         
         // Convert backend Advertisement to AdMedia
@@ -101,13 +114,34 @@ function AttendanceFunMeterPageContent() {
             type: ad.type as 'image' | 'video',
           }));
         
+        console.log('[ADS] Processed ad list:', list);
+        console.log('[ADS] Number of enabled ads:', list.length);
+        
         if (!cancelled) {
-          setAdMediaList(list);
+          // Hanya update jika ada ads dari backend, otherwise keep default ads
+          if (list.length > 0) {
+            setAdMediaList(list);
+            console.log('[ADS] Updated with backend ads');
+          } else {
+            console.log('[ADS] No enabled ads from backend, keeping default ads');
+          }
         }
       } catch (e) {
-        console.warn('[ADS] Failed to load ads from backend, using defaults', e);
+        console.warn('[ADS] Failed to load ads from backend, using fallback ads', e);
         if (!cancelled) {
-          setAdMediaList([]);
+          // Fallback: set default ads untuk testing
+          const fallbackAds: AdMedia[] = [
+            {
+              src: 'https://via.placeholder.com/600x400/FF6B6B/FFFFFF?text=Sample+Ad+1',
+              type: 'image'
+            },
+            {
+              src: 'https://via.placeholder.com/600x400/4ECDC4/FFFFFF?text=Sample+Ad+2', 
+              type: 'image'
+            }
+          ];
+          console.log('[ADS] Using fallback ads:', fallbackAds);
+          setAdMediaList(fallbackAds);
         }
       }
     };
@@ -1301,35 +1335,49 @@ function AttendanceFunMeterPageContent() {
           background: transparent !important;
         }
         
-        /* Advertisement positioning - tepat di atas footer */
-        .ad-overlay-wrapper {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
+        /* Footer with Ads Container - iklan dan footer dalam satu div */
+        .footer-with-ads-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: end;
+        }
+        
+        /* Advertisement positioning dalam footer container */
+        .ad-overlay-wrapper-footer {
+          position: relative;
+          width: 100%;
           z-index: 30;
           display: flex;
           align-items: end;
           justify-content: center;
           pointer-events: none;
-          overflow: hidden;
-          /* Positioning tepat di atas footer dengan transform */
-          transform: translateY(-100%);
-          transition: transform 0.3s ease;
+          overflow: visible;
+          /* Positioning di atas footer banner dalam container yang sama */
+          margin-bottom: 10px;
+          order: 1;
+        }
+        
+        /* Footer banner positioning */
+        .banner-bottom-container {
+          position: relative;
+          width: 100%;
+          order: 2;
         }
         
         /* Responsive positioning untuk different orientations */
         @media (orientation: landscape) {
-          .ad-overlay-wrapper {
-            /* Di landscape, iklan lebih dekat ke footer */
-            transform: translateY(-50%);
+          .ad-overlay-wrapper-footer {
+            margin-bottom: 15px;
           }
         }
         
         @media (orientation: portrait) {
-          .ad-overlay-wrapper {
-            /* Di portrait, iklan tepat di atas footer */
-            transform: translateY(-80%);
+          .ad-overlay-wrapper-footer {
+            margin-bottom: 10px;
           }
         }
         
@@ -1631,9 +1679,20 @@ function AttendanceFunMeterPageContent() {
           />
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
           
+        </div>
+      </section>
+      
+      {/* Footer Section with Advertisement - Section 4 */}
+      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]">
+        <div className="footer-with-ads-container">
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
+          {(() => {
+            console.log('[ADS_RENDER] adMediaList:', adMediaList, 'currentAdIndex:', currentAdIndex, 'currentAd:', adMediaList[currentAdIndex]);
+            console.log('[ADS_RENDER] Condition check - length > 0:', adMediaList.length > 0, 'currentAd exists:', !!adMediaList[currentAdIndex]);
+            return null;
+          })()}
           {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
-          <div className="ad-overlay-wrapper">
+          <div className="ad-overlay-wrapper-footer">
             <div className="flex items-end gap-0">
               {/* Repeat ke kiri */}
               {Array.from({ length: repeatCount }).reverse().map((_, index) => (
@@ -1768,22 +1827,20 @@ function AttendanceFunMeterPageContent() {
             </div>
           </div>
           )}
-        </div>
-      </section>
-      
-      {/* Footer Section - Section 4 */}
-      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]">
-        <div className="banner-bottom-container">
-          <div className="aspect-ratio-content">
-            <Image 
-              src="/assets/footer/footer.png" 
-              alt="Footer" 
-              fill
-              priority 
-              quality={100}
-              unoptimized={false}
-              className="object-contain select-none pointer-events-none"
-              sizes="100vw" />
+          
+          {/* Footer Banner */}
+          <div className="banner-bottom-container">
+            <div className="aspect-ratio-content">
+              <Image 
+                src="/assets/footer/footer.png" 
+                alt="Footer" 
+                fill
+                priority 
+                quality={100}
+                unoptimized={false}
+                className="object-contain select-none pointer-events-none"
+                sizes="100vw" />
+            </div>
           </div>
         </div>
       </section>
