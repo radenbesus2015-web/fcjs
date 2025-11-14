@@ -443,8 +443,11 @@
       "hasIssues": "Review the schedule inputs that still have issues."
     },
     "error": {
+      "load": "Failed to load schedule configuration.",
       "loadConfig": "Failed to load schedule configuration.",
+      "save": "Failed to save schedule.",
       "saveConfig": "Failed to save schedule.",
+      "fetchMembers": "Failed to load member data.",
       "loadPeople": "Failed to load face registry."
     },
     "modals": {
@@ -460,16 +463,36 @@
       }
     },
     "toast": {
+      "saved": "Schedule saved.",
+      "scheduleSaved": "Schedule saved.",
       "overrideSaved": "Override saved.",
       "overrideRemoved": "Override removed.",
-      "scheduleSaved": "Schedule saved.",
       "graceApplied": "Default grace applied to all days.",
-      "presetApplied": "Preset {preset} applied to {day}.",
+      "presetApplied": "Preset applied.",
+      "appliedToDays": "Applied to selected days.",
       "copyTargetsMissing": "No target days selected.",
-      "copyApplied": "{source} copied to {targets}."
+      "copyApplied": "Applied to selected days."
     },
     "confirm": {
       "removeOverride": "Delete this schedule override?"
+    },
+    "validation": {
+      "ovStart": "Override start date is required (YYYY-MM-DD).",
+      "ovEnd": "Override end date is invalid (YYYY-MM-DD).",
+      "checkIn": "Check-in time must be in HH:MM format.",
+      "checkOut": "Check-out time must be in HH:MM format.",
+      "order": "Check-out time must be later than check-in time."
+    },
+    "userSelect": {
+      "noSelection": "Please select at least one member",
+      "applied": "{count} members selected for this override"
+    },
+    "customFields": {
+      "saved": "Custom field saved",
+      "deleted": "Custom field deleted",
+      "validation": {
+        "labelRequired": "Field label is required"
+      }
     }
   },
   "adminFaceDb": {
@@ -495,1122 +518,6 @@
       "noSelection": "No items selected."
     },
     "toast": {
-      "labelUpdated": "Label updated.",
-      "deleteSuccess": "Deleted.",
-      "photoReplaced": "Photo updated.",
-      "reembedQueued": "Re-embed queued.",
-      "exportDone": "Export complete.",
-      "zipAdded": "ZIP {name} added ({count} photos)."
-    },
-    "warn": {
-      "exportEmpty": "No photos available to export.",
-      "zipNoImages": "ZIP {name} does not contain valid images.",
-      "zipNone": "No photos could be extracted from {name}.",
-      "fileIgnored": "{name} ignored (unsupported format)."
-    },
-    "confirm": {
-      "deleteRow": "Delete {target}?",
-      "deleteBulk": "Delete {count} items?"
-    },
-    "filters": {
-      "searchLabel": "Search Label",
-      "searchPlaceholder": "Search labels…",
-      "perPage": "Per page",
-      "order": "Order",
-      "orderNewest": "Newest",
-      "orderOldest": "Oldest",
-      "refresh": "Refresh",
-      "selected": "Selected: {count}"
-    },
-    "actions": {
-      "bulkUpload": "Bulk Upload",
-      "reembed": "Re-embed",
-      "delete": "Delete",
-      "export": "Export"
-    },
-    "table": {
-      "columns": {
-        "label": "Label",
-        "photo": "Photo",
-        "embedding": "Embedding",
-        "bbox": "BBox",
-        "timestamp": "Timestamp",
-        "actions": "Actions"
-      },
-      "inline": {
-        "save": "Save",
-        "idPrefix": "ID",
-        "noLabel": "(no label)",
-        "edit": "Edit label"
-      },
-      "photo": {
-        "none": "No photo",
-        "replace": "Replace photo"
-      },
-      "empty": "No data found."
-    },
-    "pagination": {
-      "total": "Total: {total}",
-      "first": "First page",
-      "prev": "Previous page",
-      "page": "Page {page}",
-      "ellipsis": "…",
-      "next": "Next page",
-      "last": "Last page"
-    },
-    "bulk": {
-      "title": "Bulk Upload",
-      "messages": {
-        "fromZip": "From {name}",
-        "labelEmpty": "Empty label, skipped.",
-        "uploading": "Uploading…",
-        "registeredAs": "Registered as {label}.",
-        "uploaded": "Upload complete.",
-        "uploadFailed": "Upload failed."
-      },
-      "forceReplace": "Force replace duplicates",
-      "clear": "Clear",
-      "progressTitle": "Upload progress",
-      "uploadingWait": "Uploads in progress… please wait until finished.",
-      "emptyHint": "No files yet. Select some images or a ZIP containing face photos.",
-      "queueCount": "{count} files in queue.",
-      "uploading": "Uploading...",
-      "clearHint": "Clear the queue when done.",
-      "start": "Start Upload",
-      "summary": {
-        "success": "Done. Success: {count}",
-        "duplicate": "Duplicates: {count}",
-        "error": "Failed: {count}",
-        "skip": "Skipped: {count}"
-      },
-      "summaryLabels": {
-        "total": "Total",
-        "ready": "Ready",
-        "uploading": "Uploading",
-        "success": "Success",
-        "duplicate": "Duplicate",
-        "error": "Failed",
-        "skip": "Skipped"
-      },
-      "statusLabel": {
-        "default_message": "Upload Ready",
-        "uploading": "Uploading",
-        "success": "Success",
-        "duplicate": "Duplicate",
-        "error": "Failed",
-        "skip": "Skipped",
-        "ready": "Ready"
-      }
-    },
-    "modal": {
-      "replacePhotoFor": "Replace photo for {label}"
-    }
-  },
-  "common": {
-    "close": "Close",
-    "cancel": "Cancel",
-    "clear": "Clear",
-    "delete": "Delete",
-    "view": "View",
-    "save": "Save",
-    "idLabel": "ID:",
-    "separator": "•",
-    "confirmDelete": "Confirm Delete"
-  },
-  "pagination": {
-    "showing": "Showing {start}-{end} of {total} {items}",
-    "previous": "Previous",
-    "next": "Next",
-    "page": "Page",
-    "of": "of",
-    "first": "First",
-    "last": "Last"
-  },
-  "adminDashboard": {
-    "state": {
-      "loading": "Loading dashboard…"
-    },
-    "error": {
-      "unauthorized": "Sign in as admin to open the dashboard.",
-      "generic": "Failed to load dashboard.",
-      "rotateKey": "Failed to rotate API key."
-    },
-    "toast": {
-      "modelReloaded": "Model reloaded successfully.",
-      "serverReloaded": "Server reloaded.",
-      "apiKeyRotated": "API key updated."
-    },
-    "confirm": {
-      "reloadServerTitle": "Reload server?",
-      "reloadServer": "Reloading the server will reapply configuration. Continue?",
-      "reloadAction": "Reload",
-      "rotateKey": "Generate a new API key for your account? Update your Authorization header afterwards.",
-      "rotateKeyTitle": "Rotate API key?"
-    },
-    "breadcrumb": "Admin Console",
-    "greeting": "Hello, {name}",
-    "fallbackName": "Admin",
-    "lastUpdated": "Last updated {time} WIB.",
-    "actions": {
-      "reloadModel": "Reload Model",
-      "reloadServer": "Reload Server",
-      "rotateKey": "Rotate API Key",
-      "rotateShort": "Rotate",
-      "processing": "Processing…"
-    },
-    "stats": {
-      "users": {
-        "label": "Users",
-        "caption": "Registered accounts"
-      },
-      "faces": {
-        "label": "Known Faces",
-        "caption": "Embeddings in memory"
-      },
-      "attendance": {
-        "label": "Attendance Events",
-        "caption": "Total log entries"
-      }
-    },
-    "apiKey": {
-      "title": "Your API Key",
-      "subtitle": "Personal credentials",
-      "hint": "Send via Authorization header: Bearer <API_KEY>",
-      "empty": "No API key yet",
-      "show": "Show",
-      "hide": "Hide",
-      "copy": "Copy API Key",
-      "copyShort": "Copy",
-      "copying": "Copying…",
-      "copied": "API key copied to clipboard.",
-      "notAvailable": "API key unavailable.",
-      "copyError": "Failed to copy API key."
-    },
-    "model": {
-      "title": "Active Model",
-      "viewJson": "View JSON",
-      "jsonTitle": "Model Summary (Raw)",
-      "backendLabel": "Backend",
-      "unknown": "UNKNOWN",
-      "backendMeta": "Backend {backendId} • target {targetId}",
-      "emotionLabel": "Emotion Model",
-      "none": "None",
-      "emotionCount": "Labels: {count}",
-      "noEmotionLabels": "No emotion labels",
-      "registeredLabels": "Registered Labels",
-      "noLabels": "No labels"
-    }
-  },
-  "adminUsers": {
-    "breadcrumb": "Dashboard › Users",
-    "title": "User Management",
-    "subtitle": "Manage admin roles, API keys, and account removal.",
-    "actions": {
-      "refresh": "Refresh",
-      "refreshing": "Loading…",
-      "viewJson": "View JSON",
-      "rotateKey": "Rotate API Key",
-      "setPassword": "Set Password",
-      "promote": "Promote",
-      "demote": "Demote",
-      "delete": "Delete",
-      "processing": "Processing…"
-    },
-    "error": {
-      "title": "Something went wrong",
-      "fetch": "Failed to load users.",
-      "generic": "Something went wrong."
-    },
-    "confirm": {
-      "title": "Confirm",
-      "promote": "Promote \"{user}\" to admin?",
-      "demote": "Remove admin role from \"{user}\"?",
-      "delete": "Delete user \"{user}\"?",
-      "rotateSelf": "Generate a new API key for your account? You'll need to update your Authorization header afterward.",
-      "rotateOther": "Generate a new API key for \"{user}\"? They will need to use the new key."
-    },
-    "toast": {
-      "promoted": "{user} is now an admin.",
-      "demoted": "{user} has been demoted.",
-      "deleted": "{user} has been deleted.",
-      "rotated": "API key rotated.",
-      "passwordSet": "Password updated.",
-      "passwordTooShort": "Password must be at least 6 characters.",
-      "cannotDemotePromoter": "You can’t demote the admin who promoted you.",
-      "cannotDeletePromoter": "You can’t delete the user who promoted you."
-    },
-    "passwordModal": {
-      "title": "Set Password",
-      "description": "Enter a new password for {user}.",
-      "label": "New Password",
-      "placeholder": "At least 6 characters",
-      "save": "Save Password"
-    },
-    "state": {
-      "loading": "Loading users…"
-    },
-    "table": {
-      "title": "List Users",
-      "empty": "No users yet",
-      "columns": {
-        "username": "Username",
-        "role": "Role",
-        "actions": "Actions"
-      }
-    },
-    "roles": {
-      "admin": "Admin",
-      "user": "User"
-    },
-    "badges": {
-      "you": "You"
-    },
-    "json": {
-      "hint": "Raw data dump for debugging"
-    }
-  },
-  "adminConfig": {
-    "breadcrumb": "Dashboard › Configuration",
-    "title": "System Configuration",
-    "subtitle": "Adjust face engine parameters with care.",
-    "actions": {
-      "refresh": "Refresh",
-      "refreshing": "Loading…",
-      "viewJson": "View JSON",
-      "resetFace": "Reset Face Engine",
-      "resetAttendance": "Reset Attendance",
-      "resetAll": "Reset All",
-      "saveFace": "Save Face Engine",
-      "saveAttendance": "Save Attendance"
-    },
-    "json": {
-      "current": "Configuration (Current)"
-    },
-    "state": {
-      "loading": "Loading configuration…"
-    },
-    "error": {
-      "title": "Something went wrong",
-      "fetch": "Failed to load configuration.",
-      "generic": "Failed to save configuration."
-    },
-    "errors": {
-      "mustNumber": "{field} must be a number.",
-      "mustInteger": "{field} must be an integer."
-    },
-    "toast": {
-      "noChanges": "No changes to save.",
-      "saved": "Configuration saved.",
-      "reset": "Configuration reset."
-    },
-    "reset": {
-      "scopeAll": "all configuration",
-      "scopeFace": "face engine configuration",
-      "scopeAttendance": "attendance configuration",
-      "confirm": "Reset {scope}?",
-      "title": "Reset configuration?",
-      "ok": "Reset"
-    },
-    "sections": {
-      "faceEngine": {
-        "title": "Face Engine",
-        "subtitle": "Control WebSocket intervals and YuNet thresholds."
-      },
-      "attendance": {
-        "title": "Attendance"
-      }
-    },
-    "fields": {
-      "minCosine": "Min Cosine Accept",
-      "funInterval": "Fun WS Interval (s)",
-      "attInterval": "Attendance WS Interval (s)",
-      "scoreThreshold": "YuNet Score Threshold",
-      "nmsThreshold": "YuNet NMS Threshold",
-      "topK": "YuNet Top K",
-      "minutes": "Minutes",
-      "seconds": "Seconds",
-      "cooldownSec": "Cooldown (seconds)",
-      "sameDayLock": "Lock once per day",
-      "attMinCosine": "Attendance Min Cosine",
-      "doubleMarkIntervalSec": "Double-mark interval (seconds)"
-    },
-    "help": {
-      "wsInterval": "Frame send interval (minutes:seconds)."
-    },
-    "defaults": {
-      "value": "Default: {value}"
-    }
-  },
-  "avatar": {
-    "label": {
-      "guest": "Guest user",
-      "user": "User"
-    },
-    "hint": "Right-click for options",
-    "menu": {
-      "loggedIn": "You are signed in to the app.",
-      "loggedOut": "You have not signed in yet.",
-      "login": "Sign in",
-      "logout": "Sign out",
-      "note": "Change language & theme from Settings."
-    },
-    "logout": {
-      "title": "Confirm Logout",
-      "description": "Are you sure you want to log out of your account?",
-      "confirm": "Yes, Logout",
-      "cancel": "Cancel"
-    }
-  },
-  "footer": {
-    "tagline": "Attendance & Fun Meter Platform"
-  },
-  "aside": {
-    "brand": {
-      "title": "Face Attendance"
-    },
-    "groups": {
-      "main": "Main",
-      "admin": "Admin"
-    },
-    "sections": {
-      "navigation": "Navigation",
-      "administration": "Administration"
-    },
-    "actions": {
-      "expand": "Expand",
-      "collapse": "Collapse",
-      "openSettings": "Open Settings"
-    }
-  },
-  "header": {
-    "breadcrumb": {
-      "admin": "Admin",
-      "website": "Website"
-    },
-    "actions": {
-      "live": "Live",
-      "openNavigation": "Open navigation"
-    },
-    "title": {
-      "default": "Untitled"
-    }
-  },
-  "auth": {
-    "welcome": "Welcome Back",
-    "subtitle": "Sign in to access your dashboard and fun meter.",
-    "footer": "By signing in, you agree to the Terms & Privacy Policy.",
-    "title": "Account",
-    "description": "Sign in or create a new account.",
-    "login": "Login",
-    "register": "Register",
-    "loading": "Processing...",
-    "signin": "Sign In",
-    "signup": "Sign Up",
-    "fields": {
-      "username": "Username",
-      "password": "Password"
-    },
-    "confirmPassword": "Confirm Password",
-    "error": {
-      "fillFields": "Please enter username and password.",
-      "loginFailed": "Login failed.",
-      "registerShortPassword": "Password must be at least 6 characters.",
-      "registerMismatch": "Password confirmation does not match.",
-      "registerFailed": "Failed to register account."
-    },
-    "toast": {
-      "loginSuccess": "Welcome, {username}!",
-      "registerSuccess": "Account created successfully. Please sign in.",
-      "logoutSuccess": "Logged out successfully."
-    }
-  },
-  "settings": {
-    "breadcrumb": "Preferences",
-    "title": "Display & Quality Settings",
-    "language": {
-      "title": "Language",
-      "help": "Select the interface language. Default: English.",
-      "options": {
-        "id": "Bahasa Indonesia",
-        "en": "English"
-      }
-    },
-    "theme": {
-      "title": "Theme",
-      "light": "Light",
-      "dark": "Dark"
-    },
-    "attendance": {
-      "title": "Attendance Streaming",
-      "width": {
-        "label": "Send Width (px)",
-        "help": "Adjust the frame resolution for attendance."
-      },
-      "jpeg": {
-        "label": "JPEG Quality",
-        "help": "Between 0.1 - 1.0. Higher values mean sharper image but larger data size."
-      }
-    },
-    "funMeter": {
-      "title": "Fun Meter Streaming",
-      "width": {
-        "label": "Send Width (px)",
-        "help": "Adjust the frame resolution for emotion analysis."
-      },
-      "jpeg": {
-        "label": "JPEG Quality",
-        "help": "Between 0.1 - 1.0. Higher values mean sharper image but larger data size."
-      },
-      "interval": {
-        "label": "Attendance & FunMeter Interval (ms)",
-        "help": "Default: 2000. Delay between frame sends to the attendance server."
-      }
-    },
-    "actions": {
-      "reset": "Reset to Default",
-      "cancel": "Cancel",
-      "save": "Save",
-      "close": "Close"
-    },
-    "toast": {
-      "saved": "Settings saved.",
-      "reset": "Settings reset to default."
-    }
-  },
-  "cameraUpload": {
-    "title": "Upload Photo",
-    "fromFile": "From File",
-    "fromCamera": "From Camera",
-    "preview": "Preview",
-    "actions": {
-      "close": "Close",
-      "startCamera": "Start Camera",
-      "stopCamera": "Stop Camera",
-      "capture": "Capture",
-      "cancel": "Cancel",
-      "upload": "Upload"
-    }
-  },
-  "home": {
-    "breadcrumb": "Face Detection",
-    "title": "Face Detection",
-    "subtitle": "Upload an image or use your camera to run face identification.",
-    "tabs": {
-      "fromImage": "From Image",
-      "fromCamera": "From Camera"
-    },
-    "sections": {
-      "results": {
-        "title": "Results",
-        "subtitle": "Detected faces"
-      },
-      "input": {
-        "title": "Input",
-        "subtitle": "Upload image"
-      },
-      "cameraResults": {
-        "title": "Camera Results",
-        "subtitle": "Detected faces"
-      },
-      "camera": {
-        "title": "Camera",
-        "subtitle": "Control"
-      }
-    },
-    "fields": {
-      "image": "Image"
-    },
-    "actions": {
-      "processing": "Processing…",
-      "runRecognition": "Run Recognition",
-      "capture": "Capture",
-      "reset": "Reset",
-      "startCamera": "Start",
-      "stopCamera": "Stop"
-    },
-    "results": {
-      "empty": "No faces detected yet.",
-      "previewEmpty": "Image preview will appear here.",
-      "waitingForImage": "Waiting for image."
-    },
-    "table": {
-      "label": "Label",
-      "score": "Score",
-      "bbox": "Bounding Box"
-    },
-    "recognize": {
-      "status": {
-        "noImage": "Select an image first",
-        "running": "Processing…",
-        "faces": "Number of faces: {count}",
-        "error": "Error: {message}"
-      }
-    },
-    "camera": {
-      "waiting": "Activate camera to start.",
-      "status": {
-        "started": "Camera active",
-        "stopped": "Camera stopped",
-        "startFirst": "Start the camera first",
-        "captureFailed": "Failed to capture image",
-        "recognizing": "Processing…",
-        "faces": "Number of faces: {count}",
-        "error": "Error: {message}"
-      }
-    },
-    "toast": {
-      "attendanceSuccess": "Attendance success: {name}",
-      "attendanceMarked": "Attendance success: {name}",
-      "score": "Similarity: {score}",
-      "dateTime": "Date & Time: {dateTime}",
-      "id": "ID: {id}",
-      "temperature": "Temp: {temp}°C"
-    }
-  },
-  "registerFace": {
-    "header": {
-      "breadcrumb": "Registration",
-      "title": "Add Face Data",
-      "subtitle": "Capture from the camera or upload a photo to add a new identity to the database."
-    },
-    "sections": {
-      "camera": {
-        "title": "Camera & Preview",
-        "subtitle": "Capture face"
-      },
-      "details": {
-        "title": "Face Details",
-        "subtitle": "Identity Information"
-      }
-    },
-    "fields": {
-      "label": "Label / Name",
-      "labelPlaceholder": "Full name",
-      "upload": "Upload Image",
-      "chooseFile": "Choose file",
-      "noFile": "No file chosen"
-    },
-    "actions": {
-      "capture": "Capture",
-      "reset": "Reset",
-      "openCamera": "Use Camera",
-      "stopCamera": "Stop Camera",
-      "submit": "Register"
-    },
-    "status": {
-      "label": "Detection status",
-      "waiting": "Waiting for face input.",
-      "noImage": "No image.",
-      "loadingImage": "Loading image...",
-      "cameraReady": "Camera ready.",
-      "cameraActive": "Camera active",
-      "cameraStopped": "Camera stopped",
-      "cameraDenied": "Camera access denied",
-      "wsConnected": "WS connected",
-      "wsDisconnected": "WS disconnected",
-      "detecting": "Detecting...",
-      "faces": "Faces: {count}",
-      "faceBadge": "{count} face(s)",
-      "noFace": "No face detected",
-      "photoCaptured": "Photo captured.",
-      "uploading": "Uploading...",
-      "registered": "Registered: {label}",
-      "updated": "Updated: {label}",
-      "replacing": "Replacing face data...",
-      "duplicate": "Face already registered.",
-      "processing": "Processing...",
-      "processingCrop": "Processing photo...",
-      "failure": "An error occurred.",
-      "error": "Error.",
-      "errorGeneric": "Error"
-    },
-    "toast": {
-      "noFaces": "No faces detected in the image.",
-      "error": "Error.",
-      "failure": "An error occurred.",
-      "loadedFromFile": "Image loaded from file.",
-      "cameraActive": "Camera activated. Ready to capture.",
-      "cameraError": "Failed to access camera",
-      "captureSuccess": "Photo captured successfully.",
-      "labelRequired": "Label is required.",
-      "nameRequired": "Name is required",
-      "sourceRequired": "Select an image or capture a photo first.",
-      "noImage": "No image from camera or upload",
-      "registerSuccess": "Registered: {label}",
-      "registerError": "Registration failed: {error}",
-      "updateSuccess": "Face updated: {label}",
-      "labelMustMatch": "Face is registered as {label}. Use that label to update.",
-      "wsConnected": "Connected to WebSocket server",
-      "wsDisconnected": "WebSocket connection lost"
-    },
-    "confirm": {
-      "replaceTitle": "Replace photo?",
-      "replaceAction": "Replace"
-    }
-  },
-  "attendance": {
-    "breadcrumb": "Attendance",
-    "title": "Automatic Attendance",
-    "subtitle": "Send camera frames to the server and monitor check-in logs in real time.",
-    "actions": {
-      "startCamera": "Start Camera",
-      "stopCamera": "Stop Camera",
-      "logRefresh": "Log refreshed.",
-      "refresh": "Refresh"
-    },
-    "fields": {
-      "interval": "Interval (ms)",
-      "perPage": "Items per page",
-      "order": "Order"
-    },
-    "order": {
-      "asc": "Oldest",
-      "desc": "Newest"
-    },
-    "sections": {
-      "camera": {
-        "title": "Camera",
-        "subtitle": "Streaming Attendance"
-      },
-      "log": {
-        "title": "Attendance Log",
-        "subtitle": "Arrival History"
-      }
-    },
-    "status": {
-      "waiting": "Press start to send frames to the attendance server.",
-      "cameraStarted": "Camera started (WS)",
-      "cameraStopped": "Camera stopped",
-      "faces": "Faces: {count}",
-      "markedSuffix": " • Marked: {labels}",
-      "wsConnected": "WebSocket connected",
-      "wsDisconnected": "WebSocket disconnected",
-      "wsReady": "WS connected • th(accuracy)={th} • mark={mode}",
-      "markOn": "enabled",
-      "markOff": "disabled",
-      "error": "Error: {message}"
-    },
-    "toast": {
-      "wsConnected": "Connected to server (WebSocket).",
-      "wsDisconnected": "WebSocket connection lost.",
-      "attendanceError": "Attendance error: {message}",
-      "success": "Attendance successful.",
-      "successWithLabel": "Attendance successful: {label}",
-      "blockedMessage": "{label}: {reason}{retry}",
-      "blockedReasonDefault": "Cannot mark attendance (rule active).",
-      "blockedRetry": " • Try again: {time}",
-      "blockedFallback": "Cannot mark attendance (already marked today or still in cooldown).",
-      "cameraStarting": "Starting camera...",
-      "cameraStarted": "✅ Camera started successfully",
-      "cameraStopping": "Stopping camera...",
-      "cameraStopped": "✅ Camera stopped successfully",
-      "cameraError": "❌ Failed to access camera: {error}",
-      "refreshSuccess": "Attendance data refreshed successfully",
-      "fetchError": "Failed to load attendance data",
-      "attendanceSuccess": "Attendance recorded: {name}",
-      "attendanceMarked": "Attendance marked: {name}",
-      "logError": "Failed to load Attendance Log. Please try again."
-    },
-    "labels": {
-      "unknown": "Unknown"
-    },
-    "table": {
-      "no": "No",
-      "name": "Name",
-      "dateTime": "Time & Date",
-      "score": "Similarity",
-      "empty": "No attendance data available."
-    },
-    "pagination": {
-      "totalLabel": "Total"
-    }
-  },
-  "fun": {
-    "breadcrumb": "Fun Meter",
-    "title": "Expression Analytics",
-    "subtitle": "Monitor happiness levels and other emotion labels directly from the camera.",
-    "actions": {
-      "startCamera": "Start Camera",
-      "stopCamera": "Stop Camera"
-    },
-    "fields": {
-      "interval": "Interval (ms)",
-      "model": "Model",
-      "modelLoading": "Waiting for metadata…"
-    },
-    "sections": {
-      "camera": {
-        "title": "Camera",
-        "subtitle": "Fun Meter Streaming"
-      },
-      "summary": {
-        "title": "Summary",
-        "subtitle": "Labels & Last Results"
-      }
-    },
-    "summary": {
-      "copy": "Fun represents the probability of happiness (0–100%). The label list is fetched directly from the model on the server.",
-      "empty": "No results from camera yet.",
-      "labelCount": {
-        "one": "1 label",
-        "other": "{count} labels"
-      }
-    },
-    "cards": {
-      "faceNumber": "Face #{num}",
-      "funValue": "Fun {value}%"
-    },
-    "status": {
-      "waiting": "Press start to send fun meter frames.",
-      "wsConnected": "WebSocket connected",
-      "wsDisconnected": "WebSocket disconnected",
-      "wsReady": "WebSocket ready",
-      "wsMissing": "WS endpoint not configured",
-      "socketDisconnected": "Socket not connected",
-      "cameraStartedWs": "Camera active (WS connected)",
-      "cameraStartedPending": "Camera active (connecting WS…)",
-      "cameraStopped": "Camera stopped",
-      "faces": "Faces: {count}",
-      "error": "Error: {message}"
-    },
-    "toast": {
-      "wsConnected": "Connected to server (WebSocket).",
-      "wsDisconnected": "WebSocket connection lost.",
-      "cameraError": "Failed to open camera. Check permissions & device."
-    },
-    "labels": {
-      "unknown": "Unknown"
-    }
-  },
-  "attendanceFunMeter": {
-    "toast": {
-      "wsConnected": "Connected to server (WebSocket).",
-      "wsDisconnected": "WebSocket connection lost.",
-      "cameraAccessError": "Failed to access camera.",
-      "funError": "Fun error: {message}",
-      "attendanceSuccess": "Attendance success: {label}",
-      "score": "Similarity: {score}",
-      "dateTime": "Date & Time: {dateTime}",
-      "attendanceBlocked": "{label}: Cannot record attendance. Try again at {time}.",
-      "attendanceBlockedNoTime": "{label}: Cannot record attendance.",
-      "attendanceError": "Error processing attendance.",
-      "adPlaying": "Advertisement playing",
-      "adNext": "Next advertisement"
-    },
-    "status": {
-      "cameraBlocked": "Camera blocked",
-      "wsConnecting": "Connecting...",
-      "wsReady": "Ready",
-      "wsError": "WebSocket connection error",
-      "facesDetected": "Faces: {count}",
-      "marked": "Marked: {labels}",
-      "wsDisconnected": "Disconnected"
-    }
-  },
-  "adminAttendance": {
-    "header": {
-      "breadcrumb": "Dashboard > Attendance",
-      "title": "Attendance"
-    },
-    "title": "Attendance Data",
-    "subtitle": "View and manage member attendance records.",
-    "filters": {
-      "searchName": "Search",
-      "searchPlaceholder": "Search member name...",
-      "status": "Status",
-      "allStatuses": "All statuses",
-      "perPage": "Per page",
-      "order": "Order",
-      "newest": "Newest",
-      "oldest": "Oldest",
-      "dateRange": "Date Range",
-      "pickDateRange": "Pick date range",
-      "pickDate": "Pick date range",
-      "clear": "Clear",
-      "rangeSeparator": "to",
-      "apply": "Apply",
-      "exportCsv": "Export CSV"
-    },
-    "status": {
-      "present": "Present",
-      "late": "Late",
-      "leftEarly": "Left Early",
-      "lateLeftEarly": "Late & Left Early",
-      "off": "Off",
-      "statusLabel": "Status",
-      "statusOptions": {
-        "all": "All statuses",
-        "present": "Present",
-        "late": "Late",
-        "leftEarly": "Left early",
-        "mixed": "Late & Left early",
-        "off": "Off"
-      }
-    },
-    "table": {
-      "columns": {
-        "member": "Member",
-        "date": "Date",
-        "checkIn": "Check In",
-        "checkOut": "Check Out",
-        "schedule": "Schedule",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "scheduleFallback": "Standard Schedule",
-      "scheduleSource": {
-        "override": "Override",
-        "weekly": "Weekly",
-        "default": "Default"
-      },
-      "graceSummary": "Grace: {in}/{out} min",
-      "notesPrefix": "Notes: {notes}",
-      "status": {
-        "present": "Present",
-        "late": "Late",
-        "early": "Left early",
-        "mixed": "Late & Left early",
-        "off": "Off"
-      },
-      "noData": "No records"
-    },
-    "actions": {
-      "view": "View",
-      "customSchedule": "Custom Schedule",
-      "editOverride": "Edit Override",
-      "deleteOverride": "Delete Override",
-      "deleteLog": "Delete Log"
-    },
-    "pagination": {
-      "perPage": "Per page",
-      "rangeDate": "Date Range",
-      "order": "Order",
-      "newest": "Newest",
-      "oldest": "Oldest",
-      "prev": "Previous",
-      "pageInfo": "Page {page} of {total}",
-      "next": "Next",
-      "first": "First page",
-      "last": "Last page",
-      "totalLabel": "Total",
-      "pageStatus": "Page {page} / {total}",
-      "range": "{start}-{end} {records}",
-      "recordsLabel": "records",
-      "goToPage": "Go to page {page}",
-      "goToLast": "Go to last page"
-    },
-    "state": {
-      "loading": "Loading attendance data..."
-    },
-    "detailModal": {
-      "title": "{label} - {date}",
-      "desc": "Log entries for this date",
-      "close": "Close",
-      "columns": {
-        "time": "Time",
-        "score": "Score"
-      },
-      "empty": "No log"
-    },
-    "overrideModal": {
-      "titleCreate": "Custom Schedule",
-      "titleEdit": "Edit Override",
-      "close": "Close",
-      "loading": "Loading override configuration...",
-      "fields": {
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "singleDay": "Single day",
-        "label": "Override Label",
-        "enabled": "Active",
-        "checkIn": "Check In",
-        "checkOut": "Check Out",
-        "graceIn": "Grace In (minutes)",
-        "graceOut": "Grace Out (minutes)",
-        "notes": "Notes",
-        "range": "Date Range",
-        "pickDate": "Pick a date",
-        "scope": "Scope",
-        "personLabel": "Select Members",
-        "personPlaceholder": "Search names...",
-        "setHoliday": "Set Holiday",
-        "holidayLabel": "Holiday"
-      },
-      "notesPlaceholder": "Optional",
-      "actions": {
-        "cancel": "Cancel",
-        "save": "Save",
-        "saving": "Saving..."
-      },
-      "active": {
-        "label": "Holiday (Off) / Working Day (On)",
-        "onFull": "Working Day",
-        "offFull": "Holiday"
-      },
-      "scope": {
-        "individual": "Specific people",
-        "badgeAll": "Applies to everyone",
-        "all": "Applies to everyone",
-        "helpIndividual": "Choose members that receive this override.",
-        "helpAll": "Override applies to all members."
-      },
-      "people": {
-        "noPeople": "No face data available to pick.",
-        "noMatches": "No results for this search.",
-        "loading": "Loading face registry...",
-        "placeholder": "Search names...",
-        "allSelected": "All members have been selected."
-      }
-    },
-    "view": {
-      "title": "Attendance Details",
-      "member": "Member",
-      "date": "Date",
-      "checkIn": "Check In",
-      "checkOut": "Check Out",
-      "schedule": "Schedule",
-      "status": "Status"
-    },
-    "confirm": {
-      "removeOverride": "Remove override for {label} on {date}?",
-      "deleteLog": "Delete log for {label} on {date}?",
-      "deleteText": "Are you sure you want to delete {what} for {name} (ID: {id}) on {date}?",
-      "log": "attendance log",
-      "override": "override"
-    },
-    "override": {
-      "startRequired": "Start date is required.",
-      "checkInFormat": "Check-in time must be in HH:MM format.",
-      "checkOutFormat": "Check-out time must be in HH:MM format.",
-      "checkOrder": "Check-out time must be greater than check-in time."
-    },
-    "schedule": {
-      "off": "Off",
-      "type": "Schedule Type",
-      "saved": "Schedule saved",
-      "note": "Notes",
-      "notePlaceholder": "Optional notes...",
-      "custom": "Custom Schedule",
-      "editOverride": "Edit Override",
-      "workday": "Normal Working Hours",
-      "halfday": "Morning Shift",
-      "evening": "Evening Shift",
-      "wfh": "WFH Flexible"
-    },
-    "error": {
-      "fetchDaily": "Failed to load daily attendance data.",
-      "loadOverrides": "Failed to load override configuration.",
-      "saveOverride": "Failed to save override.",
-      "deleteOverride": "Failed to delete override.",
-      "openLog": "Failed to open detail log.",
-      "deleteLog": "Failed to delete log.",
-      "addEvent": "Failed to add event.",
-      "updateEvent": "Failed to update event.",
-      "deleteEvent": "Failed to delete event."
-    },
-    "toast": {
-      "overrideSaved": "Schedule override saved.",
-      "noOverrideForDate": "No override for this date.",
-      "overrideDeleted": "Override deleted.",
-      "logDeleted": "Log deleted.",
-      "eventAdded": "Event added.",
-      "eventUpdated": "Event updated.",
-      "eventDeleted": "Event deleted."
-    }
-  },
-  "adminListMembers": {
-    "title": "Manage Members",
-    "actions": {
-      "export": "Export",
-      "bulkUpload": "Bulk Upload",
-      "deleteSelected": "Delete",
-      "refresh": "Refresh",
-      "addMember": "Add Member",
-      "edit": "Edit",
-      "replacePhoto": "Replace photo",
-      "delete": "Delete"
-    },
-    "selectAll": "Select all",
-    "selected": "{count} items selected",
-    "search": {
-      "placeholder": "Search labels…"
-    },
-    "table": {
-      "label": "Label",
-      "photo": "Photo",
-      "timestamp": "Timestamp",
-      "actions": "Actions",
-      "empty": "No members registered yet"
-    },
-    "order": {
-      "newest": "Newest",
-      "oldest": "Oldest"
-    },
-    "perPage": {
-      "all": "All"
-    },
-    "pagination": {
-      "info": "Showing {start}-{end} of {total} members",
-      "infoAll": "Showing all {total} members",
-      "previous": "Previous",
-      "current": "Page {page} of {total}",
-      "next": "Next"
-    },
-    "grid": {
-      "edit": "Edit",
-      "replacePhoto": "Replace photo"
-    },
-    "edit": {
-      "empty": "Label cannot be empty",
-      "success": "Data updated successfully.",
-      "error": "Failed to save: {msg}",
-      "modalTitle": "Edit",
-      "modalSubtitle": "Change member data",
-      "saving": "Saving...",
-      "photo": "Photo",
-      "currentPhoto": "Current photo",
-      "photoHint": "Select a new photo to replace the current one",
-      "dragDrop": "Drag & drop a photo here or click to choose",
-      "chooseFile": "Choose File"
-    },
-    "replacePhoto": {
-      "title": "Replace Photo",
-      "subtitle": "For: {label}",
-      "currentPhoto": "Current photo",
-      "hint": "Drag & drop a photo here or pick from device",
-      "dragDrop": "Drag & drop a photo here or click to choose",
-      "chooseFile": "Choose File",
-      "useCamera": "Use Camera",
-      "submit": "Replace Now",
-      "uploading": "Uploading...",
-      "success": "Photo updated for: {label}",
-      "error": "Failed to replace photo: {error}",
-      "noFile": "Choose a file first"
-    },
-    "confirm": {
-      "delete": {
-        "title": "Delete Member",
-        "desc": "Are you sure you want to delete {name}? This action cannot be undone.",
-        "confirm": "Delete",
-        "cancel": "Cancel"
-      },
-      "deleteMultiple": {
-        "title": "Delete Members",
-        "desc": "Are you sure you want to delete {count} selected members?",
-        "confirm": "Delete",
-        "cancel": "Cancel"
-      }
-    },
-    "toast": {
-      "fetchError": "Failed to load members",
-      "deleteSuccess": "Member deleted: {name}",
-      "deleteError": "Failed to delete member: {error}",
-      "deleteMultipleSuccess": "{count} members deleted",
-      "deleteMultipleError": "Failed to delete members: {error}",
-      "noSelection": "No members selected",
-      "fileNotImage": "{name} is not an image, skipped",
-      "noBulkItems": "No files selected",
-      "exportSuccess": "Export complete: {filename}",
       "exportError": "Export failed: {error}",
       "reordered": "Items reordered successfully"
     },
@@ -1699,6 +606,159 @@
       "wsDisconnected": "WebSocket connection lost",
       "cameraError": "Failed to access camera",
       "modelLoaded": "Model loaded: {model}"
+    }
+  },
+  "aside": {
+    "brand": {
+      "title": "Face Attendance"
+    },
+    "groups": {
+      "main": "Main Menu",
+      "admin": "Admin"
+    },
+    "sections": {
+      "navigation": "Navigation",
+      "administration": "Administration"
+    },
+    "actions": {
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "openSettings": "Open Settings"
+    }
+  },
+  "avatar": {
+    "menu": {
+      "login": "Sign in",
+      "logout": "Sign out"
+    },
+    "logout": {
+      "title": "Confirm Sign Out",
+      "description": "Are you sure you want to sign out of your account?",
+      "confirm": "Yes, Sign Out",
+      "cancel": "Cancel"
+    }
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "delete": "Delete",
+    "save": "Save",
+    "reload": "Reload",
+    "import": "Import",
+    "idLabel": "ID:",
+    "separator": "•",
+    "confirmDelete": "Confirm Delete"
+  },
+  "header": {
+    "breadcrumb": {
+      "admin": "Admin",
+      "website": "Website"
+    },
+    "actions": {
+      "live": "Live",
+      "openNavigation": "Open navigation"
+    },
+    "title": {
+      "default": "Face Recognition"
+    }
+  },
+  "auth": {
+    "welcome": "Welcome back",
+    "subtitle": "Sign in to access your dashboard and fun meter.",
+    "footer": "By signing in, you agree to our Terms & Privacy Policy.",
+    "title": "Account",
+    "description": "Sign in or create a new account.",
+    "login": "Sign In",
+    "register": "Register",
+    "loading": "Processing...",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "fields": {
+      "username": "Username",
+      "password": "Password"
+    },
+    "confirmPassword": "Confirm Password",
+    "error": {
+      "fillFields": "Please fill in username and password.",
+      "loginFailed": "Login failed.",
+      "registerShortPassword": "Password must be at least 6 characters.",
+      "registerMismatch": "Password confirmation does not match.",
+      "registerFailed": "Registration failed."
+    },
+    "toast": {
+      "loginSuccess": "Welcome, {username}!",
+      "registerSuccess": "Account created successfully. Please sign in.",
+      "logoutSuccess": "Successfully signed out."
+    }
+  },
+  "pagination": {
+    "showing": "Showing {start}-{end} of {total} {items}",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of",
+    "first": "First",
+    "last": "Last"
+  },
+  "settings": {
+    "breadcrumb": "Preferences",
+    "title": "Settings",
+    "subtitle": "Manage display preferences and streaming quality",
+    "language": {
+      "title": "Language",
+      "help": "Interface language setting",
+      "options": {
+        "id": "Bahasa Indonesia",
+        "en": "English"
+      }
+    },
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "attendance": {
+      "title": "Attendance Streaming",
+      "width": {
+        "label": "Send Width (px)",
+        "help": "Frame width sent to server. Smaller = faster."
+      },
+      "quality": {
+        "label": "JPEG Quality",
+        "help": "Image compression quality. Higher = clearer but heavier.",
+        "low": "Low (0.1)",
+        "high": "High (1.0)"
+      }
+    },
+    "funMeter": {
+      "title": "Fun Meter Streaming",
+      "width": {
+        "label": "Send Width (px)",
+        "help": "Frame width for emotion detection. Smaller = faster."
+      },
+      "quality": {
+        "label": "JPEG Quality",
+        "help": "Compression quality for emotion detection.",
+        "low": "Low (0.1)",
+        "high": "High (1.0)"
+      }
+    },
+    "baseInterval": {
+      "title": "Base Interval",
+      "label": "Interval (ms)",
+      "help": "Frame sending interval to server in milliseconds."
+    },
+    "actions": {
+      "reset": "Reset",
+      "cancel": "Cancel",
+      "save": "Save",
+      "close": "Close",
+      "logout": "Sign out"
+    },
+    "toast": {
+      "saved": "Settings saved.",
+      "reset": "Settings reset to default."
     }
   }
 }

@@ -136,7 +136,7 @@ export function AppSidebar({ navItems }: AppSidebarProps) {
               )}
               aria-hidden={!isOpen}
             >
-              {ft("groups.main", "Menu Utama")}
+              {ft("groups.main", "Main")}
             </h3>
             <nav className="space-y-1">
               {baseNav.map((item) => (

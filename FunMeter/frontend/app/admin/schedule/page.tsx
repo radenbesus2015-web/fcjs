@@ -188,7 +188,7 @@ export default function AdminSchedulePage() {
       setOrigOverrides(JSON.parse(JSON.stringify(sorted)));
     } catch (err) {
       console.error(err);
-      toast.error(t("adminSchedule.error.load", "Gagal memuat konfigurasi jadwal."));
+      toast.error(t("adminSchedule.error.loadConfig", "Failed to load schedule configuration."));
     } finally {
       setLoading(false);
     }
@@ -266,14 +266,14 @@ export default function AdminSchedulePage() {
     const rule = selectedRule;
     if (!rule) return;
     const presets: Record<string, Partial<RuleItem>> = {
-      workday: { enabled: true, label: t("adminSchedule.presets.workday.dataLabel", "Jam Kerja Normal"), check_in: "08:30", check_out: "17:00", grace_in_min: 10, grace_out_min: 5, notes: "" },
-      halfday: { enabled: true, label: t("adminSchedule.presets.halfday.dataLabel", "Shift Pagi"), check_in: "08:30", check_out: "13:00", grace_in_min: 5, grace_out_min: 0, notes: t("adminSchedule.presets.halfday.notes", "Shift pagi setengah hari.") },
-      evening: { enabled: true, label: t("adminSchedule.presets.evening.dataLabel", "Shift Sore"), check_in: "13:00", check_out: "21:00", grace_in_min: 5, grace_out_min: 5, notes: t("adminSchedule.presets.evening.notes", "Shift sore / penutupan.") },
-      wfh: { enabled: true, label: t("adminSchedule.presets.wfh.dataLabel", "WFH Fleksibel"), check_in: "09:00", check_out: "17:00", grace_in_min: 30, grace_out_min: 10, notes: t("adminSchedule.presets.wfh.notes", "WFH dengan toleransi keterlambatan 30 menit.") },
-      off: { enabled: false, label: t("adminSchedule.presets.off.dataLabel", "Hari Libur"), check_in: "", check_out: "", grace_in_min: 0, grace_out_min: 0, notes: t("adminSchedule.presets.off.notes", "Tidak ada jam kerja terjadwal.") },
+      workday: { enabled: true, label: t("adminSchedule.presets.workday.dataLabel", "Normal Working Hours"), check_in: "08:30", check_out: "17:00", grace_in_min: 10, grace_out_min: 5, notes: "" },
+      halfday: { enabled: true, label: t("adminSchedule.presets.halfday.dataLabel", "Morning Shift"), check_in: "08:30", check_out: "13:00", grace_in_min: 5, grace_out_min: 0, notes: t("adminSchedule.presets.halfday.notes", "Half-day morning shift.") },
+      evening: { enabled: true, label: t("adminSchedule.presets.evening.dataLabel", "Evening Shift"), check_in: "13:00", check_out: "21:00", grace_in_min: 5, grace_out_min: 5, notes: t("adminSchedule.presets.evening.notes", "Evening / closing shift.") },
+      wfh: { enabled: true, label: t("adminSchedule.presets.wfh.dataLabel", "Flexible WFH"), check_in: "09:00", check_out: "17:00", grace_in_min: 30, grace_out_min: 10, notes: t("adminSchedule.presets.wfh.notes", "WFH with 30-minute lateness tolerance.") },
+      off: { enabled: false, label: t("adminSchedule.presets.off.dataLabel", "Holiday"), check_in: "", check_out: "", grace_in_min: 0, grace_out_min: 0, notes: t("adminSchedule.presets.off.notes", "No scheduled working hours.") },
     };
     updateRule(rule.day, presets[target]);
-    toast.success(t("adminSchedule.toast.presetApplied", "Preset diterapkan."));
+    toast.success(t("adminSchedule.toast.presetApplied", "Preset applied.", { preset: target, day: rule.day }));
   };
 
   const applyToDays = (days: DayKey[]): void => {
@@ -282,7 +282,7 @@ export default function AdminSchedulePage() {
     setRules((prev) =>
       prev.map((r) => (days.includes(r.day) ? { ...r, label: src.label, enabled: src.enabled, check_in: src.check_in, check_out: src.check_out, grace_in_min: src.grace_in_min, grace_out_min: src.grace_out_min, notes: src.notes } : r))
     );
-    toast.success(t("adminSchedule.toast.appliedToDays", "Diterapkan ke hari yang dipilih."));
+    toast.success(t("adminSchedule.toast.copyApplied", "Applied to selected days.", { source: selectedRule?.day, targets: days.join(', ') }));
   };
 
   const saveAll = async (): Promise<void> => {
@@ -293,12 +293,12 @@ export default function AdminSchedulePage() {
       for (const ov of overrides) {
         if (ov.enabled) {
           if (!ov.start_date || !DATE_RE.test(ov.start_date)) {
-            toast.error(t("adminSchedule.validation.ovStart", "Tanggal mulai override harus diisi (YYYY-MM-DD)."));
+            toast.error(t("adminSchedule.validation.ovStart", "Override start date is required (YYYY-MM-DD)."));
             setSaving(false);
             return;
           }
           if (ov.end_date && !DATE_RE.test(ov.end_date)) {
-            toast.error(t("adminSchedule.validation.ovEnd", "Tanggal akhir override tidak valid (YYYY-MM-DD)."));
+            toast.error(t("adminSchedule.validation.ovEnd", "Override end date is invalid (YYYY-MM-DD)."));
             setSaving(false);
             return;
           }
@@ -310,7 +310,7 @@ export default function AdminSchedulePage() {
         grace_out_min: clamp(gOut, 0, 240),
         rules: rules.map((r) => ({
           day: r.day,
-          label: r.label.trim() || t("adminSchedule.defaults.workdayLabel", "Jam Kerja Normal"),
+          label: r.label.trim() || t("adminSchedule.defaults.workdayLabel", "Normal Working Hours"),
           enabled: r.enabled,
           check_in: r.enabled && TIME_RE.test(r.check_in) ? r.check_in : null,
           check_out: r.enabled && TIME_RE.test(r.check_out) ? r.check_out : null,
@@ -329,7 +329,7 @@ export default function AdminSchedulePage() {
           const body: Record<string, unknown> = {
             start_date: ov.start_date,
             end_date: ov.end_date || ov.start_date,
-            label: ov.label || t("adminSchedule.overrides.defaultLabel", "Jadwal Khusus"),
+            label: ov.label || t("adminSchedule.overrides.defaultLabel", "Custom Schedule"),
             enabled: ov.enabled,
             check_in: ov.enabled ? ov.check_in : null,
             check_out: ov.enabled ? ov.check_out : null,
@@ -360,15 +360,15 @@ export default function AdminSchedulePage() {
       const sorted = sortOverrides(rawOverrides.map((x) => ({ ...x, id: String(x.id || genId()) })));
       setOverrides(sorted);
       setOrigOverrides(JSON.parse(JSON.stringify(sorted)));
-      toast.success(t("adminSchedule.toast.saved", "Jadwal tersimpan."));
+      toast.success(t("adminSchedule.toast.scheduleSaved", "Schedule saved."));
     } catch (err: unknown) {
       console.error("[SCHEDULE_SAVE] Error:", err);
       const msg = err instanceof Error ? err.message : 
         (err && typeof err === 'object' && 'data' in err ? 
           (err as { data?: { message?: string } }).data?.message : undefined) || 
         (err && typeof err === 'object' && 'response' in err ? 
-          (err as { response?: { data?: { message?: string } } }).response?.data?.message : undefined) || "Gagal menyimpan jadwal.";
-      toast.error(t("adminSchedule.error.save", "Gagal menyimpan jadwal.") + (msg ? `\n${msg}` : ""));
+          (err as { response?: { data?: { message?: string } } }).response?.data?.message : undefined) || t("adminSchedule.error.saveConfig", "Failed to save schedule.");
+      toast.error(msg ? `${t("adminSchedule.error.saveConfig", "Failed to save schedule.")}\n${msg}` : t("adminSchedule.error.saveConfig", "Failed to save schedule."));
     } finally {
       setSaving(false);
     }
@@ -396,7 +396,7 @@ export default function AdminSchedulePage() {
       id: genId(),
       start_date: new Date().toISOString().slice(0,10),
       end_date: new Date().toISOString().slice(0,10),
-      label: t("adminSchedule.overrides.defaultLabel", "Jadwal Khusus"),
+      label: t("adminSchedule.overrides.defaultLabel", "Custom Schedule"),
       enabled: true,
       check_in: "08:30",
       check_out: "17:00",
@@ -510,7 +510,7 @@ export default function AdminSchedulePage() {
       
       setMembers(response.items || []);
     } catch (error) {
-      toast.error(t("adminSchedule.error.fetchMembers", "Failed to load member data"));
+      toast.error(t("adminSchedule.error.loadPeople", "Failed to load face registry."));
     } finally {
       setLoadingMembers(false);
     }
@@ -638,23 +638,23 @@ export default function AdminSchedulePage() {
     const start = String(form.start_date || "").trim();
     const end = String((form.singleDay ? form.start_date : form.end_date) || start);
     if (!start) {
-      toast.error(t("adminSchedule.validation.ovStart", "Tanggal mulai override harus diisi (YYYY-MM-DD)."));
+      toast.error(t("adminSchedule.validation.ovStart", "Override start date is required (YYYY-MM-DD)."));
       return;
     }
     if (form.enabled) {
       const ci = String(form.check_in || "").trim();
       const co = String(form.check_out || "").trim();
       if (!TIME_RE.test(ci)) {
-        toast.error(t("adminSchedule.validation.checkIn", "Jam masuk harus format HH:MM."));
+        toast.error(t("adminSchedule.validation.checkIn", "Check-in time must be in HH:MM format."));
         return;
       }
       if (!TIME_RE.test(co)) {
-        toast.error(t("adminSchedule.validation.checkOut", "Jam pulang harus format HH:MM."));
+        toast.error(t("adminSchedule.validation.checkOut", "Check-out time must be in HH:MM format."));
         return;
       }
       const toMin = (s: string) => Number(s.slice(0,2))*60 + Number(s.slice(3,5));
       if (toMin(co) <= toMin(ci)) {
-        toast.error(t("adminSchedule.validation.order", "Jam pulang harus lebih besar dari jam masuk."));
+        toast.error(t("adminSchedule.validation.order", "Check-out time must be later than check-in time."));
         return;
       }
     }
@@ -662,7 +662,7 @@ export default function AdminSchedulePage() {
       id: form.id,
       start_date: start,
       end_date: end,
-      label: form.label || t("adminSchedule.overrides.defaultLabel", "Jadwal Khusus"),
+      label: form.label || t("adminSchedule.overrides.defaultLabel", "Custom Schedule"),
       enabled: !!form.enabled,
       check_in: form.enabled ? (form.check_in || "08:30") : null,
       check_out: form.enabled ? (form.check_out || "17:00") : null,
@@ -677,14 +677,14 @@ export default function AdminSchedulePage() {
       return next;
     });
     setModalEdit({ open: false, ov: null });
-    toast.success(t("adminSchedule.overrides.saved", "Override saved."));
+    toast.success(t("adminSchedule.toast.overrideSaved", "Override saved."));
   };
 
   const confirmDeleteOverride = (): void => {
     const id = modalDeleteOv.ov?.id;
     if (id) deleteOverride(id);
     setModalDeleteOv({ open: false, ov: null });
-    toast.success(t("adminSchedule.overrides.deleted", "Override removed."));
+    toast.success(t("adminSchedule.toast.overrideRemoved", "Override removed."));
   };
 
   const confirmDeleteLog = async (): Promise<void> => {

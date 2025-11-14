@@ -900,10 +900,11 @@
   },
   "settings": {
     "breadcrumb": "Preferensi",
-    "title": "Pengaturan Tampilan & Kualitas",
+    "title": "Pengaturan",
+    "subtitle": "Kelola preferensi tampilan dan kualitas streaming",
     "language": {
       "title": "Bahasa",
-      "help": "Mengatur bahasa antarmuka. Default: English.",
+      "help": "Pengaturan bahasa antarmuka",
       "options": {
         "id": "Bahasa Indonesia",
         "en": "English"
@@ -918,33 +919,39 @@
       "title": "Streaming Absensi",
       "width": {
         "label": "Lebar Kirim (px)",
-        "help": "Mengatur resolusi frame untuk absensi."
+        "help": "Lebar frame yang dikirim ke server. Semakin kecil = lebih cepat."
       },
-      "jpeg": {
+      "quality": {
         "label": "Kualitas JPEG",
-        "help": "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar."
+        "help": "Kualitas kompresi gambar. Tinggi = lebih jelas tapi lebih berat.",
+        "low": "Rendah (0.1)",
+        "high": "Tinggi (1.0)"
       }
     },
     "funMeter": {
       "title": "Streaming Fun Meter",
       "width": {
         "label": "Lebar Kirim (px)",
-        "help": "Mengatur resolusi frame untuk analisis emosi."
+        "help": "Lebar frame untuk deteksi emosi. Semakin kecil = lebih cepat."
       },
-      "jpeg": {
+      "quality": {
         "label": "Kualitas JPEG",
-        "help": "Antara 0.1 - 1.0. Nilai tinggi lebih tajam namun ukuran data lebih besar."
-      },
-      "interval": {
-        "label": "Interval Attendance & FunMeter (ms)",
-        "help": "Default: 2000. Jeda antar frame ke server attendance."
+        "help": "Kualitas kompresi untuk deteksi emosi.",
+        "low": "Rendah (0.1)",
+        "high": "Tinggi (1.0)"
       }
     },
+    "baseInterval": {
+      "title": "Interval Dasar",
+      "label": "Interval (ms)",
+      "help": "Interval pengiriman frame ke server dalam milidetik."
+    },
     "actions": {
-      "reset": "Atur Ulang ke Bawaan",
+      "reset": "Atur Ulang",
       "cancel": "Batal",
       "save": "Simpan",
-      "close": "Tutup"
+      "close": "Tutup",
+      "logout": "Keluar"
     },
     "toast": {
       "saved": "Pengaturan tersimpan.",
