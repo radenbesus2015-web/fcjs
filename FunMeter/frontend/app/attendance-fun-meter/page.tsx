@@ -239,7 +239,7 @@ function AttendanceFunMeterPageContent() {
     }));
   }, []);
 
-  // Cached advertisement loading with lazy cache
+  // Cached advertisement loading with lazy cache and video optimization
   useEffect(() => {
     let cancelled = false;
     
@@ -253,6 +253,30 @@ function AttendanceFunMeterPageContent() {
           console.log('[ADS CACHE] Using cached advertisements');
           setAdMediaList(cachedAds);
           updateCacheStats('adMediaHits');
+          
+          // Start aggressive preloading for videos immediately
+          setTimeout(() => {
+            cachedAds.forEach((ad, index) => {
+              if (ad.type === 'video') {
+                // Preload first few videos immediately
+                if (index < 3) {
+                  const video = document.createElement('video');
+                  video.src = ad.src;
+                  video.preload = 'auto';
+                  video.muted = true;
+                  video.playsInline = true;
+                  video.crossOrigin = 'anonymous';
+                  video.load();
+                  
+                  preloadedVideos.current.set(ad.src, video);
+                  preloadCache.current.set(ad.src, true);
+                  
+                  console.log('[IMMEDIATE PRELOAD] Started loading video:', ad.src);
+                }
+              }
+            });
+          }, 100);
+          
           return;
         }
 
@@ -264,13 +288,34 @@ function AttendanceFunMeterPageContent() {
             const apiData = await fetchActiveAdvertisements();
             
             // Convert backend Advertisement to AdMedia
-            return apiData
+            const processedAds = apiData
               .filter((ad) => ad.enabled) // Only enabled ads
               .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)) // Sort by display_order
               .map((ad) => ({
                 src: ad.src,
                 type: ad.type as 'image' | 'video',
               }));
+            
+            // Immediately start preloading first video
+            const firstVideo = processedAds.find(ad => ad.type === 'video');
+            if (firstVideo) {
+              setTimeout(() => {
+                const video = document.createElement('video');
+                video.src = firstVideo.src;
+                video.preload = 'auto';
+                video.muted = true;
+                video.playsInline = true;
+                video.crossOrigin = 'anonymous';
+                video.load();
+                
+                preloadedVideos.current.set(firstVideo.src, video);
+                preloadCache.current.set(firstVideo.src, true);
+                
+                console.log('[FIRST VIDEO PRELOAD] Started loading:', firstVideo.src);
+              }, 50);
+            }
+            
+            return processedAds;
           },
           10 * 60 * 1000 // 10 minutes TTL
         );
@@ -2141,6 +2186,49 @@ function AttendanceFunMeterPageContent() {
             min-width: 350px !important;
           }
         }
+        
+        /* Video loading optimization */
+        .ad-overlay-container video {
+          /* Optimize video loading */
+          will-change: transform, opacity;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          /* Disable anti-aliasing untuk performa */
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
+          /* Network optimization hints */
+          loading: eager;
+        }
+        
+        /* Loading indicator untuk video ads */
+        .video-loading {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 4px;
+          font-size: 12px;
+          z-index: 40;
+          display: none;
+        }
+        
+        .video-loading.show {
+          display: block;
+        }
+        
+        /* Preload hints untuk browser */
+        .preload-hint {
+          position: absolute;
+          top: -9999px;
+          left: -9999px;
+          width: 1px;
+          height: 1px;
+          opacity: 0;
+          pointer-events: none;
+        }
       `}} />
       
       {/* Cache Statistics Display (Development Only) */}
@@ -2151,9 +2239,17 @@ function AttendanceFunMeterPageContent() {
             : '0'}%</div>
           <div>Ads: {adMediaCache.size()}/10 | Att: {attendanceResultsCache.size()}/50</div>
           <div>Emo: {emotionResultsCache.size()}/50 | Frames: {videoFrameCache.size()}/20</div>
-          <div>Settings: {settingsCache.size()}/20 | Total: {cacheStats.totalRequests}</div>
+          <div>Settings: {settingsCache.size()}/20 | Videos: {preloadedVideos.current.size}</div>
+          <div>Total Requests: {cacheStats.totalRequests}</div>
         </div>
       )}
+      
+      {/* Preload hints untuk browser */}
+      {adMediaList.map((ad, index) => (
+        ad.type === 'video' && index < 5 ? (
+          <link key={ad.src} rel="preload" as="video" href={ad.src} className="preload-hint" />
+        ) : null
+      ))}
       
       <div className="page-root">
       {/* Header banner - Section 1 */}
@@ -2183,6 +2279,13 @@ function AttendanceFunMeterPageContent() {
             className="block w-full h-full object-cover"
           />
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
+          
+          {/* Video Loading Indicator */}
+          {adMediaList[currentAdIndex]?.type === 'video' && (
+            <div className="video-loading" id="video-loading">
+              Loading video...
+            </div>
+          )}
           
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
           {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
@@ -2257,12 +2360,31 @@ function AttendanceFunMeterPageContent() {
                     autoPlay
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     crossOrigin="anonymous"
                     className="select-none w-full h-auto object-contain block"
                     style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
+                    onLoadStart={() => {
+                      const loadingEl = document.getElementById('video-loading');
+                      if (loadingEl) loadingEl.classList.add('show');
+                    }}
+                    onLoadedData={() => {
+                      const loadingEl = document.getElementById('video-loading');
+                      if (loadingEl) loadingEl.classList.remove('show');
+                    }}
+                    onCanPlay={() => {
+                      const loadingEl = document.getElementById('video-loading');
+                      if (loadingEl) loadingEl.classList.remove('show');
+                    }}
                     onLoadedMetadata={(e) => {
                       const video = e.currentTarget;
+                      // Use preloaded video if available
+                      const preloadedVideo = preloadedVideos.current.get(adMediaList[currentAdIndex].src);
+                      if (preloadedVideo && preloadedVideo.readyState >= 3) {
+                        console.log('[CENTER VIDEO] Using preloaded video for immediate play');
+                        video.currentTime = 0;
+                      }
+                      
                       video.play().catch(() => {
                         setTimeout(() => video.play().catch(() => {}), 100);
                       });
@@ -2270,7 +2392,19 @@ function AttendanceFunMeterPageContent() {
                     onEnded={goToNextAd}
                     onError={(e) => {
                       console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
+                      const loadingEl = document.getElementById('video-loading');
+                      if (loadingEl) loadingEl.classList.remove('show');
                       e.currentTarget.style.display = 'none';
+                      // Try next ad if current fails
+                      setTimeout(goToNextAd, 1000);
+                    }}
+                    onWaiting={() => {
+                      const loadingEl = document.getElementById('video-loading');
+                      if (loadingEl) loadingEl.classList.add('show');
+                    }}
+                    onPlaying={() => {
+                      const loadingEl = document.getElementById('video-loading');
+                      if (loadingEl) loadingEl.classList.remove('show');
                     }}
                   />
                 )}
