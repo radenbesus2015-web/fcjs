@@ -1135,9 +1135,7 @@ function AttendanceFunMeterPageContent() {
         /* Landscape mode - header aspect ratio 24:3 */
         @media (orientation: landscape) {
           .banner-top-container {
-            padding-top: 12.5%; /* 24:3 = 3/24 = 12.5% */
-            min-height: 50px;
-            max-height: 80px;
+            padding-top: 8%; /* 24:3 = 3/24 = 12.5% */
           }
           
           .banner-top-container::after {
@@ -1151,8 +1149,6 @@ function AttendanceFunMeterPageContent() {
         @media (orientation: portrait) {
           .banner-top-container {
             padding-top: 10%; /* 40:4 = 4/40 = 10% */
-            min-height: auto;
-            max-height: none;
           }
         }
 
@@ -1216,8 +1212,6 @@ function AttendanceFunMeterPageContent() {
           .video-container {
             /* Maintain 16:9 aspect ratio untuk landscape */
             aspect-ratio: 16 / 9;
-            max-width: 100%;
-            max-height: 100%;
           }
         }
         
@@ -1226,8 +1220,6 @@ function AttendanceFunMeterPageContent() {
           .video-container {
             /* Maintain 9:16 aspect ratio untuk portrait */
             aspect-ratio: 9 / 16;
-            max-width: 100%;
-            max-height: 100%;
           }
         }
         
@@ -1255,9 +1247,7 @@ function AttendanceFunMeterPageContent() {
         /* Landscape mode - footer aspect ratio 24:2 */
         @media (orientation: landscape) {
           .banner-bottom-container {
-            padding-top: 8.33%; /* 24:2 = 2/24 = 8.33% */
-            min-height: 50px;
-            max-height: 50px;
+            padding-top: 3%; /* 24:2 = 2/24 = 8.33% */
           }
           
           .banner-bottom-container::after {
@@ -1271,8 +1261,6 @@ function AttendanceFunMeterPageContent() {
         @media (orientation: portrait) {
           .banner-bottom-container {
             padding-top: 5%; /* 40:2 = 2/40 = 5% */
-            min-height: auto;
-            max-height: none;
           }
         }
         
@@ -1311,6 +1299,38 @@ function AttendanceFunMeterPageContent() {
         #camera-host * {
           background-color: transparent !important;
           background: transparent !important;
+        }
+        
+        /* Advertisement positioning - tepat di atas footer */
+        .ad-overlay-wrapper {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 30;
+          display: flex;
+          align-items: end;
+          justify-content: center;
+          pointer-events: none;
+          overflow: hidden;
+          /* Positioning tepat di atas footer dengan transform */
+          transform: translateY(-100%);
+          transition: transform 0.3s ease;
+        }
+        
+        /* Responsive positioning untuk different orientations */
+        @media (orientation: landscape) {
+          .ad-overlay-wrapper {
+            /* Di landscape, iklan lebih dekat ke footer */
+            transform: translateY(-50%);
+          }
+        }
+        
+        @media (orientation: portrait) {
+          .ad-overlay-wrapper {
+            /* Di portrait, iklan tepat di atas footer */
+            transform: translateY(-80%);
+          }
         }
         
         /* Advertisement overlay responsive sizing dengan aspect ratio */
@@ -1600,21 +1620,20 @@ function AttendanceFunMeterPageContent() {
       
       {/* Video Section with Advertisement Overlay - Section 2 */}
       <section id="camera" className="relative w-screen overflow-hidden bg-black">
-        <div className="video-container">
-          <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center bg-black">
-            <video 
-              ref={videoRef} 
-              id="video" 
-              autoPlay 
-              playsInline 
-              muted 
-              className="block w-full h-full object-cover"
-            />
-            <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
+        <div ref={hostRef} id="camera-host" className="relative w-full h-full flex items-center justify-center bg-black">
+          <video 
+            ref={videoRef} 
+            id="video" 
+            autoPlay 
+            playsInline 
+            muted 
+            className="block w-full h-full object-cover"
+          />
+          <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
           
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
           {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
-          <div className="absolute bottom-0 left-0 right-0 z-30 flex items-end justify-center pointer-events-none overflow-hidden">
+          <div className="ad-overlay-wrapper">
             <div className="flex items-end gap-0">
               {/* Repeat ke kiri */}
               {Array.from({ length: repeatCount }).reverse().map((_, index) => (
@@ -1749,7 +1768,6 @@ function AttendanceFunMeterPageContent() {
             </div>
           </div>
           )}
-          </div>
         </div>
       </section>
       
