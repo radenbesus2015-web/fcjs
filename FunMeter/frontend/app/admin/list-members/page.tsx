@@ -53,7 +53,20 @@ export default function AdminListMembersPage() {
   const [editingItem, setEditingItem] = useState<FaceItem | null>(null);
   const [editingReplaceFile, setEditingReplaceFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
+  // View mode state (grid or list) - consistent with advertisement page
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('adminListMembers.viewMode');
+      return (saved === 'grid' || saved === 'list') ? saved : 'grid';
+    }
+    return 'grid';
+  });
+  
+  // Save view mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('adminListMembers.viewMode', viewMode);
+  }, [viewMode]);
+  
   const editFileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Bulk upload state
@@ -641,9 +654,26 @@ export default function AdminListMembersPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {/* View switch */}
-            <div className="hidden md:flex items-center gap-1 mr-2">
-              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>{t("adminListMembers.viewMode.grid", "Grid")}</Button>
-              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>{t("adminListMembers.viewMode.list", "List")}</Button>
+            {/* View Mode Toggle - same style as advertisement page */}
+            <div className="flex items-center border rounded-md mr-2">
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                size="icon"
+                className="rounded-r-none"
+                onClick={() => setViewMode('grid')}
+                title={t("adminListMembers.view.grid", "Tampilan Grid")}
+              >
+                <Icon name="LayoutGrid" className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={viewMode === 'list' ? 'default' : 'ghost'} 
+                size="icon"
+                className="rounded-l-none border-l"
+                onClick={() => setViewMode('list')}
+                title={t("adminListMembers.view.list", "Tampilan List")}
+              >
+                <Icon name="LayoutList" className="h-4 w-4" />
+              </Button>
             </div>
             <select
               className="h-9 rounded-md border px-2 text-sm bg-background text-foreground"
@@ -701,7 +731,7 @@ export default function AdminListMembersPage() {
 
       {/* DIV 2: Data Display - Members Table / Grid */}
       <div className="border rounded-lg bg-card">
-      {viewMode === "table" ? (
+      {viewMode === "list" ? (
       <div className="border rounded-lg max-h-[70vh] overflow-auto">
         <div className="min-w-full">
           <table className="w-full">
