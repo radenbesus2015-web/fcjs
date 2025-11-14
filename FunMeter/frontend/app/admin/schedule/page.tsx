@@ -1113,33 +1113,19 @@ export default function AdminSchedulePage() {
               <div className="grid grid-cols-2 gap-3">
                 <label className="space-y-1">
                   <div className="text-sm font-medium">{t("adminSchedule.form.checkIn", "Check In")}</div>
-<<<<<<< HEAD
-                  <input
-                    className="h-9 w-full rounded-md border px-3 text-sm"
-                    placeholder="08:30"
-                    value={selectedRule?.check_in || ""}
-=======
                   <Input
                     type="time"
                     value={selectedRule?.check_in || ""}
                     disabled={!selectedRule?.enabled}
->>>>>>> cb16713680378790b27123eedde49e5c5f8c98f6
                     onChange={(e) => updateRule(selectedDay, { check_in: e.target.value })}
                   />
                 </label>
                 <label className="space-y-1">
                   <div className="text-sm font-medium">{t("adminSchedule.form.checkOut", "Check Out")}</div>
-<<<<<<< HEAD
-                  <input
-                    className="h-9 w-full rounded-md border px-3 text-sm"
-                    placeholder="17:00"
-                    value={selectedRule?.check_out || ""}
-=======
                   <Input
                     type="time"
                     value={selectedRule?.check_out || ""}
                     disabled={!selectedRule?.enabled}
->>>>>>> cb16713680378790b27123eedde49e5c5f8c98f6
                     onChange={(e) => updateRule(selectedDay, { check_out: e.target.value })}
                   />
                 </label>
@@ -1151,10 +1137,7 @@ export default function AdminSchedulePage() {
                     type="number"
                     className="h-9 w-full rounded-md border px-3 text-sm"
                     value={selectedRule?.grace_in_min ?? 0}
-<<<<<<< HEAD
-=======
                     disabled={!selectedRule?.enabled}
->>>>>>> cb16713680378790b27123eedde49e5c5f8c98f6
                     onChange={(e) => updateRule(selectedDay, { grace_in_min: clamp(Number(e.target.value), 0, 240) })}
                   />
                 </label>
@@ -1164,10 +1147,7 @@ export default function AdminSchedulePage() {
                     type="number"
                     className="h-9 w-full rounded-md border px-3 text-sm"
                     value={selectedRule?.grace_out_min ?? 0}
-<<<<<<< HEAD
-=======
                     disabled={!selectedRule?.enabled}
->>>>>>> cb16713680378790b27123eedde49e5c5f8c98f6
                     onChange={(e) => updateRule(selectedDay, { grace_out_min: clamp(Number(e.target.value), 0, 240) })}
                   />
                 </label>
