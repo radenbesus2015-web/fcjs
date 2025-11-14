@@ -4,6 +4,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useWs } from "@/components/providers/WsProvider";
@@ -396,6 +397,10 @@ function RegisterFacePageContent() {
 
   // Reset registration
   const resetRegistration = () => {
+    // Revoke preview URL if exists
+    if (uploadPreviewSrc && uploadPreviewSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(uploadPreviewSrc);
+    }
     setUserName("");
     setUploadFile(null);
     setUploadPreviewSrc("");
@@ -407,15 +412,18 @@ function RegisterFacePageContent() {
   // Handle file upload and create preview
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    
+    // Revoke old preview URL if exists
+    if (uploadPreviewSrc && uploadPreviewSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(uploadPreviewSrc);
+    }
+    
     setUploadFile(file);
     
-    // Create preview
+    // Create preview using URL.createObjectURL (like Bulk Upload)
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadPreviewSrc(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const previewUrl = URL.createObjectURL(file);
+      setUploadPreviewSrc(previewUrl);
     } else {
       setUploadPreviewSrc("");
     }
@@ -429,6 +437,15 @@ function RegisterFacePageContent() {
       stopCamera();
     };
   }, []);
+
+  // Cleanup preview URL on unmount or when preview changes
+  useEffect(() => {
+    return () => {
+      if (uploadPreviewSrc && uploadPreviewSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(uploadPreviewSrc);
+      }
+    };
+  }, [uploadPreviewSrc]);
 
   return (
     <div className="space-y-6">
@@ -554,15 +571,60 @@ function RegisterFacePageContent() {
                   {uploadFile?.name || t("registerFace.fields.noFile", "Tidak ada berkas yang dipilih")}
                 </span>
               </div>
-              {uploadPreviewSrc && (
-                <div className="mt-3">
-                  <img
-                    src={uploadPreviewSrc}
-                    alt={t("registerFace.fields.preview", "Preview gambar")}
-                    className="w-full max-w-md h-auto rounded-lg border border-border object-contain"
-                  />
+              
+              {/* File Preview - Like Bulk Upload */}
+              {uploadFile && uploadPreviewSrc && (
+                <div className="mt-3 space-y-2">
+                  <h3 className="font-semibold text-sm text-foreground">
+                    {t("registerFace.fields.files", "Files (1)")}
+                  </h3>
+                  <div className="flex items-center gap-4 p-3 border rounded-lg bg-card border-border">
+                    {/* Preview Thumbnail */}
+                    <Image 
+                      src={uploadPreviewSrc} 
+                      alt={uploadFile.name}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 object-cover rounded border"
+                      loading="lazy"
+                      unoptimized={uploadPreviewSrc.startsWith("blob:")}
+                    />
+
+                    {/* File Info */}
+                    <div className="flex-1 space-y-1">
+                      <input
+                        type="text"
+                        value={uploadFile.name}
+                        disabled
+                        className="w-full px-2 py-1 text-sm border rounded bg-background text-foreground border-border"
+                        readOnly
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("registerFace.fields.statusReady", "Ready to upload")}
+                      </p>
+                    </div>
+
+                    {/* Remove Button */}
+                    <button
+                      onClick={() => {
+                        if (uploadPreviewSrc && uploadPreviewSrc.startsWith("blob:")) {
+                          URL.revokeObjectURL(uploadPreviewSrc);
+                        }
+                        setUploadFile(null);
+                        setUploadPreviewSrc("");
+                        if (uploadInputRef.current) {
+                          uploadInputRef.current.value = "";
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-destructive"
+                      type="button"
+                    >
+                      <Icon name="Trash2" className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               )}
+              
               <input
                 ref={uploadInputRef}
                 type="file"
