@@ -33,6 +33,19 @@ interface AdItem extends Advertisement {
 
 // LS_KEY removed - now using backend API
 
+// Helper function to truncate file name with minimum 10 characters before showing ellipsis
+const truncateFileName = (fileName: string, maxLength: number = 30) => {
+  // Don't truncate if less than or equal to 10 characters
+  if (fileName.length <= 10) return fileName;
+  
+  // Don't truncate if within max length
+  if (fileName.length <= maxLength) return fileName;
+  
+  // Only truncate if longer than 10 characters and exceeds max length
+  // Show first (maxLength - 3) characters + "..."
+  return fileName.substring(0, Math.max(10, maxLength - 3)) + '...';
+};
+
 export default function AdminAdvertisementPage() {
   const { t, locale } = useI18n();
   const confirm = useConfirmDialog();
@@ -57,8 +70,6 @@ export default function AdminAdvertisementPage() {
   const [editingReplaceFile, setEditingReplaceFile] = useState<File | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
-  const hasLoadedRef = useRef(false);
-  const isLoadingRef = useRef(false);
   
   // View mode state (grid or list)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -165,18 +176,10 @@ export default function AdminAdvertisementPage() {
   }, [items, startIndex, endIndex, viewMode]);
 
   // Load advertisements from backend API
-  const load = useCallback(async (showToast = true) => {
-    // Prevent double execution
-    if (isLoadingRef.current) return;
-    
-    isLoadingRef.current = true;
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    const isInitialLoad = !hasLoadedRef.current;
-    
-    if (showToast && isInitialLoad) {
-      toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 2000 });
-    }
+    toast.info(t("adminAds.toast.loading", "Memuat daftar iklan..."), { duration: 1000 });
     
     try {
       const data = await fetchAllAdvertisements();
@@ -198,28 +201,31 @@ export default function AdminAdvertisementPage() {
       // Sort by display_order
       items.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
       setItems(items);
-      
-      if (showToast && isInitialLoad) {
+      // Show success toast for successful loading
+      // Delay success toast slightly to ensure it appears after loading toast
+      setTimeout(() => {
         toast.success(t("adminAds.toast.loaded", "✅ Berhasil memuat {count} iklan", { count: items.length }), { duration: 3000 });
-      }
-      hasLoadedRef.current = true;
+      }, 100);
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Failed to load advertisements list.";
       setError(error);
-      if (showToast) {
-        toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
-      }
+      toast.error(t("adminAds.toast.loadError", "❌ Gagal memuat daftar iklan: {error}", { error }), { duration: 5000 });
     } finally {
       setLoading(false);
-      isLoadingRef.current = false;
     }
   }, [t]);
 
-  useEffect(() => {
-    if (!hasLoadedRef.current && !isLoadingRef.current) {
-      void load();
-    }
-  }, [load]);
+  // Load data on mount only
+  useEffect(() => { 
+    void load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Manual reload - load() already shows success toast
+  const manualReload = async () => {
+    await load();
+    // No additional toast needed since load() already shows success
+  };
 
   const save = async (silent?: boolean) => {
     try {
@@ -581,6 +587,18 @@ export default function AdminAdvertisementPage() {
     }
   };
 
+  // Toggle select all advertisements
+  const toggleSelectAll = () => {
+    if (selected.length === paginatedItems.length && paginatedItems.length > 0) {
+      // Deselect all items on current page
+      const pageSrcs = new Set(paginatedItems.map((it) => it.src));
+      setSelected((prev) => prev.filter((s) => !pageSrcs.has(s)));
+    } else {
+      // Select all items on current page
+      setSelected((prev) => [...new Set([...prev, ...paginatedItems.map((it) => it.src)])]);
+    }
+  };
+
   // Delete selected ads
   const deleteSelected = async () => {
     try {
@@ -698,7 +716,7 @@ export default function AdminAdvertisementPage() {
                 <Icon name="LayoutList" className="h-4 w-4" />
               </Button>
             </div>
-            <Button variant="outline" size="icon" onClick={() => void load()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")} disabled={loading}>
+            <Button variant="outline" size="icon" onClick={() => void manualReload()} title={t("common.reload", "Reload")} aria-label={t("common.reload", "Reload")} disabled={loading}>
               <Icon name="RefreshCw" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
             <input
@@ -865,8 +883,8 @@ export default function AdminAdvertisementPage() {
                                   />
                                 </div>
                               ) : (
-                                <div className="text-sm font-medium truncate max-w-xs">
-                                  {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                                <div className="text-sm font-medium max-w-xs">
+                                  {truncateFileName(it.title || it.file_name || it.src.split('/').pop() || 'Unknown', 25)}
                                 </div>
                               )}
                             </td>
@@ -952,7 +970,32 @@ export default function AdminAdvertisementPage() {
                 </div>
               ) : (
                 /* Grid View */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <>
+                  {/* Grid Controls */}
+                  <div className="flex items-center justify-between mb-4 p-3 bg-muted/30 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded"
+                        checked={paginatedItems.length > 0 && paginatedItems.every((it) => selected.includes(it.src))}
+                        onChange={toggleSelectAll}
+                        aria-label={t("adminAds.selectAll", "Pilih semua")}
+                      />
+                      <span className="text-sm font-medium">
+                        {t("adminAds.selectAll", "Pilih semua")}
+                      </span>
+                      {selected.length > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          ({selected.length} {t("adminAds.selected", "dipilih")})
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {t("adminAds.totalItems", "{total} iklan", { total: items.length })}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {paginatedItems.map((it, localIdx) => {
                     const globalIdx = startIndex + localIdx;
                     const isSelected = selected.includes(it.src);
@@ -1053,8 +1096,8 @@ export default function AdminAdvertisementPage() {
                         {/* Card Footer with Info */}
                         <div className="p-3 space-y-2">
                           <div className="flex items-center gap-2">
-                            <div className="text-sm font-medium truncate flex-1">
-                              {it.title || it.file_name || it.src.split('/').pop() || 'Unknown'}
+                            <div className="text-sm font-medium flex-1">
+                              {truncateFileName(it.title || it.file_name || it.src.split('/').pop() || 'Unknown', 35)}
                             </div>
                             <Button
                               variant="ghost"
@@ -1111,6 +1154,7 @@ export default function AdminAdvertisementPage() {
                     );
                   })}
                 </div>
+                </>
               )}
               
               

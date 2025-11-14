@@ -12,6 +12,7 @@ import { Icon } from "@/components/common/Icon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 type DayKey =
   | "Senin"
@@ -22,6 +23,17 @@ type DayKey =
   | "Sabtu"
   | "Minggu";
 
+interface CustomField {
+  id: string;
+  label: string;
+  type: "text" | "number" | "time" | "textarea";
+  value: string | number;
+  required?: boolean;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+}
+
 interface RuleItem {
   day: DayKey;
   label: string;
@@ -31,6 +43,7 @@ interface RuleItem {
   grace_in_min: number;
   grace_out_min: number;
   notes?: string;
+  customFields?: CustomField[];
 }
 
 interface OverrideItem {
@@ -56,6 +69,14 @@ interface AttendanceConfig {
 
 interface ScheduleResponse {
   attendance: Partial<AttendanceConfig>;
+}
+
+interface MemberItem {
+  id: string | number;
+  label: string;
+  person_id?: string;
+  photo_url?: string;
+  photo_path?: string;
 }
 
 const DAYS: DayKey[] = [
@@ -399,12 +420,185 @@ export default function AdminSchedulePage() {
   };
   const [modalDeleteOv, setModalDeleteOv] = useState<{ open: boolean; ov: OverrideItem | null }>({ open: false, ov: null });
   const [modalDeleteLog, setModalDeleteLog] = useState<{ open: boolean; ov: OverrideItem | null }>({ open: false, ov: null });
+  
+  // User selection modal state
+  const [modalUserSelect, setModalUserSelect] = useState<{ open: boolean }>({ open: false });
+  const [members, setMembers] = useState<MemberItem[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [searchMember, setSearchMember] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+
+  // Custom Fields Management State
+  const [modalCustomField, setModalCustomField] = useState<{ 
+    open: boolean; 
+    field: CustomField | null; 
+    isEdit: boolean 
+  }>({ open: false, field: null, isEdit: false });
+
+  // ESC key handler for user selection modal
+  useEffect(() => {
+    if (!modalUserSelect.open) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setModalUserSelect({ open: false });
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [modalUserSelect.open]);
+
+  // ESC key handler for custom field modal
+  useEffect(() => {
+    if (!modalCustomField.open) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setModalCustomField({ open: false, field: null, isEdit: false });
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [modalCustomField.open]);
 
   const openView = (ov: OverrideItem) => setModalView({ open: true, ov });
   const openEdit = (ov: OverrideItem) => setModalEdit({ open: true, ov: { ...ov, singleDay: ov.end_date ? ov.end_date === ov.start_date : true, scope: (ov.targets && ov.targets.length ? "individual" : "all") } });
   const openCustom = (ov: OverrideItem) => setModalEdit({ open: true, ov: { ...ov, singleDay: ov.end_date ? ov.end_date === ov.start_date : true, scope: (ov.targets && ov.targets.length ? "individual" : "all") } });
   const openDeleteOverride = (ov: OverrideItem) => setModalDeleteOv({ open: true, ov });
   const openDeleteLog = (ov: OverrideItem) => setModalDeleteLog({ open: true, ov });
+
+  // Fetch members data
+  const fetchMembers = async (search = "") => {
+    try {
+      setLoadingMembers(true);
+      const params = new URLSearchParams();
+      params.set("per_page", "9999"); // Get all members
+      if (search.trim()) params.set("q", search.trim());
+      
+      const response = await request<{
+        items: MemberItem[];
+      }>(`/register-db-data?${params.toString()}`);
+      
+      setMembers(response.items || []);
+    } catch (error) {
+      toast.error(t("adminSchedule.error.fetchMembers", "Failed to load member data"));
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // Open user selection modal
+  const openUserSelection = () => {
+    // Set scope to individual when opening user selection
+    updateModalEdit(() => ({ scope: "individual" }));
+    
+    // Initialize selected members from current targets
+    const currentTargets = modalEdit.ov?.targets || [];
+    const targetIds = new Set(currentTargets.map(target => 
+      typeof target === 'string' ? target : target.value || String(target)
+    ));
+    setSelectedMembers(targetIds);
+    setSearchMember("");
+    setModalUserSelect({ open: true });
+    fetchMembers();
+  };
+
+  // Handle member selection
+  const toggleMemberSelection = (memberId: string) => {
+    setSelectedMembers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(memberId)) {
+        newSet.delete(memberId);
+      } else {
+        newSet.add(memberId);
+      }
+      return newSet;
+    });
+  };
+
+  // Apply selected members to override
+  const applySelectedMembers = () => {
+    if (selectedMembers.size === 0) {
+      toast.error(t("adminSchedule.userSelect.noSelection", "Please select at least one member"));
+      return;
+    }
+
+    const selectedTargets = Array.from(selectedMembers).map(id => {
+      const member = members.find(m => String(m.id) === id);
+      return {
+        value: id,
+        label: member?.label || id
+      };
+    });
+    
+    updateModalEdit(() => ({ targets: selectedTargets }));
+    setModalUserSelect({ open: false });
+    
+    toast.success(
+      t("adminSchedule.userSelect.applied", "{count} members selected for this override", { 
+        count: selectedTargets.length 
+      })
+    );
+  };
+
+  // Filter members based on search
+  const filteredMembers = useMemo(() => {
+    if (!searchMember.trim()) return members;
+    return members.filter(member => 
+      member.label.toLowerCase().includes(searchMember.toLowerCase())
+    );
+  }, [members, searchMember]);
+
+  // Custom Fields CRUD Functions
+  const createCustomField = () => {
+    const newField: CustomField = {
+      id: genId(),
+      label: "",
+      type: "text",
+      value: "",
+      required: false,
+      placeholder: ""
+    };
+    setModalCustomField({ open: true, field: newField, isEdit: false });
+  };
+
+  const editCustomField = (field: CustomField) => {
+    setModalCustomField({ open: true, field: { ...field }, isEdit: true });
+  };
+
+  const saveCustomField = (field: CustomField) => {
+    if (!selectedRule) return;
+    
+    const updatedFields = selectedRule.customFields || [];
+    const existingIndex = updatedFields.findIndex(f => f.id === field.id);
+    
+    if (existingIndex >= 0) {
+      // Update existing field
+      updatedFields[existingIndex] = field;
+    } else {
+      // Add new field
+      updatedFields.push(field);
+    }
+    
+    updateRule(selectedDay, { customFields: updatedFields });
+    setModalCustomField({ open: false, field: null, isEdit: false });
+    toast.success(t("adminSchedule.customFields.saved", "Custom field saved"));
+  };
+
+  const deleteCustomField = (fieldId: string) => {
+    if (!selectedRule) return;
+    
+    const updatedFields = (selectedRule.customFields || []).filter(f => f.id !== fieldId);
+    updateRule(selectedDay, { customFields: updatedFields });
+    toast.success(t("adminSchedule.customFields.deleted", "Custom field deleted"));
+  };
+
+  const updateCustomFieldValue = (fieldId: string, value: string | number) => {
+    if (!selectedRule) return;
+    
+    const updatedFields = (selectedRule.customFields || []).map(f => 
+      f.id === fieldId ? { ...f, value } : f
+    );
+    updateRule(selectedDay, { customFields: updatedFields });
+  };
 
   const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
   const saveEdit = (): void => {
@@ -498,7 +692,7 @@ export default function AdminSchedulePage() {
             </div>
       {/* Modals */}
       <Dialog open={modalView.open} onOpenChange={(open) => !open && setModalView({ open: false, ov: null })}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalView({ open: false, ov: null })}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto shadow-2xl" hideOverlay onEscapeKeyDown={() => setModalView({ open: false, ov: null })}>
           <DialogHeader>
             <DialogTitle>{t("adminSchedule.modals.view.title", "View Override")}</DialogTitle>
           </DialogHeader>
@@ -519,7 +713,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalEdit.open} onOpenChange={(open) => !open ? setModalEdit({ open: false, ov: null }) : null}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalEdit({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto shadow-2xl" hideOverlay onEscapeKeyDown={() => setModalEdit({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             saveEdit();
@@ -567,21 +761,28 @@ export default function AdminSchedulePage() {
                   </div>
                 </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.checkIn", "Check In")}</Label>
-                <Input type="time" value={modalEdit.ov.check_in ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ check_in: e.target.value }))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.checkOut", "Check Out")}</Label>
-                <Input type="time" value={modalEdit.ov.check_out ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ check_out: e.target.value }))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.graceIn", "Grace In (minutes)")}</Label>
-                <Input type="number" value={modalEdit.ov.grace_in_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ grace_in_min: clamp(Number(e.target.value), 0, 240) }))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.graceOut", "Grace Out (minutes)")}</Label>
-                <Input type="number" value={modalEdit.ov.grace_out_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ grace_out_min: clamp(Number(e.target.value), 0, 240) }))} />
+              {/* Time and Grace Settings - Grouped together */}
+              <div className="space-y-3 sm:col-span-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.checkIn", "Check In")}</Label>
+                    <Input type="time" value={modalEdit.ov.check_in ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ check_in: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.checkOut", "Check Out")}</Label>
+                    <Input type="time" value={modalEdit.ov.check_out ?? ""} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ check_out: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.graceIn", "Grace In (minutes)")}</Label>
+                    <Input type="number" value={modalEdit.ov.grace_in_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ grace_in_min: clamp(Number(e.target.value), 0, 240) }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.graceOut", "Grace Out (minutes)")}</Label>
+                    <Input type="number" value={modalEdit.ov.grace_out_min} disabled={!modalEdit.ov.enabled} onChange={(e)=> updateModalEdit(() => ({ grace_out_min: clamp(Number(e.target.value), 0, 240) }))} />
+                  </div>
+                </div>
               </div>
               <div className="space-y-1 sm:col-span-2">
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.notes", "Notes")}</Label>
@@ -591,9 +792,67 @@ export default function AdminSchedulePage() {
                 <Label className="text-xs font-semibold">{t("adminSchedule.overrides.form.scope", "Applies to")}</Label>
                 <div className="flex gap-2">
                   <Button type="button" size="sm" variant={modalEdit.ov.scope === "all" ? "default" : "outline"} onClick={()=> updateModalEdit(() => ({ scope: "all", targets: [] }))}>{t("adminSchedule.overrides.scope.all", "Applies to everyone")}</Button>
-                  <Button type="button" size="sm" variant={modalEdit.ov.scope === "individual" ? "default" : "outline"} onClick={()=> updateModalEdit(() => ({ scope: "individual" }))}>{t("adminSchedule.overrides.scope.individual", "Specific people")}</Button>
+                  <Button type="button" size="sm" variant={modalEdit.ov.scope === "individual" ? "default" : "outline"} onClick={openUserSelection}>{t("adminSchedule.overrides.scope.individual", "Specific people")}</Button>
                 </div>
                 <p className="text-xs text-muted-foreground">{modalEdit.ov.scope === "individual" ? t("adminSchedule.overrides.form.scopeHelpIndividual", "Select specific members that receive this override.") : t("adminSchedule.overrides.form.scopeHelpAll", "Override applies to every member.")}</p>
+                
+                {/* Selected Members Display */}
+                {modalEdit.ov.scope === "individual" && modalEdit.ov.targets && modalEdit.ov.targets.length > 0 && (
+                  <div className="mt-3 p-3 bg-muted/30 rounded-lg border">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">
+                      {t("adminSchedule.overrides.selectedMembers", "Selected members")} ({modalEdit.ov.targets.length})
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {modalEdit.ov.targets.map((target, index) => {
+                        const label = typeof target === 'string' ? target : target.label || target.value;
+                        return (
+                          <Badge key={index} className="text-xs bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800">
+                            {label}
+                            <button
+                              type="button"
+                              className="ml-1 hover:text-destructive"
+                              onClick={() => {
+                                const newTargets = modalEdit.ov?.targets?.filter((_, i) => i !== index) || [];
+                                updateModalEdit(() => ({ targets: newTargets }));
+                              }}
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={openUserSelection}
+                    >
+                      <Icon name="Users" className="h-3 w-3 mr-1" />
+                      {t("adminSchedule.overrides.editSelection", "Edit Selection")}
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Empty state for individual scope */}
+                {modalEdit.ov.scope === "individual" && (!modalEdit.ov.targets || modalEdit.ov.targets.length === 0) && (
+                  <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-dashed">
+                    <div className="text-center text-sm text-muted-foreground">
+                      {t("adminSchedule.overrides.noMembersSelected", "No members selected")}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full"
+                      onClick={openUserSelection}
+                    >
+                      <Icon name="UserPlus" className="h-3 w-3 mr-1" />
+                      {t("adminSchedule.overrides.selectMembers", "Select Members")}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -605,7 +864,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalDeleteOv.open} onOpenChange={(open) => !open && setModalDeleteOv({ open: false, ov: null })}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteOv({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto shadow-2xl" hideOverlay onEscapeKeyDown={() => setModalDeleteOv({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDeleteOverride();
@@ -625,7 +884,7 @@ export default function AdminSchedulePage() {
       </Dialog>
 
       <Dialog open={modalDeleteLog.open} onOpenChange={(open) => !open && setModalDeleteLog({ open: false, ov: null })}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto" hideOverlay onEscapeKeyDown={() => setModalDeleteLog({ open: false, ov: null })} onKeyDown={(e) => {
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto shadow-2xl" hideOverlay onEscapeKeyDown={() => setModalDeleteLog({ open: false, ov: null })} onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             confirmDeleteLog();
@@ -819,43 +1078,49 @@ export default function AdminSchedulePage() {
             </label>
             <div />
 
-            <label className="space-y-1">
-              <div className="text-sm font-medium">{t("adminSchedule.form.checkIn", "Check In")}</div>
-              <input
-                className="h-9 w-40 rounded-md border px-3 text-sm"
-                placeholder="08:30"
-                value={selectedRule?.check_in || ""}
-                onChange={(e) => updateRule(selectedDay, { check_in: e.target.value })}
-              />
-            </label>
-            <label className="space-y-1">
-              <div className="text-sm font-medium">{t("adminSchedule.form.checkOut", "Check Out")}</div>
-              <input
-                className="h-9 w-40 rounded-md border px-3 text-sm"
-                placeholder="17:00"
-                value={selectedRule?.check_out || ""}
-                onChange={(e) => updateRule(selectedDay, { check_out: e.target.value })}
-              />
-            </label>
-
-            <label className="space-y-1">
-              <div className="text-sm font-medium">{t("adminSchedule.form.graceIn", "Grace In (minutes)")}</div>
-              <input
-                type="number"
-                className="h-9 w-32 rounded-md border px-3 text-sm"
-                value={selectedRule?.grace_in_min ?? 0}
-                onChange={(e) => updateRule(selectedDay, { grace_in_min: clamp(Number(e.target.value), 0, 240) })}
-              />
-            </label>
-            <label className="space-y-1">
-              <div className="text-sm font-medium">{t("adminSchedule.form.graceOut", "Grace Out (minutes)")}</div>
-              <input
-                type="number"
-                className="h-9 w-32 rounded-md border px-3 text-sm"
-                value={selectedRule?.grace_out_min ?? 0}
-                onChange={(e) => updateRule(selectedDay, { grace_out_min: clamp(Number(e.target.value), 0, 240) })}
-              />
-            </label>
+            {/* Time and Grace Settings - Grouped together */}
+            <div className="space-y-3 md:col-span-2">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="space-y-1">
+                  <div className="text-sm font-medium">{t("adminSchedule.form.checkIn", "Check In")}</div>
+                  <input
+                    className="h-9 w-full rounded-md border px-3 text-sm"
+                    placeholder="08:30"
+                    value={selectedRule?.check_in || ""}
+                    onChange={(e) => updateRule(selectedDay, { check_in: e.target.value })}
+                  />
+                </label>
+                <label className="space-y-1">
+                  <div className="text-sm font-medium">{t("adminSchedule.form.checkOut", "Check Out")}</div>
+                  <input
+                    className="h-9 w-full rounded-md border px-3 text-sm"
+                    placeholder="17:00"
+                    value={selectedRule?.check_out || ""}
+                    onChange={(e) => updateRule(selectedDay, { check_out: e.target.value })}
+                  />
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="space-y-1">
+                  <div className="text-sm font-medium">{t("adminSchedule.form.graceIn", "Grace In (minutes)")}</div>
+                  <input
+                    type="number"
+                    className="h-9 w-full rounded-md border px-3 text-sm"
+                    value={selectedRule?.grace_in_min ?? 0}
+                    onChange={(e) => updateRule(selectedDay, { grace_in_min: clamp(Number(e.target.value), 0, 240) })}
+                  />
+                </label>
+                <label className="space-y-1">
+                  <div className="text-sm font-medium">{t("adminSchedule.form.graceOut", "Grace Out (minutes)")}</div>
+                  <input
+                    type="number"
+                    className="h-9 w-full rounded-md border px-3 text-sm"
+                    value={selectedRule?.grace_out_min ?? 0}
+                    onChange={(e) => updateRule(selectedDay, { grace_out_min: clamp(Number(e.target.value), 0, 240) })}
+                  />
+                </label>
+              </div>
+            </div>
 
             <label className="space-y-1 md:col-span-2">
               <div className="text-sm font-medium">{t("adminSchedule.form.notes", "Notes")}</div>
@@ -866,6 +1131,87 @@ export default function AdminSchedulePage() {
                 onChange={(e) => updateRule(selectedDay, { notes: e.target.value })}
               />
             </label>
+
+            {/* Custom Fields Section */}
+            <div className="md:col-span-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">{t("adminSchedule.customFields.title", "Custom Fields")}</div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={createCustomField}
+                  className="text-xs"
+                >
+                  <Icon name="Plus" className="h-3 w-3 mr-1" />
+                  {t("adminSchedule.customFields.add", "Add Field")}
+                </Button>
+              </div>
+              
+              {selectedRule?.customFields && selectedRule.customFields.length > 0 && (
+                <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                  {selectedRule.customFields.map((field) => (
+                    <div key={field.id} className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <label className="space-y-1">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                          </div>
+                          {field.type === "textarea" ? (
+                            <textarea
+                              className="w-full rounded-md border p-2 text-sm resize-none"
+                              rows={2}
+                              placeholder={field.placeholder}
+                              value={String(field.value)}
+                              onChange={(e) => updateCustomFieldValue(field.id, e.target.value)}
+                            />
+                          ) : (
+                            <input
+                              type={field.type}
+                              className="h-8 w-full rounded-md border px-2 text-sm"
+                              placeholder={field.placeholder}
+                              value={String(field.value)}
+                              min={field.min}
+                              max={field.max}
+                              onChange={(e) => {
+                                const value = field.type === "number" ? Number(e.target.value) : e.target.value;
+                                updateCustomFieldValue(field.id, value);
+                              }}
+                            />
+                          )}
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editCustomField(field)}
+                          className="h-6 w-6 p-0"
+                          title={t("adminSchedule.customFields.edit", "Edit field")}
+                        >
+                          <Icon name="Pencil" className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteCustomField(field.id)}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                          title={t("adminSchedule.customFields.delete", "Delete field")}
+                        >
+                          <Icon name="Trash2" className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {(!selectedRule?.customFields || selectedRule.customFields.length === 0) && (
+                <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-lg">
+                  {t("adminSchedule.customFields.empty", "No custom fields added yet")}
+                </div>
+              )}
+            </div>
 
             <div className="md:col-span-2 flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={() => applyToDays(DAYS)}>
@@ -892,6 +1238,320 @@ export default function AdminSchedulePage() {
           </div>
         </div>
       </div>
+
+      {/* User Selection Modal */}
+      <Dialog open={modalUserSelect.open} onOpenChange={(open) => !open && setModalUserSelect({ open: false })}>
+        <DialogContent 
+          className="max-w-2xl max-h-[75vh] bg-background border border-border rounded-2xl m-auto shadow-2xl flex flex-col p-0" 
+          hideOverlay
+          role="dialog"
+          aria-labelledby="user-select-title"
+          aria-describedby="user-select-description"
+        >
+          {/* Header - Fixed */}
+          <div className="px-6 py-4 border-b border-border shrink-0">
+            <DialogTitle id="user-select-title" className="text-lg font-semibold">
+              {t("adminSchedule.userSelect.title", "Select Members")}
+            </DialogTitle>
+            <p id="user-select-description" className="text-sm text-muted-foreground mt-1">
+              {t("adminSchedule.userSelect.subtitle", "Select members who will receive this custom schedule")}
+            </p>
+          </div>
+          
+          {/* Content - Scrollable */}
+          <div className="flex flex-col flex-1 min-h-0 px-6 py-4 gap-4">
+            {/* Search Input - Fixed */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="relative flex-1">
+                <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                <Input
+                  type="text"
+                  placeholder={t("adminSchedule.userSelect.searchPlaceholder", "Search member names...")}
+                  value={searchMember}
+                  onChange={(e) => setSearchMember(e.target.value)}
+                  className="pl-10 focus:ring-2 focus:ring-primary focus:border-primary"
+                  aria-label={t("adminSchedule.userSelect.searchLabel", "Search members by name")}
+                />
+              </div>
+              {searchMember && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchMember("")}
+                  className="shrink-0"
+                  title={t("adminSchedule.userSelect.clearSearch", "Clear search")}
+                  aria-label={t("adminSchedule.userSelect.clearSearch", "Clear search")}
+                >
+                  <Icon name="X" className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Selected Count - Fixed */}
+            <div className="flex items-center justify-between text-sm shrink-0">
+              <span className="text-muted-foreground">
+                {t("adminSchedule.userSelect.selectedCount", "{count} members selected", { count: selectedMembers.size })}
+              </span>
+              <div className="flex items-center gap-2 overflow-x-auto">
+                {filteredMembers.length > 0 && selectedMembers.size < filteredMembers.length && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allIds = new Set([...selectedMembers, ...filteredMembers.map(m => String(m.id))]);
+                      setSelectedMembers(allIds);
+                    }}
+                    className="whitespace-nowrap"
+                    title={t("adminSchedule.userSelect.selectAllTooltip", "Select all displayed members")}
+                    aria-label={t("adminSchedule.userSelect.selectAllTooltip", "Select all displayed members")}
+                  >
+                    {t("adminSchedule.userSelect.selectAll", "Select All")}
+                  </Button>
+                )}
+                {selectedMembers.size > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedMembers(new Set())}
+                    className="whitespace-nowrap"
+                    title={t("adminSchedule.userSelect.clearAllTooltip", "Clear all member selections")}
+                    aria-label={t("adminSchedule.userSelect.clearAllTooltip", "Clear all member selections")}
+                  >
+                    {t("adminSchedule.userSelect.clearAll", "Clear All")}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Members List - Scrollable */}
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto border rounded-lg">
+              {loadingMembers ? (
+                <div className="flex items-center justify-center p-8 min-h-[200px]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-sm text-muted-foreground">
+                      {t("adminSchedule.userSelect.loading", "Loading member data...")}
+                    </span>
+                  </div>
+                </div>
+              ) : filteredMembers.length === 0 ? (
+                <div className="flex items-center justify-center p-8 min-h-[200px]">
+                  <div className="text-center">
+                    <Icon name="Users" className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      {searchMember 
+                        ? t("adminSchedule.userSelect.noResults", "No results found for this search")
+                        : t("adminSchedule.userSelect.noMembers", "No member data available")
+                      }
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="divide-y min-w-full">
+                  {filteredMembers.map((member) => {
+                    const memberId = String(member.id);
+                    const isSelected = selectedMembers.has(memberId);
+                    
+                    return (
+                      <div
+                        key={member.id}
+                        className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors min-w-0 ${
+                          isSelected ? 'bg-orange-50 border-l-2 border-l-orange-500 dark:bg-orange-900/10 dark:border-l-orange-400' : ''
+                        }`}
+                        onClick={() => toggleMemberSelection(memberId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleMemberSelection(memberId)}
+                          className="h-4 w-4 rounded shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={t("adminSchedule.userSelect.selectMember", "Select member {name}", { name: member.label })}
+                        />
+                        
+                        {/* Member Avatar */}
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {member.photo_url || member.photo_path ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={member.photo_url || member.photo_path}
+                              alt={member.label}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <Icon name="User" className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        
+                        {/* Member Info */}
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="font-medium text-sm truncate">{member.label}</div>
+                          {member.person_id && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {t("adminSchedule.userSelect.memberId", "ID")}: {member.person_id}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {isSelected && (
+                          <Icon name="Check" className="h-4 w-4 text-orange-500 shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer - Sticky */}
+          <div className="px-6 py-4 border-t border-border bg-muted/20 shrink-0 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setModalUserSelect({ open: false })}
+                aria-label={t("adminSchedule.userSelect.cancelAction", "Cancel member selection")}
+              >
+                {t("common.cancel", "Cancel")}
+              </Button>
+              <Button
+                onClick={applySelectedMembers}
+                disabled={selectedMembers.size === 0}
+                aria-label={t("adminSchedule.userSelect.applyAction", "Apply selection of {count} members", { count: selectedMembers.size })}
+              >
+                {t("adminSchedule.userSelect.apply", "Apply ({count})", { count: selectedMembers.size })}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Field Modal */}
+      <Dialog open={modalCustomField.open} onOpenChange={(open) => !open && setModalCustomField({ open: false, field: null, isEdit: false })}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-auto bg-background border border-border rounded-2xl m-auto shadow-2xl" hideOverlay>
+          <DialogHeader>
+            <DialogTitle>
+              {modalCustomField.isEdit 
+                ? t("adminSchedule.customFields.editTitle", "Edit Custom Field")
+                : t("adminSchedule.customFields.createTitle", "Create Custom Field")
+              }
+            </DialogTitle>
+          </DialogHeader>
+          
+          {modalCustomField.field && (
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <Label className="text-sm font-semibold">{t("adminSchedule.customFields.fieldLabel", "Field Label")}</Label>
+                <Input
+                  value={modalCustomField.field.label}
+                  onChange={(e) => setModalCustomField(prev => ({
+                    ...prev,
+                    field: prev.field ? { ...prev.field, label: e.target.value } : null
+                  }))}
+                  placeholder={t("adminSchedule.customFields.labelPlaceholder", "Enter field label")}
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <Label className="text-sm font-semibold">{t("adminSchedule.customFields.fieldType", "Field Type")}</Label>
+                <select
+                  className="h-9 w-full rounded-md border px-3 text-sm"
+                  value={modalCustomField.field.type}
+                  onChange={(e) => setModalCustomField(prev => ({
+                    ...prev,
+                    field: prev.field ? { 
+                      ...prev.field, 
+                      type: e.target.value as CustomField["type"],
+                      value: e.target.value === "number" ? 0 : ""
+                    } : null
+                  }))}
+                >
+                  <option value="text">{t("adminSchedule.customFields.types.text", "Text")}</option>
+                  <option value="number">{t("adminSchedule.customFields.types.number", "Number")}</option>
+                  <option value="time">{t("adminSchedule.customFields.types.time", "Time")}</option>
+                  <option value="textarea">{t("adminSchedule.customFields.types.textarea", "Textarea")}</option>
+                </select>
+              </div>
+              
+              <div className="space-y-1">
+                <Label className="text-sm font-semibold">{t("adminSchedule.customFields.placeholder", "Placeholder")}</Label>
+                <Input
+                  value={modalCustomField.field.placeholder || ""}
+                  onChange={(e) => setModalCustomField(prev => ({
+                    ...prev,
+                    field: prev.field ? { ...prev.field, placeholder: e.target.value } : null
+                  }))}
+                  placeholder={t("adminSchedule.customFields.placeholderPlaceholder", "Enter placeholder text")}
+                />
+              </div>
+              
+              {modalCustomField.field.type === "number" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold">{t("adminSchedule.customFields.min", "Min Value")}</Label>
+                    <Input
+                      type="number"
+                      value={modalCustomField.field.min || ""}
+                      onChange={(e) => setModalCustomField(prev => ({
+                        ...prev,
+                        field: prev.field ? { ...prev.field, min: Number(e.target.value) } : null
+                      }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold">{t("adminSchedule.customFields.max", "Max Value")}</Label>
+                    <Input
+                      type="number"
+                      value={modalCustomField.field.max || ""}
+                      onChange={(e) => setModalCustomField(prev => ({
+                        ...prev,
+                        field: prev.field ? { ...prev.field, max: Number(e.target.value) } : null
+                      }))}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="required"
+                  checked={modalCustomField.field.required || false}
+                  onChange={(e) => setModalCustomField(prev => ({
+                    ...prev,
+                    field: prev.field ? { ...prev.field, required: e.target.checked } : null
+                  }))}
+                  className="h-4 w-4 rounded"
+                />
+                <Label htmlFor="required" className="text-sm">
+                  {t("adminSchedule.customFields.required", "Required field")}
+                </Label>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setModalCustomField({ open: false, field: null, isEdit: false })}
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                if (modalCustomField.field && modalCustomField.field.label.trim()) {
+                  saveCustomField(modalCustomField.field);
+                } else {
+                  toast.error(t("adminSchedule.customFields.validation.labelRequired", "Field label is required"));
+                }
+              }}
+              disabled={!modalCustomField.field?.label.trim()}
+            >
+              {t("common.save", "Save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

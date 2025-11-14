@@ -68,6 +68,9 @@
       "show": "Show",
       "select": "Select ad"
     },
+    "selectAll": "Select all",
+    "selected": "{count} item selected",
+    "totalItems": "{total} ads",
     "table": {
       "preview": "Preview",
       "fileName": "File Name",
@@ -1527,6 +1530,8 @@
       "replacePhoto": "Replace photo",
       "delete": "Delete"
     },
+    "selectAll": "Select all",
+    "selected": "{count} items selected",
     "search": {
       "placeholder": "Search labels…"
     },
