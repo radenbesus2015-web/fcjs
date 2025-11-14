@@ -1595,9 +1595,9 @@
         "cancel": "Cancel"
       },
       "deleteMultiple": {
-        "title": "Delete Multiple Members",
+        "title": "Delete Members",
         "desc": "Are you sure you want to delete {count} selected members?",
-        "confirm": "Delete All",
+        "confirm": "Delete",
         "cancel": "Cancel"
       }
     },

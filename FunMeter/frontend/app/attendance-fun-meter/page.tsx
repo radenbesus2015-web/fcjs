@@ -9,7 +9,7 @@ interface AdMedia {
   type: 'image' | 'video';
 }
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
@@ -20,6 +20,140 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/common/Icon";
 import { fetchActiveAdvertisements } from "@/lib/supabase-advertisements";
 import { ClientOnly } from "@/components/providers/ClientOnly";
+
+// Lazy Cache Implementation
+class LazyCache<T> {
+  private cache = new Map<string, { data: T; timestamp: number; ttl: number }>();
+  private maxSize: number;
+  private defaultTTL: number;
+
+  constructor(maxSize = 100, defaultTTL = 5 * 60 * 1000) { // 5 minutes default TTL
+    this.maxSize = maxSize;
+    this.defaultTTL = defaultTTL;
+  }
+
+  set(key: string, data: T, ttl?: number): void {
+    // Remove oldest entries if cache is full
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) this.cache.delete(oldestKey);
+    }
+
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl: ttl || this.defaultTTL
+    });
+  }
+
+  get(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    // Check if entry has expired
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  has(key: string): boolean {
+    return this.get(key) !== null;
+  }
+
+  delete(key: string): boolean {
+    return this.cache.delete(key);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+
+  // Get or set with lazy loading
+  async getOrSet(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
+    const cached = this.get(key);
+    if (cached !== null) {
+      return cached;
+    }
+
+    const data = await factory();
+    this.set(key, data, ttl);
+    return data;
+  }
+}
+
+// Cache instances for different data types
+const adMediaCache = new LazyCache<AdMedia[]>(10, 10 * 60 * 1000); // 10 minutes for ads
+const attendanceResultsCache = new LazyCache<AttendanceResult[]>(50, 30 * 1000); // 30 seconds for attendance
+const emotionResultsCache = new LazyCache<EmotionResult[]>(50, 15 * 1000); // 15 seconds for emotions
+const videoFrameCache = new LazyCache<Uint8Array>(20, 5 * 1000); // 5 seconds for video frames
+const settingsCache = new LazyCache<Record<string, unknown>>(20, 60 * 1000); // 1 minute for settings
+const videoLoadCache = new LazyCache<boolean>(50, 5 * 60 * 1000); // 5 minutes for video load status
+
+// Debounce utility for performance optimization
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Throttle utility for frame processing
+function useThrottle<T extends (...args: unknown[]) => unknown>(
+  callback: T,
+  delay: number
+): T {
+  const lastRun = useRef(Date.now());
+
+  return useCallback(
+    ((...args) => {
+      if (Date.now() - lastRun.current >= delay) {
+        callback(...args);
+        lastRun.current = Date.now();
+      }
+    }) as T,
+    [callback, delay]
+  );
+}
+
+// Memoized computation hook
+function useMemoizedComputation<T>(
+  computation: () => T,
+  deps: React.DependencyList,
+  cacheKey?: string
+): T {
+  return useMemo(() => {
+    if (cacheKey) {
+      const cached = settingsCache.get(cacheKey);
+      if (cached !== null) {
+        return cached as T;
+      }
+    }
+
+    const result = computation();
+    
+    if (cacheKey) {
+      settingsCache.set(cacheKey, result as Record<string, unknown>);
+    }
+
+    return result;
+  }, deps);
+}
 
 interface AttendanceFunResult {
   // Attendance data
@@ -82,72 +216,79 @@ interface LastAttResults {
 }
 
 function AttendanceFunMeterPageContent() {
-  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([
-    // Default ads untuk testing - akan di-replace oleh backend data
-    {
-      src: 'https://via.placeholder.com/600x400/FF6B6B/FFFFFF?text=Test+Ad+1',
-      type: 'image'
-    },
-    {
-      src: 'https://via.placeholder.com/600x400/4ECDC4/FFFFFF?text=Test+Ad+2', 
-      type: 'image'
-    }
-  ]);
+  const [adMediaList, setAdMediaList] = useState<AdMedia[]>([]);
+  
+  // Cache-aware state management
+  const [cacheStats, setCacheStats] = useState({
+    adMediaHits: 0,
+    attendanceHits: 0,
+    emotionHits: 0,
+    frameHits: 0,
+    totalRequests: 0
+  });
 
+  // Debounced values for performance
+  const debouncedAdIndex = useDebounce(0, 100);
+  
+  // Cache statistics updater
+  const updateCacheStats = useCallback((type: keyof typeof cacheStats) => {
+    setCacheStats(prev => ({
+      ...prev,
+      [type]: prev[type] + 1,
+      totalRequests: prev.totalRequests + 1
+    }));
+  }, []);
+
+  // Cached advertisement loading with lazy cache
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    
+    const loadAdsWithCache = async () => {
       try {
-        console.log('[ADS] Loading advertisements from backend...');
-        // Load active advertisements from backend API
-        const data = await fetchActiveAdvertisements();
-        console.log('[ADS] Raw data from backend:', data);
+        const cacheKey = 'active-advertisements';
         
-        if (cancelled) return;
-        
-        // Convert backend Advertisement to AdMedia
-        const list: AdMedia[] = data
-          .filter((ad) => ad.enabled) // Only enabled ads
-          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)) // Sort by display_order
-          .map((ad) => ({
-            src: ad.src,
-            type: ad.type as 'image' | 'video',
-          }));
-        
-        console.log('[ADS] Processed ad list:', list);
-        console.log('[ADS] Number of enabled ads:', list.length);
+        // Try to get from cache first
+        const cachedAds = adMediaCache.get(cacheKey);
+        if (cachedAds && !cancelled) {
+          console.log('[ADS CACHE] Using cached advertisements');
+          setAdMediaList(cachedAds);
+          updateCacheStats('adMediaHits');
+          return;
+        }
+
+        // Load from backend API with cache
+        const data = await adMediaCache.getOrSet(
+          cacheKey,
+          async () => {
+            console.log('[ADS CACHE] Loading fresh advertisements from API');
+            const apiData = await fetchActiveAdvertisements();
+            
+            // Convert backend Advertisement to AdMedia
+            return apiData
+              .filter((ad) => ad.enabled) // Only enabled ads
+              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)) // Sort by display_order
+              .map((ad) => ({
+                src: ad.src,
+                type: ad.type as 'image' | 'video',
+              }));
+          },
+          10 * 60 * 1000 // 10 minutes TTL
+        );
         
         if (!cancelled) {
-          // Hanya update jika ada ads dari backend, otherwise keep default ads
-          if (list.length > 0) {
-            setAdMediaList(list);
-            console.log('[ADS] Updated with backend ads');
-          } else {
-            console.log('[ADS] No enabled ads from backend, keeping default ads');
-          }
+          setAdMediaList(data);
         }
       } catch (e) {
-        console.warn('[ADS] Failed to load ads from backend, using fallback ads', e);
+        console.warn('[ADS CACHE] Failed to load ads from backend, using defaults', e);
         if (!cancelled) {
-          // Fallback: set default ads untuk testing
-          const fallbackAds: AdMedia[] = [
-            {
-              src: 'https://via.placeholder.com/600x400/FF6B6B/FFFFFF?text=Sample+Ad+1',
-              type: 'image'
-            },
-            {
-              src: 'https://via.placeholder.com/600x400/4ECDC4/FFFFFF?text=Sample+Ad+2', 
-              type: 'image'
-            }
-          ];
-          console.log('[ADS] Using fallback ads:', fallbackAds);
-          setAdMediaList(fallbackAds);
+          setAdMediaList([]);
         }
       }
     };
-    load();
+    
+    loadAdsWithCache();
     return () => { cancelled = true; };
-  }, []);
+  }, [updateCacheStats]);
   const { t, locale } = useI18n();
   const { useSetting } = useSettings();
   const router = useRouter();
@@ -187,6 +328,17 @@ function AttendanceFunMeterPageContent() {
   const [sendingAtt, setSendingAtt] = useState(false);
   const [attendanceResults, setAttendanceResults] = useState<AttendanceResult[]>([]);
   const [emotionResults, setEmotionResults] = useState<EmotionResult[]>([]);
+  
+  // Cached results with memoization
+  const cachedAttendanceResults = useMemo(() => {
+    const cacheKey = `attendance-${Date.now()}`;
+    return attendanceResultsCache.get(cacheKey) || attendanceResults;
+  }, [attendanceResults]);
+  
+  const cachedEmotionResults = useMemo(() => {
+    const cacheKey = `emotions-${Date.now()}`;
+    return emotionResultsCache.get(cacheKey) || emotionResults;
+  }, [emotionResults]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastAttPush, setLastAttPush] = useState(0);
   const [lastAttResults, setLastAttResults] = useState<LastAttResults>({ t: 0, results: [] });
@@ -196,7 +348,7 @@ function AttendanceFunMeterPageContent() {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const DPRRef = useRef(1);
 
-  // Settings
+  // Cached Settings with memoization
   const { model: baseInterval } = useSetting("baseInterval", { clamp: { max: 5000, round: true } });
   const { model: attSendWidth } = useSetting("attendance.sendWidth", { 
     clamp: { min: 160, max: 1920, round: true } 
@@ -206,6 +358,19 @@ function AttendanceFunMeterPageContent() {
   });
   const { model: jpegQuality } = useSetting("attendance.jpegQuality", { clamp: { min: 0, max: 1 } });
   const { model: funIntervalMs } = useSetting("funMeter.funIntervalMs", { clamp: { min: 100, max: 2000, round: true } });
+  
+  // Memoized settings for performance
+  const memoizedSettings = useMemoizedComputation(
+    () => ({
+      baseInterval: Number(baseInterval),
+      attSendWidth: Number(attSendWidth),
+      funSendWidth: Number(funSendWidth),
+      jpegQuality: Number(jpegQuality),
+      funIntervalMs: Number(funIntervalMs)
+    }),
+    [baseInterval, attSendWidth, funSendWidth, jpegQuality, funIntervalMs],
+    'app-settings'
+  );
 
   // WebSocket connection
   const socket = useWs({
@@ -224,6 +389,12 @@ function AttendanceFunMeterPageContent() {
         const data = args[0] as AttResultData;
         const results = Array.isArray(data?.results) ? data.results : [];
         console.log("[ATT_RESULT] Received:", { results, marked: data?.marked, marked_info: data?.marked_info });
+        
+        // Cache attendance results
+        const cacheKey = `att-result-${Date.now()}`;
+        attendanceResultsCache.set(cacheKey, results, 30 * 1000); // 30 seconds TTL
+        updateCacheStats('attendanceHits');
+        
         setAttendanceResults(results);
         setLastAttResults({ t: Date.now(), results });
         
@@ -311,6 +482,12 @@ function AttendanceFunMeterPageContent() {
         const data = args[0] as FunResultData;
         const results = Array.isArray(data?.results) ? data.results : [];
         console.log("[FUN_RESULT] Received", results.length, "emotion results:", results);
+        
+        // Cache emotion results
+        const cacheKey = `emotion-result-${Date.now()}`;
+        emotionResultsCache.set(cacheKey, results, 15 * 1000); // 15 seconds TTL
+        updateCacheStats('emotionHits');
+        
         setEmotionResults(results);
         drawFun(results);
       },
@@ -371,19 +548,32 @@ function AttendanceFunMeterPageContent() {
   };
   
   
-  const ensureSnapSize = () => {
+  // Memoized snap size calculation
+  const ensureSnapSize = useCallback(() => {
     const v = videoRef.current;
     if (!v) return false;
+    
     const vw = v.videoWidth, vh = v.videoHeight;
     if (!vw || !vh) return false;
-    sendHeightRef.current = Math.round((Number(funSendWidth) * vh) / vw);
-    if (!snapCanvasRef.current) {
-      snapCanvasRef.current = document.createElement("canvas");
+    
+    const newHeight = Math.round((memoizedSettings.funSendWidth * vh) / vw);
+    
+    // Only update if dimensions changed
+    if (sendHeightRef.current !== newHeight) {
+      sendHeightRef.current = newHeight;
+      
+      if (!snapCanvasRef.current) {
+        snapCanvasRef.current = document.createElement("canvas");
+      }
+      
+      snapCanvasRef.current.width = memoizedSettings.funSendWidth;
+      snapCanvasRef.current.height = newHeight;
+      
+      console.log('[SNAP_SIZE] Updated canvas size:', memoizedSettings.funSendWidth, 'x', newHeight);
     }
-    snapCanvasRef.current.width = Number(funSendWidth);
-    snapCanvasRef.current.height = sendHeightRef.current;
+    
     return true;
-  };
+  }, [memoizedSettings.funSendWidth]);
   
   const getLetterboxTransform = () => {
     const overlay = overlayRef.current;
@@ -546,86 +736,118 @@ function AttendanceFunMeterPageContent() {
     const now = Date.now();
     if (missingName && now - lastAttPush > 400) {
       pushAttFrame();
-    } else if (now - lastAttPush > Number(baseInterval)) {
+    } else if (now - lastAttPush > memoizedSettings.baseInterval) {
       pushAttFrame();
     }
   };
   
-  // Frame encoding and sending
-  const toBytes = async () => {
+  // Cached frame encoding and sending
+  const toBytes = useCallback(async (): Promise<Uint8Array | null> => {
     if (!snapCanvasRef.current) return null;
+    
     const canvas = snapCanvasRef.current;
-    const preferWebP = !!document.createElement("canvas").toDataURL("image/webp").match("data:image/webp");
-    const type = preferWebP ? "image/webp" : "image/jpeg";
-    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, type, Number(jpegQuality)));
-    if (!blob) return null;
-    return new Uint8Array(await blob.arrayBuffer());
-  };
-  
-  const pushFunFrame = useCallback(async () => {
-    if (!socket) {
-      console.log("[PUSH_FUN_FRAME] No socket");
-      return;
-    }
-    if (!socket.socket?.connected) {
-      console.log("[PUSH_FUN_FRAME] Socket not connected");
-      return;
-    }
-    if (sendingFun) {
-      console.log("[PUSH_FUN_FRAME] Already sending");
-      return;
-    }
-    if (!ensureSnapSize()) {
-      console.log("[PUSH_FUN_FRAME] Cannot ensure snap size");
-      return;
+    const frameKey = `frame-${canvas.width}x${canvas.height}-${Date.now()}`;
+    
+    // Check cache first
+    const cachedFrame = videoFrameCache.get(frameKey);
+    if (cachedFrame) {
+      console.log('[FRAME CACHE] Using cached frame');
+      updateCacheStats('frameHits');
+      return cachedFrame;
     }
     
-    setSendingFun(true);
-    try {
-      const snapCanvas = snapCanvasRef.current;
-      const video = videoRef.current;
-      if (!snapCanvas || !video) {
-        console.log("[PUSH_FUN_FRAME] Missing canvas or video");
-        return;
-      }
-      const sctx = snapCanvas.getContext("2d");
-      if (!sctx) {
-        console.log("[PUSH_FUN_FRAME] Cannot get canvas context");
-        return;
-      }
-      sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
-      const bytes = await toBytes();
-      if (bytes && socket) {
-        console.log("[PUSH_FUN_FRAME] Sending frame, size:", bytes.length);
-        socket.emit("fun_frame", bytes);
-      }
-    } catch (error) {
-      console.error("[PUSH_FUN_FRAME] Error:", error);
-    } finally {
-      setSendingFun(false);
-    }
-  }, [socket, sendingFun]);
+    const preferWebP = !!document.createElement("canvas").toDataURL("image/webp").match("data:image/webp");
+    const type = preferWebP ? "image/webp" : "image/jpeg";
+    const blob = await new Promise<Blob | null>((res) => 
+      canvas.toBlob(res, type, memoizedSettings.jpegQuality)
+    );
+    
+    if (!blob) return null;
+    
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    
+    // Cache the frame
+    videoFrameCache.set(frameKey, bytes, 5 * 1000); // 5 seconds TTL
+    
+    return bytes;
+  }, [memoizedSettings.jpegQuality, updateCacheStats]);
   
-  const pushAttFrame = async () => {
+  // Throttled frame pushing with cache
+  const pushFunFrame = useThrottle(
+    useCallback(async () => {
+      if (!socket) {
+        console.log("[PUSH_FUN_FRAME] No socket");
+        return;
+      }
+      if (!socket.socket?.connected) {
+        console.log("[PUSH_FUN_FRAME] Socket not connected");
+        return;
+      }
+      if (sendingFun) {
+        console.log("[PUSH_FUN_FRAME] Already sending");
+        return;
+      }
+      if (!ensureSnapSize()) {
+        console.log("[PUSH_FUN_FRAME] Cannot ensure snap size");
+        return;
+      }
+      
+      setSendingFun(true);
+      try {
+        const snapCanvas = snapCanvasRef.current;
+        const video = videoRef.current;
+        if (!snapCanvas || !video) {
+          console.log("[PUSH_FUN_FRAME] Missing canvas or video");
+          return;
+        }
+        
+        const sctx = snapCanvas.getContext("2d");
+        if (!sctx) {
+          console.log("[PUSH_FUN_FRAME] Cannot get canvas context");
+          return;
+        }
+        
+        sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+        const bytes = await toBytes();
+        
+        if (bytes && socket) {
+          console.log("[PUSH_FUN_FRAME] Sending cached frame, size:", bytes.length);
+          socket.emit("fun_frame", bytes);
+        }
+      } catch (error) {
+        console.error("[PUSH_FUN_FRAME] Error:", error);
+      } finally {
+        setSendingFun(false);
+      }
+    }, [socket, sendingFun, toBytes]),
+    memoizedSettings.funIntervalMs / 2 // Throttle at half the interval
+  );
+  
+  // Cached attendance frame pushing
+  const pushAttFrame = useCallback(async () => {
     if (!socket || !socket.socket?.connected || sendingAtt || !ensureSnapSize()) return;
+    
     setSendingAtt(true);
     try {
       const snapCanvas = snapCanvasRef.current;
       const video = videoRef.current;
       if (!snapCanvas || !video) return;
+      
       const sctx = snapCanvas.getContext("2d");
       if (!sctx) return;
+      
       sctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
       const bytes = await toBytes();
+      
       if (bytes && socket) {
-        console.log("[PUSH_ATT_FRAME] Sending frame, size:", bytes.length); // DEBUG LOG
+        console.log("[PUSH_ATT_FRAME] Sending cached frame, size:", bytes.length);
         socket.emit("att_frame", bytes);
         setLastAttPush(Date.now());
       }
     } finally {
       setSendingAtt(false);
     }
-  };
+  }, [socket, sendingAtt, toBytes]);
 
   // Camera functions (direct implementation like Vue original)
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -638,42 +860,136 @@ function AttendanceFunMeterPageContent() {
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [repeatCount, setRepeatCount] = useState(3); // Jumlah repeat iklan ke kanan dan kiri (total = 1 center + 3 kiri + 3 kanan = 7)
 
-  // Optimized preload: hanya preload current dan next ad
+  // Optimized preload with cache: hanya preload current dan next ad
   const preloadedVideos = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const preloadCache = useRef<Map<string, boolean>>(new Map());
   
+  // Aggressive video preloading with immediate loading
   useEffect(() => {
     const currentAd = adMediaList[currentAdIndex];
     const nextIndex = (currentAdIndex + 1) % adMediaList.length;
     const nextAd = adMediaList[nextIndex];
+    const prevIndex = currentAdIndex > 0 ? currentAdIndex - 1 : adMediaList.length - 1;
+    const prevAd = adMediaList[prevIndex];
     
-    // Preload current ad
-    if (currentAd && currentAd.type === 'video' && !preloadedVideos.current.has(currentAd.src)) {
+    const preloadVideo = async (ad: AdMedia, priority: 'high' | 'medium' | 'low' = 'medium') => {
+      if (ad.type !== 'video' || preloadCache.current.has(ad.src)) {
+        // If already cached, ensure it's ready
+        const existingVideo = preloadedVideos.current.get(ad.src);
+        if (existingVideo && existingVideo.readyState < 3) {
+          console.log('[VIDEO CACHE] Ensuring video is ready:', ad.src);
+          existingVideo.load();
+        }
+        return;
+      }
+      
+      console.log(`[VIDEO CACHE] Preloading video (${priority}):`, ad.src);
+      preloadCache.current.set(ad.src, true);
+      
       const video = document.createElement('video');
-      video.src = currentAd.src;
-      video.preload = 'auto';
+      video.src = ad.src;
       video.muted = true;
       video.playsInline = true;
-      video.load();
-      preloadedVideos.current.set(currentAd.src, video);
+      video.crossOrigin = 'anonymous';
+      
+      // Aggressive preloading based on priority
+      if (priority === 'high') {
+        video.preload = 'auto';
+        // Force immediate loading for current video
+        video.load();
+        
+        // Wait for video to be ready
+        const loadPromise = new Promise<void>((resolve) => {
+          const checkReady = () => {
+            if (video.readyState >= 3) { // HAVE_FUTURE_DATA
+              console.log('[VIDEO CACHE] High priority video ready:', ad.src);
+              resolve();
+            } else {
+              setTimeout(checkReady, 100);
+            }
+          };
+          
+          video.addEventListener('canplay', () => resolve(), { once: true });
+          video.addEventListener('loadeddata', () => resolve(), { once: true });
+          checkReady();
+        });
+        
+        // Timeout after 10 seconds
+        Promise.race([
+          loadPromise,
+          new Promise(resolve => setTimeout(resolve, 10000))
+        ]).then(() => {
+          console.log('[VIDEO CACHE] High priority video load completed or timed out:', ad.src);
+        });
+      } else if (priority === 'medium') {
+        video.preload = 'metadata';
+        // Load metadata first, then full video after short delay
+        setTimeout(() => {
+          if (preloadCache.current.has(ad.src)) {
+            video.preload = 'auto';
+            video.load();
+          }
+        }, 1000);
+      } else {
+        video.preload = 'none';
+        // Only load on demand
+      }
+      
+      // Error handling
+      video.addEventListener('error', (e) => {
+        console.error('[VIDEO CACHE] Video load error:', ad.src, e);
+        preloadCache.current.delete(ad.src);
+        preloadedVideos.current.delete(ad.src);
+      });
+      
+      // Progress tracking
+      video.addEventListener('progress', () => {
+        if (video.buffered.length > 0) {
+          const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+          const duration = video.duration || 0;
+          if (duration > 0) {
+            const bufferedPercent = (bufferedEnd / duration) * 100;
+            console.log(`[VIDEO CACHE] Buffered ${bufferedPercent.toFixed(1)}% of ${ad.src}`);
+          }
+        }
+      });
+      
+      preloadedVideos.current.set(ad.src, video);
+      
+      // Extended cleanup time for better caching
+      setTimeout(() => {
+        if (preloadedVideos.current.has(ad.src) && !document.body.contains(video)) {
+          video.src = '';
+          preloadedVideos.current.delete(ad.src);
+          preloadCache.current.delete(ad.src);
+          console.log('[VIDEO CACHE] Cleaned up unused video:', ad.src);
+        }
+      }, 120000); // 2 minutes instead of 30 seconds
+    };
+    
+    // Preload with priorities: current (high), next (medium), previous (low)
+    if (currentAd) preloadVideo(currentAd, 'high');
+    if (nextAd && nextAd.src !== currentAd?.src) preloadVideo(nextAd, 'medium');
+    if (prevAd && prevAd.src !== currentAd?.src && prevAd.src !== nextAd?.src) {
+      preloadVideo(prevAd, 'low');
     }
     
-    // Preload next ad
-    if (nextAd && nextAd.type === 'video' && !preloadedVideos.current.has(nextAd.src)) {
-      const video = document.createElement('video');
-      video.src = nextAd.src;
-      video.preload = 'auto';
-      video.muted = true;
-      video.playsInline = true;
-      video.load();
-      preloadedVideos.current.set(nextAd.src, video);
-    }
+    // Preload all videos in background with low priority
+    adMediaList.forEach((ad, index) => {
+      if (ad.type === 'video' && 
+          index !== currentAdIndex && 
+          index !== nextIndex && 
+          index !== prevIndex) {
+        setTimeout(() => preloadVideo(ad, 'low'), 5000 + (index * 2000)); // Staggered loading
+      }
+    });
     
-    // Cleanup old preloaded videos (keep only current and next)
-    const keepSources = new Set([currentAd?.src, nextAd?.src]);
+    // Cleanup old preloaded videos (keep current, next, and previous)
+    const keepSources = new Set([currentAd?.src, nextAd?.src, prevAd?.src]);
     preloadedVideos.current.forEach((video, src) => {
       if (!keepSources.has(src)) {
-        video.src = '';
-        preloadedVideos.current.delete(src);
+        // Don't immediately remove, let timeout handle it for better caching
+        console.log('[VIDEO CACHE] Marking for cleanup:', src);
       }
     });
   }, [currentAdIndex, adMediaList]);
@@ -982,17 +1298,17 @@ function AttendanceFunMeterPageContent() {
     socket.on("connect", handleConnect);
     
     // Setup interval for sending fun frames
-    console.log("[WS_SETUP] Setting up fun frame interval:", funIntervalMs, "ms");
+    console.log("[WS_SETUP] Setting up fun frame interval:", memoizedSettings.funIntervalMs, "ms");
     const funInterval = setInterval(() => {
       pushFunFrame();
-    }, Number(funIntervalMs));
+    }, memoizedSettings.funIntervalMs);
     
     return () => {
       console.log("[WS_SETUP] Cleaning up");
       socket.off("connect", handleConnect);
       clearInterval(funInterval);
     };
-  }, [socket, funIntervalMs, pushFunFrame]);
+  }, [socket, memoizedSettings.funIntervalMs, pushFunFrame]);
 
     useEffect(() => {
     const handleKeyPress = (event : KeyboardEvent) => {
@@ -1021,11 +1337,31 @@ function AttendanceFunMeterPageContent() {
     return colors[emotion] || "text-gray-400";
   };
   
-  // Ad rotation logic: 5 detik untuk foto, auto-advance untuk video setelah selesai
+  // Optimized ad rotation with preloading
   const goToNextAd = useCallback(() => {
-    setCurrentAdIndex((prevIndex) => (prevIndex + 1) % Math.max(1, adMediaList.length));
-  }, [adMediaList.length]);
+    const nextIndex = (currentAdIndex + 1) % Math.max(1, adMediaList.length);
+    const nextAd = adMediaList[nextIndex];
+    
+    // Ensure next video is ready before switching
+    if (nextAd && nextAd.type === 'video') {
+      const preloadedVideo = preloadedVideos.current.get(nextAd.src);
+      if (preloadedVideo && preloadedVideo.readyState < 3) {
+        console.log('[AD ROTATION] Waiting for video to be ready:', nextAd.src);
+        // Force load if not ready
+        preloadedVideo.load();
+        
+        // Wait a bit for video to load before switching
+        setTimeout(() => {
+          setCurrentAdIndex(nextIndex);
+        }, 500);
+        return;
+      }
+    }
+    
+    setCurrentAdIndex(nextIndex);
+  }, [currentAdIndex, adMediaList]);
 
+  // Optimized ad timing with better video handling
   useEffect(() => {
     const currentAd = adMediaList[currentAdIndex];
     
@@ -1043,14 +1379,52 @@ function AttendanceFunMeterPageContent() {
         goToNextAd();
       }, 5000);
     } else if (currentAd.type === 'video') {
-      // Untuk video, hanya play center video (CSS akan handle clone visual)
+      // Untuk video, gunakan preloaded video jika tersedia
       const centerVideo = adVideoRef.current;
+      const preloadedVideo = preloadedVideos.current.get(currentAd.src);
+      
       if (centerVideo) {
-        centerVideo.currentTime = 0;
-        centerVideo.play().catch(() => {
-          // Retry sekali jika gagal
-          setTimeout(() => centerVideo.play().catch(() => {}), 100);
-        });
+        // Copy dari preloaded video jika tersedia dan ready
+        if (preloadedVideo && preloadedVideo.readyState >= 3) {
+          console.log('[AD VIDEO] Using preloaded video:', currentAd.src);
+          centerVideo.src = preloadedVideo.src;
+          centerVideo.currentTime = 0;
+          
+          // Play immediately since it's preloaded
+          centerVideo.play().catch((error) => {
+            console.error('[AD VIDEO] Play error:', error);
+            // Fallback: try to load and play
+            centerVideo.load();
+            setTimeout(() => {
+              centerVideo.play().catch(() => {
+                console.error('[AD VIDEO] Fallback play failed');
+              });
+            }, 500);
+          });
+        } else {
+          // Fallback to normal loading
+          console.log('[AD VIDEO] Fallback loading:', currentAd.src);
+          centerVideo.src = currentAd.src;
+          centerVideo.currentTime = 0;
+          centerVideo.load();
+          
+          // Wait for video to be ready before playing
+          const playWhenReady = () => {
+            if (centerVideo.readyState >= 3) {
+              centerVideo.play().catch(() => {
+                setTimeout(() => centerVideo.play().catch(() => {}), 100);
+              });
+            } else {
+              setTimeout(playWhenReady, 100);
+            }
+          };
+          
+          centerVideo.addEventListener('canplay', () => {
+            centerVideo.play().catch(() => {});
+          }, { once: true });
+          
+          playWhenReady();
+        }
       }
     }
     
@@ -1061,27 +1435,97 @@ function AttendanceFunMeterPageContent() {
     };
   }, [currentAdIndex, adMediaList, goToNextAd]);
 
-  // Preload next ad for seamless transition
+  // Enhanced preload for seamless transitions
   useEffect(() => {
     const nextIndex = adMediaList.length ? (currentAdIndex + 1) % adMediaList.length : 0;
     const nextAd = adMediaList[nextIndex];
     
     if (nextAd && nextAd.type === 'video') {
-      // Preload next video
-      const preloadVideo = document.createElement('video');
-      preloadVideo.src = nextAd.src;
-      preloadVideo.preload = 'auto';
-      preloadVideo.load();
-      
-      return () => {
-        preloadVideo.src = '';
-      };
+      // Ensure next video is aggressively preloaded
+      const existingVideo = preloadedVideos.current.get(nextAd.src);
+      if (!existingVideo) {
+        console.log('[SEAMLESS PRELOAD] Loading next video:', nextAd.src);
+        const preloadVideo = document.createElement('video');
+        preloadVideo.src = nextAd.src;
+        preloadVideo.preload = 'auto';
+        preloadVideo.muted = true;
+        preloadVideo.playsInline = true;
+        preloadVideo.crossOrigin = 'anonymous';
+        preloadVideo.load();
+        
+        preloadedVideos.current.set(nextAd.src, preloadVideo);
+        preloadCache.current.set(nextAd.src, true);
+        
+        return () => {
+          if (!preloadCache.current.has(nextAd.src)) {
+            preloadVideo.src = '';
+          }
+        };
+      } else if (existingVideo.readyState < 3) {
+        // Ensure existing video is fully loaded
+        console.log('[SEAMLESS PRELOAD] Ensuring next video is ready:', nextAd.src);
+        existingVideo.load();
+      }
     } else if (nextAd && nextAd.type === 'image') {
-      // Preload next image
-      const preloadImage = new window.Image();
-      preloadImage.src = nextAd.src;
+      // Preload next image with cache
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.src = nextAd.src;
+      
+      img.onload = () => {
+        console.log('[SEAMLESS PRELOAD] Image preloaded:', nextAd.src);
+      };
+      
+      img.onerror = () => {
+        console.error('[SEAMLESS PRELOAD] Image preload failed:', nextAd.src);
+      };
     }
-  }, [currentAdIndex]);
+  }, [currentAdIndex, adMediaList]);
+
+  // Cache cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('[CACHE CLEANUP] Clearing all caches on unmount');
+      adMediaCache.clear();
+      attendanceResultsCache.clear();
+      emotionResultsCache.clear();
+      videoFrameCache.clear();
+      settingsCache.clear();
+      
+      // Cleanup preloaded videos
+      preloadedVideos.current.forEach((video) => {
+        if (document.body.contains(video)) {
+          document.body.removeChild(video);
+        }
+        video.src = '';
+      });
+      preloadedVideos.current.clear();
+      preloadCache.current.clear();
+    };
+  }, []);
+  
+  // Cache statistics logging (development only)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const logInterval = setInterval(() => {
+        const hitRate = cacheStats.totalRequests > 0 
+          ? ((cacheStats.adMediaHits + cacheStats.attendanceHits + cacheStats.emotionHits + cacheStats.frameHits) / cacheStats.totalRequests * 100).toFixed(1)
+          : '0';
+        
+        console.log('[CACHE STATS]', {
+          hitRate: `${hitRate}%`,
+          adMedia: `${adMediaCache.size()}/${10}`,
+          attendance: `${attendanceResultsCache.size()}/${50}`,
+          emotions: `${emotionResultsCache.size()}/${50}`,
+          frames: `${videoFrameCache.size()}/${20}`,
+          settings: `${settingsCache.size()}/${20}`,
+          stats: cacheStats
+        });
+      }, 30000); // Log every 30 seconds
+      
+      return () => clearInterval(logInterval);
+    }
+  }, [cacheStats]);
 
   return (
     <>
@@ -1335,59 +1779,78 @@ function AttendanceFunMeterPageContent() {
           background: transparent !important;
         }
         
-        /* Footer with Ads Container - iklan dan footer dalam satu div */
-        .footer-with-ads-container {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: end;
-        }
-        
-        /* Advertisement positioning dalam footer container */
-        .ad-overlay-wrapper-footer {
-          position: relative;
-          width: 100%;
+        /* Advertisement positioning - tepat di atas footer */
+        /* Advertisement overlay wrapper positioning */
+        .ad-overlay-wrapper {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
           z-index: 30;
           display: flex;
           align-items: end;
           justify-content: center;
           pointer-events: none;
-          overflow: visible;
-          /* Positioning di atas footer banner dalam container yang sama */
-          margin-bottom: 10px;
-          order: 1;
-        }
-        
-        /* Footer banner positioning */
-        .banner-bottom-container {
-          position: relative;
-          width: 100%;
-          order: 2;
-        }
-        
-        /* Responsive positioning untuk different orientations */
-        @media (orientation: landscape) {
-          .ad-overlay-wrapper-footer {
-            margin-bottom: 15px;
-          }
+          overflow: hidden;
+          /* Padding dari bottom untuk memberikan space */
+          padding-bottom: 0px;
         }
         
         @media (orientation: portrait) {
-          .ad-overlay-wrapper-footer {
-            margin-bottom: 10px;
+          .ad-overlay-wrapper {
+            /* Di portrait, iklan lebih dekat ke footer */
+            padding-bottom: 0px;
           }
         }
         
-        /* Advertisement overlay responsive sizing dengan aspect ratio */
+        @media (orientation: landscape) {
+          .ad-overlay-wrapper {
+            /* Di landscape, iklan sedikit lebih tinggi */
+            padding-bottom: 0px;
+          }
+        }
+        
+        /* Mobile adjustments untuk ad wrapper */
+        @media (max-width: 768px) {
+          .ad-overlay-wrapper {
+            padding-bottom: 0px;
+          }
+        }
+        
+        /* Cache statistics display (development only) */
+        .cache-stats {
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 8px 12px;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 11px;
+          z-index: 9999;
+          display: none;
+        }
+        
+        .cache-stats.show {
+          display: block;
+        }
+        
+        @media (max-width: 768px) {
+          .cache-stats {
+            font-size: 9px;
+            padding: 6px 8px;
+          }
+        }
+        
+        /* Advertisement overlay responsive sizing - praktis dan responsif */
         .ad-overlay-container {
           position: relative;
           width: 280px;
           min-width: 280px;
-          /* Aspect ratio 4:3 untuk iklan (standar advertising) */
-          padding-top: 75%; /* 4:3 = 3/4 = 75% */
+          /* Height yang praktis berdasarkan viewport */
+          height: clamp(120px, 15vh, 200px);
+          max-height: 200px;
           /* Hardware acceleration untuk smooth rendering */
           will-change: transform;
           transform: translateZ(0);
@@ -1395,16 +1858,18 @@ function AttendanceFunMeterPageContent() {
           /* Ensure no white background */
           background: transparent !important;
           background-color: transparent !important;
+          /* Flex untuk centering content */
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         
-        /* Content positioning dalam aspect ratio container */
+        /* Content positioning dalam container */
         .ad-overlay-container > * {
-          position: absolute;
-          top: 0;
-          left: 0;
           width: 100%;
           height: 100%;
           object-fit: contain;
+          object-position: center;
         }
         
         /* Video optimization */
@@ -1426,80 +1891,107 @@ function AttendanceFunMeterPageContent() {
           background-color: transparent !important;
         }
         
-        /* Portrait mode - smaller ads dengan aspect ratio konsisten */
+        /* Portrait mode - smaller ads dengan height responsif */
         @media (orientation: portrait) {
           .ad-overlay-container {
-            width: 240px;
-            min-width: 240px;
-            padding-top: 75%; /* Maintain 4:3 aspect ratio */
+            width: 200px;
+            min-width: 200px;
+            height: clamp(100px, 12vh, 150px);
+            max-height: 150px;
           }
         }
         
-        /* Landscape mode - medium ads dengan aspect ratio konsisten */
+        /* Landscape mode - medium ads dengan height responsif */
         @media (orientation: landscape) {
           .ad-overlay-container {
-            width: 350px;
-            min-width: 350px;
-            padding-top: 75%; /* Maintain 4:3 aspect ratio */
+            width: 320px;
+            min-width: 320px;
+            height: clamp(120px, 15vh, 180px);
+            max-height: 180px;
           }
         }
         
         /* Large landscape screens */
         @media (orientation: landscape) and (min-width: 1024px) {
           .ad-overlay-container {
-            width: 450px;
-            min-width: 450px;
-            padding-top: 75%; /* Maintain 4:3 aspect ratio */
+            width: 400px;
+            min-width: 400px;
+            height: clamp(150px, 18vh, 220px);
+            max-height: 220px;
           }
         }
         
         /* Extra large screens */
         @media (min-width: 1920px) {
           .ad-overlay-container {
-            width: 600px;
-            min-width: 600px;
-            padding-top: 75%; /* Maintain 4:3 aspect ratio */
+            width: 500px;
+            min-width: 500px;
+            height: clamp(180px, 20vh, 280px);
+            max-height: 280px;
           }
         }
         
-        /* Alternative aspect ratios untuk different ad formats */
-        .ad-overlay-container.aspect-16-9 {
-          padding-top: 56.25%; /* 16:9 = 9/16 = 56.25% */
+        /* Alternative sizes untuk different ad formats */
+        .ad-overlay-container.compact {
+          height: clamp(80px, 10vh, 120px);
+          max-height: 120px;
         }
         
-        .ad-overlay-container.aspect-1-1 {
-          padding-top: 100%; /* 1:1 = 1/1 = 100% */
+        .ad-overlay-container.large {
+          height: clamp(200px, 25vh, 300px);
+          max-height: 300px;
         }
         
-        .ad-overlay-container.aspect-3-2 {
-          padding-top: 66.67%; /* 3:2 = 2/3 = 66.67% */
+        .ad-overlay-container.square {
+          width: clamp(150px, 15vh, 200px);
+          height: clamp(150px, 15vh, 200px);
+          max-width: 200px;
+          max-height: 200px;
         }
         
-        /* Dynamic aspect ratio berdasarkan content */
-        .ad-overlay-container.auto-aspect {
-          padding-top: 0;
+        /* Auto height untuk content yang tidak memerlukan fixed aspect ratio */
+        .ad-overlay-container.auto-height {
           height: auto;
+          min-height: 80px;
+          max-height: 250px;
         }
         
-        .ad-overlay-container.auto-aspect > * {
-          position: static;
+        .ad-overlay-container.auto-height > * {
           width: 100%;
           height: auto;
+          max-height: 100%;
         }
         
-        /* Fallback untuk browser yang tidak support aspect-ratio */
-        @supports not (aspect-ratio: 1) {
-          .video-container {
-            padding-top: 56.25%; /* 16:9 fallback */
-            height: 0;
+        /* Responsive adjustments untuk mobile devices */
+        @media (max-width: 480px) {
+          .ad-overlay-container {
+            width: 180px;
+            min-width: 180px;
+            height: clamp(80px, 10vh, 120px);
+            max-height: 120px;
+          }
+        }
+        
+        /* Very small screens */
+        @media (max-width: 360px) {
+          .ad-overlay-container {
+            width: 150px;
+            min-width: 150px;
+            height: clamp(70px, 8vh, 100px);
+            max-height: 100px;
+          }
+        }
+        
+        /* Fallback untuk browser yang tidak support clamp() */
+        @supports not (width: clamp(1px, 1vh, 1px)) {
+          .ad-overlay-container {
+            height: 150px;
           }
           
-          .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+          @media (orientation: portrait) {
+            .ad-overlay-container {
+              height: 120px;
+            }
           }
         }
 
@@ -1650,6 +2142,19 @@ function AttendanceFunMeterPageContent() {
           }
         }
       `}} />
+      
+      {/* Cache Statistics Display (Development Only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className={`cache-stats ${cacheStats.totalRequests > 0 ? 'show' : ''}`}>
+          <div>Cache Hit Rate: {cacheStats.totalRequests > 0 
+            ? ((cacheStats.adMediaHits + cacheStats.attendanceHits + cacheStats.emotionHits + cacheStats.frameHits) / cacheStats.totalRequests * 100).toFixed(1)
+            : '0'}%</div>
+          <div>Ads: {adMediaCache.size()}/10 | Att: {attendanceResultsCache.size()}/50</div>
+          <div>Emo: {emotionResultsCache.size()}/50 | Frames: {videoFrameCache.size()}/20</div>
+          <div>Settings: {settingsCache.size()}/20 | Total: {cacheStats.totalRequests}</div>
+        </div>
+      )}
+      
       <div className="page-root">
       {/* Header banner - Section 1 */}
       <section id="banner_top" className="relative w-screen overflow-hidden bg-[#006CBB]">
@@ -1679,20 +2184,9 @@ function AttendanceFunMeterPageContent() {
           />
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
           
-        </div>
-      </section>
-      
-      {/* Footer Section with Advertisement - Section 4 */}
-      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]">
-        <div className="footer-with-ads-container">
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
-          {(() => {
-            console.log('[ADS_RENDER] adMediaList:', adMediaList, 'currentAdIndex:', currentAdIndex, 'currentAd:', adMediaList[currentAdIndex]);
-            console.log('[ADS_RENDER] Condition check - length > 0:', adMediaList.length > 0, 'currentAd exists:', !!adMediaList[currentAdIndex]);
-            return null;
-          })()}
           {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
-          <div className="ad-overlay-wrapper-footer">
+          <div className="ad-overlay-wrapper">
             <div className="flex items-end gap-0">
               {/* Repeat ke kiri */}
               {Array.from({ length: repeatCount }).reverse().map((_, index) => (
@@ -1827,20 +2321,22 @@ function AttendanceFunMeterPageContent() {
             </div>
           </div>
           )}
-          
-          {/* Footer Banner */}
-          <div className="banner-bottom-container">
-            <div className="aspect-ratio-content">
-              <Image 
-                src="/assets/footer/footer.png" 
-                alt="Footer" 
-                fill
-                priority 
-                quality={100}
-                unoptimized={false}
-                className="object-contain select-none pointer-events-none"
-                sizes="100vw" />
-            </div>
+        </div>
+      </section>
+      
+      {/* Footer Section - Section 4 */}
+      <section id="banner_bottom" className="relative w-screen overflow-hidden bg-[#A3092E]">
+        <div className="banner-bottom-container">
+          <div className="aspect-ratio-content">
+            <Image 
+              src="/assets/footer/footer.png" 
+              alt="Footer" 
+              fill
+              priority 
+              quality={100}
+              unoptimized={false}
+              className="object-contain select-none pointer-events-none"
+              sizes="100vw" />
           </div>
         </div>
       </section>
@@ -1848,6 +2344,15 @@ function AttendanceFunMeterPageContent() {
     </>
   );
 }
+
+// Export cache instances for external access (optional)
+export { 
+  adMediaCache, 
+  attendanceResultsCache, 
+  emotionResultsCache, 
+  videoFrameCache, 
+  settingsCache 
+};
 
 export default function AttendanceFunMeterPage() {
   const { t, locale } = useI18n();
