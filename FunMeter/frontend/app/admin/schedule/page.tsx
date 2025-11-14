@@ -212,15 +212,46 @@ export default function AdminSchedulePage() {
     setRules((prev) =>
       prev.map((r) => {
         if (r.day !== day) return r;
+        const wasEnabled = r.enabled;
         const enabled = patch.enabled ?? r.enabled;
+        // Detect transition from disabled to enabled
+        const transitioningToEnabled = !wasEnabled && enabled;
+        
         const next: RuleItem = {
           ...r,
           ...patch,
           enabled,
-          check_in: enabled ? (patch.check_in !== undefined ? (TIME_RE.test(String(patch.check_in)) ? String(patch.check_in) : r.check_in || "08:30") : r.check_in) : "",
-          check_out: enabled ? (patch.check_out !== undefined ? (TIME_RE.test(String(patch.check_out)) ? String(patch.check_out) : r.check_out || "17:00") : r.check_out) : "",
-          grace_in_min: enabled ? clamp(Number(patch.grace_in_min ?? r.grace_in_min), 0, 240) : 0,
-          grace_out_min: enabled ? clamp(Number(patch.grace_out_min ?? r.grace_out_min), 0, 240) : 0,
+          // If transitioning to enabled and no explicit label provided, use default
+          label: patch.label !== undefined 
+            ? String(patch.label)
+            : (transitioningToEnabled ? t("adminSchedule.defaults.workdayLabel", "Normal Working Hours") : r.label),
+          // If transitioning to enabled and no explicit check_in provided, use default
+          check_in: enabled 
+            ? (patch.check_in !== undefined 
+                ? String(patch.check_in) // Always use the provided value, even if not yet valid (validation happens on blur)
+                : (transitioningToEnabled || !r.check_in ? "08:30" : r.check_in))
+            : "",
+          // If transitioning to enabled and no explicit check_out provided, use default
+          check_out: enabled 
+            ? (patch.check_out !== undefined 
+                ? String(patch.check_out) // Always use the provided value, even if not yet valid (validation happens on blur)
+                : (transitioningToEnabled || !r.check_out ? "17:00" : r.check_out))
+            : "",
+          // If transitioning to enabled and no explicit grace values provided, use defaults
+          grace_in_min: enabled 
+            ? (patch.grace_in_min !== undefined 
+                ? clamp(Number(patch.grace_in_min), 0, 240)
+                : (transitioningToEnabled ? gIn : clamp(Number(r.grace_in_min), 0, 240)))
+            : 0,
+          grace_out_min: enabled 
+            ? (patch.grace_out_min !== undefined 
+                ? clamp(Number(patch.grace_out_min), 0, 240)
+                : (transitioningToEnabled ? gOut : clamp(Number(r.grace_out_min), 0, 240)))
+            : 0,
+          // If transitioning to enabled and no explicit notes provided, clear notes
+          notes: patch.notes !== undefined 
+            ? String(patch.notes)
+            : (transitioningToEnabled ? "" : (r.notes || "")),
         };
         if (!enabled) {
           next.check_in = "";
@@ -1068,7 +1099,7 @@ export default function AdminSchedulePage() {
 
           {/* Form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="space-y-1">
+            <label className="space-y-1 md:col-span-2">
               <div className="text-sm font-medium">{t("adminSchedule.form.label", "Schedule Label")}</div>
               <input
                 className="h-9 w-full rounded-md border px-3 text-sm"
@@ -1076,26 +1107,25 @@ export default function AdminSchedulePage() {
                 onChange={(e) => updateRule(selectedDay, { label: e.target.value })}
               />
             </label>
-            <div />
 
             {/* Time and Grace Settings - Grouped together */}
             <div className="space-y-3 md:col-span-2">
               <div className="grid grid-cols-2 gap-3">
                 <label className="space-y-1">
                   <div className="text-sm font-medium">{t("adminSchedule.form.checkIn", "Check In")}</div>
-                  <input
-                    className="h-9 w-full rounded-md border px-3 text-sm"
-                    placeholder="08:30"
+                  <Input
+                    type="time"
                     value={selectedRule?.check_in || ""}
+                    disabled={!selectedRule?.enabled}
                     onChange={(e) => updateRule(selectedDay, { check_in: e.target.value })}
                   />
                 </label>
                 <label className="space-y-1">
                   <div className="text-sm font-medium">{t("adminSchedule.form.checkOut", "Check Out")}</div>
-                  <input
-                    className="h-9 w-full rounded-md border px-3 text-sm"
-                    placeholder="17:00"
+                  <Input
+                    type="time"
                     value={selectedRule?.check_out || ""}
+                    disabled={!selectedRule?.enabled}
                     onChange={(e) => updateRule(selectedDay, { check_out: e.target.value })}
                   />
                 </label>
@@ -1107,6 +1137,7 @@ export default function AdminSchedulePage() {
                     type="number"
                     className="h-9 w-full rounded-md border px-3 text-sm"
                     value={selectedRule?.grace_in_min ?? 0}
+                    disabled={!selectedRule?.enabled}
                     onChange={(e) => updateRule(selectedDay, { grace_in_min: clamp(Number(e.target.value), 0, 240) })}
                   />
                 </label>
@@ -1116,6 +1147,7 @@ export default function AdminSchedulePage() {
                     type="number"
                     className="h-9 w-full rounded-md border px-3 text-sm"
                     value={selectedRule?.grace_out_min ?? 0}
+                    disabled={!selectedRule?.enabled}
                     onChange={(e) => updateRule(selectedDay, { grace_out_min: clamp(Number(e.target.value), 0, 240) })}
                   />
                 </label>
