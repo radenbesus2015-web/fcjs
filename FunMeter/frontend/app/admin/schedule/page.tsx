@@ -1043,8 +1043,8 @@ export default function AdminSchedulePage() {
       </div>
 
       {/* Days Editor */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border rounded-lg p-2 md:col-span-1 bg-card">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+        <div className="border rounded-lg p-2 md:col-span-1 bg-card self-start">
           <div className="divide-y">
             {DAYS.map((d) => {
               const r = rules.find((x) => x.day === d);
