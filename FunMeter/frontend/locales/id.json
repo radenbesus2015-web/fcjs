@@ -99,7 +99,13 @@
       "importJsonDeprecated": "Import JSON tidak didukung. Gunakan tombol Upload untuk menambah iklan baru.",
       "titleUpdated": "Nama iklan berhasil diupdate.",
       "titleUpdateFailed": "Gagal mengupdate nama iklan.",
-      "updateFailed": "Gagal mengupdate status iklan."
+      "updateFailed": "Gagal mengupdate status iklan.",
+      "invalidFileType": "File harus berupa gambar atau video",
+      "titleRequired": "Nama iklan harus diisi",
+      "uploading": "Mengunggah file baru...",
+      "replaced": "Iklan berhasil diganti",
+      "updated": "Iklan berhasil diupdate",
+      "importing": "Mengimpor {count} file..."
     },
     "confirm": {
       "delete": {
@@ -1186,6 +1192,8 @@
       "blockedReasonDefault": "Tidak bisa absen (aturan berlaku).",
       "blockedRetry": " • Coba lagi: {time}",
       "blockedFallback": "Tidak bisa absen (sudah absen hari ini atau masih dalam jeda).",
+      "blockedWithRetry": "{label}: Bisa absen lagi pada {time} ({duration}).",
+      "blockedGeneric": "Tidak dapat absen saat ini. Silakan coba lagi nanti.",
       "cameraStarting": "Memulai kamera...",
       "cameraStarted": "✅ Kamera berhasil dimulai",
       "cameraStopping": "Menghentikan kamera...",

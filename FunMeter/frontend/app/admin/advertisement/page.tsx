@@ -474,7 +474,7 @@ export default function AdminAdvertisementPage() {
     const isVideo = file.type.startsWith('video/');
     
     if (!isImage && !isVideo) {
-      toast.error(t("adminAds.toast.invalidFileType", "❌ File harus berupa gambar atau video"), { duration: 3000 });
+      toast.error(t("adminAds.toast.invalidFileType", "File must be an image or video"), { duration: 3000 });
       return;
     }
     
@@ -487,7 +487,7 @@ export default function AdminAdvertisementPage() {
     const newTitle = editingTitle.trim();
     
     if (!newTitle && !editingReplaceFile) {
-      toast.error(t("adminAds.toast.titleRequired", "❌ Nama iklan harus diisi"), { duration: 3000 });
+      toast.error(t("adminAds.toast.titleRequired", "Ad name is required"), { duration: 3000 });
       return;
     }
     
@@ -496,7 +496,7 @@ export default function AdminAdvertisementPage() {
     try {
       // If there's a new file, upload it first
       if (editingReplaceFile) {
-        toast.info(t("adminAds.toast.uploading", "Mengunggah file baru..."), { duration: 2000 });
+        toast.info(t("adminAds.toast.uploading", "Uploading new file..."), { duration: 2000 });
         
         // Delete old advertisement
         await deleteAdvertisement(editingItem.id);
@@ -512,7 +512,7 @@ export default function AdminAdvertisementPage() {
         // Reload to get new data
         await load();
         
-        toast.success(t("adminAds.toast.replaced", "✅ Iklan berhasil diganti"), { duration: 3000 });
+        toast.success(t("adminAds.toast.replaced", "Ad successfully replaced"), { duration: 3000 });
       } else {
         // Just update title
         await updateAdvertisement(editingItem.id, { title: newTitle || undefined });
@@ -522,13 +522,13 @@ export default function AdminAdvertisementPage() {
           return prev.map((it, i) => (i === editingIndex ? { ...it, title: newTitle || undefined } : it));
         });
         
-        toast.success(t("adminAds.toast.updated", "✅ Iklan berhasil diupdate"), { duration: 2000 });
+        toast.success(t("adminAds.toast.updated", "Ad successfully updated"), { duration: 2000 });
       }
       
       cancelEdit();
     } catch (e) {
       console.error("[ADMIN_ADS] Failed to save edit:", e);
-      toast.error(t("adminAds.toast.saveFailed", "❌ Gagal menyimpan perubahan"), { duration: 3000 });
+      toast.error(t("adminAds.toast.saveFailed", "Failed to save changes"), { duration: 3000 });
     } finally {
       setSavingEdit(false);
     }
@@ -539,7 +539,7 @@ export default function AdminAdvertisementPage() {
   const handleImportFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     
-    toast.info(t("adminAds.toast.importing", "Mengimpor {count} file...", { count: files.length }), { duration: 2000 });
+    toast.info(t("adminAds.toast.importing", "Importing {count} files...", { count: files.length }), { duration: 2000 });
     
     try {
       const picked = Array.from(files).slice(0, 50); // safety limit
@@ -578,9 +578,9 @@ export default function AdminAdvertisementPage() {
       // Reload untuk sync dengan backend
       await load();
       
-      toast.success(t("adminAds.toast.imported", "✅ Berhasil mengimpor {count} media iklan", { count: uploaded.length }), { duration: 3000 });
+      toast.success(t("adminAds.toast.imported", "Successfully imported {count} ad media", { count: uploaded.length }), { duration: 3000 });
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : t("adminAds.toast.importFailed", "❌ Gagal mengimpor file");
+      const error = e instanceof Error ? e.message : t("adminAds.toast.importFailed", "Failed to import file");
       toast.error(error, { duration: 5000 });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -618,7 +618,7 @@ export default function AdminAdvertisementPage() {
       if (!confirmed) return;
       
       setDeleting(true);
-      toast.info(t("adminAds.toast.deleting", "Menghapus {count} iklan...", { count: itemsToDelete.length }), { duration: 2000 });
+      toast.info(t("adminAds.toast.deleting", "Deleting {count} ads...", { count: itemsToDelete.length }), { duration: 2000 });
       
       // Delete dari backend
       await Promise.all(
@@ -637,9 +637,9 @@ export default function AdminAdvertisementPage() {
         setCurrentPage(1);
       }
       
-      toast.success(t("adminAds.toast.deletedSelected", "✅ {count} iklan berhasil dihapus", { count: itemsToDelete.length }), { duration: 3000 });
+      toast.success(t("adminAds.toast.deletedSelected", "{count} ads successfully deleted", { count: itemsToDelete.length }), { duration: 3000 });
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : t("adminAds.toast.deleteFailed", "❌ Gagal menghapus iklan");
+      const error = e instanceof Error ? e.message : t("adminAds.toast.deleteFailed", "Failed to delete ads");
       toast.error(error, { duration: 5000 });
     } finally {
       setDeleting(false);
@@ -654,10 +654,10 @@ export default function AdminAdvertisementPage() {
   const importFromJson = async () => {
     try {
       // Import from JSON is deprecated - show warning and reload from backend
-      toast.warn(t("adminAds.toast.importJsonDeprecated", "⚠️ Import JSON tidak didukung. Gunakan tombol Upload untuk menambah iklan baru."), { duration: 4000 });
+      toast.warn(t("adminAds.toast.importJsonDeprecated", "JSON import not supported. Use Upload button to add new ads."), { duration: 4000 });
       await load();
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : t("adminAds.toast.importJsonFailed", "❌ Gagal mengimpor file JSON");
+      const error = e instanceof Error ? e.message : t("adminAds.toast.importJsonFailed", "Failed to import JSON file");
       toast.error(error, { duration: 5000 });
     }
   };

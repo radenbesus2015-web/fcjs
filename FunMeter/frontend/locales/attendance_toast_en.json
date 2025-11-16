@@ -1,0 +1,8 @@
+{
+  "attendance": {
+    "toast": {
+      "blockedWithRetry": "{label}: Can attend again at {time} (remaining {duration}).",
+      "blockedGeneric": "Cannot attend at this time. Please try again later."
+    }
+  }
+}

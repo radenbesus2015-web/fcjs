@@ -499,7 +499,7 @@ export default function FunMeterPage() {
               ref={videoRef}
               autoPlay
               playsInline
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
             />
             <canvas
               ref={overlayRef}

@@ -460,7 +460,7 @@ function RegisterFacePageContent() {
             {t("registerFace.header.subtitle", "Take a photo from camera or upload an image to add new identity to database.")}
           </p>
 
-          <div className="relative overflow-hidden rounded-2xl border bg-muted/30">
+          <div className="relative overflow-hidden rounded-2xl border bg-muted/30 aspect-video">
             {/* Image preview if captured */}
             {previewSrc ? (
               <img
@@ -468,7 +468,7 @@ function RegisterFacePageContent() {
                 onLoad={() => fitCanvasToElement(overlayRef.current, (document.querySelector(`#preview-img`) as HTMLImageElement) || null)}
                 id="preview-img"
                 alt="preview"
-                className="w-full"
+                className="w-full h-full object-contain"
               />
             ) : (
               <video
@@ -476,7 +476,7 @@ function RegisterFacePageContent() {
                 autoPlay
                 playsInline
                 muted
-                className="w-full"
+                className="w-full h-full object-cover"
               />
             )}
             {/* Overlay for future detection results */}
