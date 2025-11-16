@@ -1862,6 +1862,7 @@ function AttendanceFunMeterPageContent() {
           }
         }
         
+        
         /* Advertisement overlay responsive sizing - praktis dan responsif */
         .ad-overlay-container {
           position: relative;
