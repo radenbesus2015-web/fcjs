@@ -1862,31 +1862,6 @@ function AttendanceFunMeterPageContent() {
           }
         }
         
-        /* Cache statistics display (development only) */
-        .cache-stats {
-          position: fixed;
-          top: 10px;
-          left: 10px;
-          background: rgba(0, 0, 0, 0.8);
-          color: white;
-          padding: 8px 12px;
-          border-radius: 4px;
-          font-family: monospace;
-          font-size: 11px;
-          z-index: 9999;
-          display: none;
-        }
-        
-        .cache-stats.show {
-          display: block;
-        }
-        
-        @media (max-width: 768px) {
-          .cache-stats {
-            font-size: 9px;
-            padding: 6px 8px;
-          }
-        }
         
         /* Advertisement overlay responsive sizing - praktis dan responsif */
         .ad-overlay-container {
@@ -2230,19 +2205,6 @@ function AttendanceFunMeterPageContent() {
           pointer-events: none;
         }
       `}} />
-      
-      {/* Cache Statistics Display (Development Only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className={`cache-stats ${cacheStats.totalRequests > 0 ? 'show' : ''}`}>
-          <div>Cache Hit Rate: {cacheStats.totalRequests > 0 
-            ? ((cacheStats.adMediaHits + cacheStats.attendanceHits + cacheStats.emotionHits + cacheStats.frameHits) / cacheStats.totalRequests * 100).toFixed(1)
-            : '0'}%</div>
-          <div>Ads: {adMediaCache.size()}/10 | Att: {attendanceResultsCache.size()}/50</div>
-          <div>Emo: {emotionResultsCache.size()}/50 | Frames: {videoFrameCache.size()}/20</div>
-          <div>Settings: {settingsCache.size()}/20 | Videos: {preloadedVideos.current.size}</div>
-          <div>Total Requests: {cacheStats.totalRequests}</div>
-        </div>
-      )}
       
       {/* Preload hints untuk browser */}
       {adMediaList.map((ad, index) => (
