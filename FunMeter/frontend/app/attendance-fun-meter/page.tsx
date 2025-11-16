@@ -118,17 +118,20 @@ function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
-  const lastRun = useRef(Date.now());
+  const lastRun = useRef(0);
 
-  return useCallback(
-    ((...args) => {
-      if (Date.now() - lastRun.current >= delay) {
+  const throttledFn = useCallback(
+    (...args: unknown[]) => {
+      const now = Date.now();
+      if (now - lastRun.current >= delay) {
         callback(...args);
-        lastRun.current = Date.now();
+        lastRun.current = now;
       }
-    }) as T,
+    },
     [callback, delay]
   );
+
+  return throttledFn as T;
 }
 
 // Memoized computation hook

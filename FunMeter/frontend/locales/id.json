@@ -22,7 +22,7 @@
       "title": "Absensi & Fun Meter"
     },
     "attendance": {
-      "title": "Absensi"
+      "title": "Halaman Absensi"
     },
     "funMeter": {
       "title": "Fun Meter"
@@ -44,9 +44,6 @@
     },
     "adminSchedule": {
       "title": "Jadwal"
-    },
-    "adminUsers": {
-      "title": "Manajemen Pengguna"
     },
     "adminConfig": {
       "title": "Konfigurasi Sistem"
@@ -717,7 +714,7 @@
         "subtitle": "Atur interval WebSocket dan ambang YuNet."
       },
       "attendance": {
-        "title": "Absensi"
+        "title": "Halaman Absensi"
       }
     },
     "fields": {
@@ -740,6 +737,7 @@
   "adminUsers": {
     "breadcrumb": "Dashboard › Pengguna",
     "title": "Manajemen Pengguna",
+    "nav": "Manajemen Pengguna",
     "subtitle": "Kelola peran admin, API key, dan penghapusan akun.",
     "actions": {
       "refresh": "Segarkan",
@@ -750,6 +748,7 @@
       "promote": "Naikkan",
       "demote": "Turunkan",
       "delete": "Hapus",
+      "deleteAccount": "Hapus Akun",
       "processing": "Memproses…"
     },
     "error": {
@@ -763,8 +762,8 @@
     "confirm": {
       "title": "Konfirmasi",
       "promote": "Promosikan \"{user}\" menjadi admin?",
-      "demote": "Cabut peran admin dari \"{user}\"?",
-      "delete": "Hapus user \"{user}\"?",
+      "demote": "Cabut {role} dari \"{user}\"?",
+      "delete": "Hapus akun \"{user}\"?",
       "rotateSelf": "Generate API key baru untuk akun kamu? Kamu harus memperbarui Authorization header setelah ini.",
       "rotateOther": "Generate API key baru untuk \"{user}\"? Pengguna tersebut harus memakai key baru setelah ini."
     },
@@ -775,8 +774,9 @@
       "rotated": "API key diperbarui.",
       "passwordSet": "Password diperbarui.",
       "passwordTooShort": "Password minimal 6 karakter.",
-      "cannotDemotePromoter": "Tidak boleh mendemote admin yang mempromosikan kamu.",
-      "cannotDeletePromoter": "Tidak boleh menghapus orang yang mempromosikan kamu."
+      "cannotDemotePromoter": "Tidak boleh mendemote admin yang mempromosikan {you}.",
+      "cannotDeletePromoter": "Tidak boleh menghapus orang yang mempromosikan {you}.",
+      "noPermission": "Anda tidak memiliki izin untuk melakukan tindakan ini."
     },
     "passwordModal": {
       "title": "Setel Password",
@@ -795,6 +795,7 @@
       }
     },
     "roles": {
+      "owner": "Owner",
       "admin": "Admin",
       "user": "User"
     },
@@ -818,6 +819,10 @@
     }
   },
   "common": {
+    "you": "Anda",
+    "role": "Peran",
+    "actions": "Aksi",
+    "deleteAccount": "Hapus Akun",
     "close": "Tutup",
     "cancel": "Batal",
     "clear": "Bersihkan",
@@ -1291,7 +1296,7 @@
   "adminAttendance": {
     "header": {
       "breadcrumb": "Dashboard > Absensi",
-      "title": "Absensi"
+      "title": "Halaman Absensi"
     },
     "title": "Data Absensi",
     "subtitle": "Lihat dan kelola data absensi anggota.",

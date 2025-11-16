@@ -260,7 +260,7 @@ export default function AttendancePage() {
     }
     
     setCameraLoading(true);
-    toast.info(t("attendance.toast.cameraStarting", "Memulai kamera..."), { duration: 2000 });
+    toast.info(t("attendance.toast.cameraStarting", "Starting camera..."), { duration: 2000 });
     
     try {
       console.log("[CAMERA] Starting camera...");
@@ -335,12 +335,12 @@ export default function AttendancePage() {
       
       setCameraActive(true);
       fitCanvasToVideo();
-      toast.success(t("attendance.toast.cameraStarted", "✅ Kamera berhasil dimulai"), { duration: 3000 });
+      toast.success(t("attendance.toast.cameraStarted", "Camera started successfully"), { duration: 3000 });
     } catch (error: unknown) {
       console.error("[CAMERA] Error starting camera:", error);
       setCameraActive(false);
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
-      toast.error(t("attendance.toast.cameraError", "❌ Gagal mengakses kamera: {error}", { error: errorMsg }), { duration: 5000 });
+      toast.error(t("attendance.toast.cameraError", "Failed to access camera: {error}", { error: errorMsg }), { duration: 5000 });
     } finally {
       setCameraLoading(false);
     }
@@ -372,7 +372,7 @@ export default function AttendancePage() {
   };
 
   const stopCamera = () => {
-    toast.info(t("attendance.toast.cameraStopping", "Menghentikan kamera..."), { duration: 1500 });
+    toast.info(t("attendance.toast.cameraStopping", "Stopping camera..."), { duration: 1500 });
     
     
     const video = videoRef.current;
@@ -388,7 +388,7 @@ export default function AttendancePage() {
     // Always set to false when stopping
     setCameraActive(false);
     
-    toast.success(t("attendance.toast.cameraStopped", "✅ Kamera berhasil dihentikan"), { duration: 2000 });
+    toast.success(t("attendance.toast.cameraStopped", "Camera stopped successfully"), { duration: 2000 });
     
     // Clear canvas and reset results
     const overlay = overlayRef.current;
@@ -657,7 +657,7 @@ export default function AttendancePage() {
       
       // Show success notification after refresh completes (only for manual refresh)
       if (showToast) {
-        toast.success(t("attendance.toast.refreshSuccess", "Data absensi berhasil diperbarui"), { duration: 2000 });
+        toast.success(t("attendance.toast.refreshSuccess", "Attendance data refreshed successfully"), { duration: 2000 });
       }
     } catch (error: unknown) {
       // Ignore errors if request was aborted or component unmounted
@@ -669,7 +669,7 @@ export default function AttendancePage() {
         }
         return;
       }
-      toast.error(t("attendance.toast.fetchError", "Gagal memuat data absensi"));
+      toast.error(t("attendance.toast.fetchError", "Failed to load attendance data"));
     } finally {
       // Clear loading state
       if (isMountedRef.current) {
@@ -772,9 +772,9 @@ export default function AttendancePage() {
         {/* Left: Camera card */}
         <div className="bg-card rounded-lg border p-6 self-start">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("attendance.sections.camera.title", "Kamera")}
+            {t("attendance.sections.camera.title", "Camera")}
           </p>
-          <h3 className="text-lg font-semibold mb-4">{t("attendance.sections.camera.subtitle", "Streaming absensi")}</h3>
+          <h3 className="text-lg font-semibold mb-4">{t("attendance.sections.camera.subtitle", "Attendance streaming")}</h3>
           <div className="relative rounded-lg border bg-muted/30 overflow-hidden mb-4">
             <video
               ref={videoRef}
@@ -801,7 +801,7 @@ export default function AttendancePage() {
             />
           </div>
           <p className="m-4 text-sm text-muted-foreground">
-            {t("attendance.status.waiting", "Tekan mulai untuk mengirim frame ke server attendance.")}
+            {t("attendance.status.waiting", "Press start to send frames to attendance server.")}
           </p>
           <div className="mb-2">
             <Button
@@ -817,17 +817,17 @@ export default function AttendancePage() {
               {cameraLoading ? (
                 <>
                   <Icon name="Loader2" className="h-4 w-4 animate-spin" />
-                  <span>{t("attendance.actions.loading", "Memuat...")}</span>
+                  <span>{t("attendance.actions.loading", "Loading...")}</span>
                 </>
               ) : cameraActive ? (
                 <>
                   <Icon name="Square" className="h-4 w-4" />
-                  <span>{t("attendance.actions.stopCamera", "Hentikan Kamera")}</span>
+                  <span>{t("attendance.actions.stopCamera", "Stop Camera")}</span>
                 </>
               ) : (
                 <>
                   <Icon name="Play" className="h-4 w-4" />
-                  <span>{t("attendance.actions.startCamera", "Mulai Kamera")}</span>
+                  <span>{t("attendance.actions.startCamera", "Start Camera")}</span>
                 </>
               )}
             </Button>
@@ -838,8 +838,8 @@ export default function AttendancePage() {
         <div className="bg-card rounded-lg border p-6 self-start">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("attendance.sections.log.title", "Log absensi")}</p>
-              <div className="text-lg font-semibold">{t("attendance.sections.log.subtitle", "Riwayat kedatangan")}</div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("attendance.sections.log.title", "Attendance log")}</p>
+              <div className="text-lg font-semibold">{t("attendance.sections.log.subtitle", "Arrival history")}</div>
             </div>
             <Button 
               onClick={() => refreshLog(logMeta.page, true)} 
@@ -854,7 +854,7 @@ export default function AttendancePage() {
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
             <label className="space-y-1">
-              <span className="text-sm font-medium">{t("attendance.fields.perPage", "Jumlah per halaman")}</span>
+              <span className="text-sm font-medium">{t("attendance.fields.perPage", "Items per page")}</span>
               <select
                 value={perPage}
                 onChange={(e) => { setPerPage(Number(e.target.value)); refreshLog(1); }}
@@ -866,30 +866,30 @@ export default function AttendancePage() {
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-sm font-medium">{t("attendance.fields.order", "Urutan")}</span>
+              <span className="text-sm font-medium">{t("attendance.fields.order", "Order")}</span>
               <select
                 value={order}
                 onChange={(e) => { const v = e.target.value as "asc" | "desc"; setOrder(v); refreshLog(1); }}
                 className="h-9 w-full rounded-md border px-3 py-1 text-sm"
               >
-                <option value="desc">{t("attendance.order.desc", "Terbaru")}</option>
-                <option value="asc">{t("attendance.order.asc", "Terlama")}</option>
+                <option value="desc">{t("attendance.order.desc", "Newest")}</option>
+                <option value="asc">{t("attendance.order.asc", "Oldest")}</option>
               </select>
             </label>
           </div>
           <div className="rounded-lg border p-0 text-sm overflow-x-auto">
             {logItems.length === 0 ? (
               <div className="p-6">
-                <p className="text-muted-foreground">{t("attendance.table.empty", "Belum ada data absensi.")}</p>
+                <p className="text-muted-foreground">{t("attendance.table.empty", "No attendance data yet.")}</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-muted/40">
                   <tr>
                     <th className="text-left p-3 font-medium w-16">{t("attendance.table.no", "No")}</th>
-                    <th className="text-left p-3 font-medium">{t("attendance.table.name", "Nama")}</th>
-                    <th className="text-left p-3 font-medium">{t("attendance.table.dateTime", "Waktu & tanggal")}</th>
-                    <th className="text-right p-3 font-medium w-24">{t("attendance.table.score", "Skor")}</th>
+                    <th className="text-left p-3 font-medium">{t("attendance.table.name", "Name")}</th>
+                    <th className="text-left p-3 font-medium">{t("attendance.table.dateTime", "Date & Time")}</th>
+                    <th className="text-right p-3 font-medium w-24">{t("attendance.table.score", "Score")}</th>
                   </tr>
                 </thead>
                 <tbody>
