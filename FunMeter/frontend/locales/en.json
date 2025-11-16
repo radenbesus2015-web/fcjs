@@ -495,6 +495,88 @@
       }
     }
   },
+  "adminUsers": {
+    "breadcrumb": "Dashboard › Users",
+    "title": "User Management",
+    "nav": "User Management",
+    "subtitle": "Manage admin roles, API keys, and account deletion.",
+    "table": {
+      "title": "User List",
+      "username": "Username",
+      "role": "Role",
+      "actions": "Actions",
+      "loading": "Loading users...",
+      "noUsers": "No users found",
+      "empty": "No users yet",
+      "columns": {
+        "username": "Username",
+        "role": "Role",
+        "actions": "Actions"
+      }
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "user": "User"
+    },
+    "badges": {
+      "you": "You"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "refreshing": "Loading...",
+      "viewJson": "View JSON",
+      "rotateKey": "Rotate API Key",
+      "setPassword": "Set Password",
+      "promote": "Promote",
+      "demote": "Demote",
+      "delete": "Delete",
+      "deleteAccount": "Delete Account",
+      "processing": "Processing...",
+      "changePassword": "Change Password",
+      "close": "Close"
+    },
+    "passwordModal": {
+      "title": "Set Password",
+      "description": "Enter a new password for {user}.",
+      "newPassword": "New Password",
+      "passwordPlaceholder": "Enter new password (min 6 characters)",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "error": {
+      "title": "An error occurred",
+      "fetch": "Failed to load user data.",
+      "generic": "An error occurred."
+    },
+    "state": {
+      "loading": "Loading user data..."
+    },
+    "confirm": {
+      "title": "Confirmation",
+      "promote": "Promote \"{user}\" to admin?",
+      "demote": "Remove admin role from \"{user}\"?",
+      "delete": "Delete user \"{user}\"?",
+      "rotateSelf": "Generate a new API key for your account? You will need to update the Authorization header after this.",
+      "rotateOther": "Generate a new API key for \"{user}\"? The user will need to use the new key after this."
+    },
+    "toast": {
+      "promoted": "{user} is now an admin.",
+      "demoted": "{user} has been demoted.",
+      "deleted": "{user} has been deleted.",
+      "passwordSet": "Password updated successfully.",
+      "passwordTooShort": "Password must be at least 6 characters long.",
+      "cannotDemotePromoter": "Cannot demote the admin who promoted you.",
+      "cannotDeletePromoter": "Cannot delete the user who promoted you.",
+      "noPermission": "You do not have permission to perform this action.",
+      "rotated": "API key has been rotated.",
+      "error": {
+        "generic": "An error occurred.",
+        "fetch": "Failed to load user data.",
+        "save": "Failed to save changes."
+      }
+    }
+  },
   "adminFaceDb": {
     "header": {
       "breadcrumb": "Database",

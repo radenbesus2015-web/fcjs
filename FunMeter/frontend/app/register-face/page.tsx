@@ -85,12 +85,12 @@ function RegisterFacePageContent() {
     root: true,
     on: {
       connect() {
-        setStatusText(t("registerFace.status.wsConnected", "WS terhubung"));
-        toast.success(t("registerFace.toast.wsConnected", "Terhubung ke server WebSocket"));
+        setStatusText(t("registerFace.status.wsConnected", "WS connected"));
+        toast.success(t("registerFace.toast.wsConnected", "Connected to WebSocket server"));
       },
       disconnect(...args: unknown[]) {
-        setStatusText(t("registerFace.status.wsDisconnected", "WS terputus"));
-        toast.warn(t("registerFace.toast.wsDisconnected", "Koneksi WebSocket terputus"));
+        setStatusText(t("registerFace.status.wsDisconnected", "WS disconnected"));
+        toast.warn(t("registerFace.toast.wsDisconnected", "WebSocket connection disconnected"));
       },
       face_detection(...args: unknown[]) {
         const data = args[0] as FaceDetectionData;
@@ -99,8 +99,8 @@ function RegisterFacePageContent() {
         setFacesCount(faces.length);
         setStatusText(
           faces.length > 0
-            ? t("registerFace.status.faces", "Jumlah wajah: {count}", { count: faces.length })
-            : t("registerFace.status.noFace", "Tidak ada wajah terdeteksi")
+            ? t("registerFace.status.faces", "Faces detected: {count}", { count: faces.length })
+            : t("registerFace.status.noFace", "No face detected")
         );
       },
     },
@@ -121,7 +121,7 @@ function RegisterFacePageContent() {
       });
       videoRef.current.srcObject = stream;
       setCameraActive(true);
-      setStatusText(t("registerFace.status.cameraActive", "Kamera aktif"));
+      setStatusText(t("registerFace.status.cameraActive", "Camera active"));
       
       await new Promise((resolve) => {
         if ((videoRef.current?.readyState || 0) >= 2) resolve(undefined);
@@ -129,8 +129,8 @@ function RegisterFacePageContent() {
       });
       
     } catch (error) {
-      setStatusText(t("registerFace.status.cameraDenied", "Akses kamera ditolak"));
-      toast.error(t("registerFace.toast.cameraError", "Gagal mengakses kamera"));
+      setStatusText(t("registerFace.status.cameraDenied", "Camera access denied"));
+      toast.error(t("registerFace.toast.cameraError", "Failed to access camera"));
     }
   };
 
@@ -141,7 +141,7 @@ function RegisterFacePageContent() {
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
-    setStatusText(t("registerFace.status.cameraStopped", "Kamera dihentikan"));
+    setStatusText(t("registerFace.status.cameraStopped", "Camera stopped"));
   };
 
   // Adjust overlay canvas to image size
@@ -205,7 +205,7 @@ function RegisterFacePageContent() {
       try {
         const fd = new FormData();
         fd.append("file", blob, "capture.jpg");
-        setStatusText(t("registerFace.status.processing", "Memproses..."));
+        setStatusText(t("registerFace.status.processing", "Processing..."));
         const resp = await postForm<PreviewResponse>("/register-face/preview", fd);
         const facesRaw = Array.isArray(resp?.faces) ? resp.faces : [];
         const facesCroppedRaw = Array.isArray(resp?.faces_cropped) ? resp.faces_cropped : [];
@@ -225,8 +225,8 @@ function RegisterFacePageContent() {
         setPreviewSrc(nextUrl);
         setStatusText(
           detected > 0
-            ? t("registerFace.status.faces", "Jumlah wajah: {count}", { count: detected })
-            : t("registerFace.status.noImage", "Tidak ada gambar.")
+            ? t("registerFace.status.faces", "Faces detected: {count}", { count: detected })
+            : t("registerFace.status.noImage", "No image.")
         );
 
         // Draw overlay boxes once image element is ready
@@ -259,7 +259,7 @@ function RegisterFacePageContent() {
     setPreviewToken("");
     setPreviewFaces([]);
     clearCanvas(overlayRef.current);
-    setStatusText(t("registerFace.status.noImage", "Tidak ada gambar."));
+    setStatusText(t("registerFace.status.noImage", "No image."));
     // Always restart camera for fresh start
     stopCamera();
     await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure clean stop
@@ -309,12 +309,12 @@ function RegisterFacePageContent() {
   // Start registration process (single image)
   const startRegistration = async () => {
     if (!userName.trim()) {
-      toast.error(t("registerFace.toast.nameRequired", "Nama harus diisi"));
+      toast.error(t("registerFace.toast.nameRequired", "Name is required"));
       return;
     }
     const imgData = await buildImageData();
     if (!imgData) {
-      toast.error(t("registerFace.toast.noImage", "Tidak ada gambar dari kamera atau upload"));
+      toast.error(t("registerFace.toast.noImage", "No image from camera or upload"));
       return;
     }
     const sendOnce = async (force: boolean) => {
@@ -349,10 +349,10 @@ function RegisterFacePageContent() {
 
       if (!isOk && isDuplicate) {
         const confirm = await confirmDialog({
-          title: t('registerFace.confirm.replaceTitle', 'Ganti foto?'),
-          description: t('registerFace.toast.labelMustMatch', 'Wajah terdaftar sebagai {label}. Gunakan label tersebut untuk memperbarui.', { label: userName.trim() }),
-          confirmText: t('registerFace.confirm.replaceAction', 'Ganti'),
-          cancelText: t('common.cancel', 'Batal'),
+          title: t('registerFace.confirm.replaceTitle', 'Replace photo?'),
+          description: t('registerFace.toast.labelMustMatch', 'Face registered as {label}. Use that label to update.', { label: userName.trim() }),
+          confirmText: t('registerFace.confirm.replaceAction', 'Replace'),
+          cancelText: t('common.cancel', 'Cancel'),
         });
         if (!confirm) throw new Error(response?.message || response?.error || 'Duplicate, cancelled by user');
         // retry with force
@@ -361,7 +361,7 @@ function RegisterFacePageContent() {
 
       if (response && (response.status === 'ok' || response.success || response.ok)) {
         const registeredLabel = response.label || userName.trim();
-        toast.success(t('registerFace.toast.registerSuccess', 'Terdaftar: {label}', { label: registeredLabel }));
+        toast.success(t('registerFace.toast.registerSuccess', 'Registered: {label}', { label: registeredLabel }));
         // Reset form
         setUserName('');
         setUploadFile(null);
@@ -387,7 +387,7 @@ function RegisterFacePageContent() {
         errorMessage = JSON.stringify(error);
       }
       
-      toast.error(t("registerFace.toast.registerError", "Registrasi gagal: {error}", { 
+      toast.error(t("registerFace.toast.registerError", "Registration failed: {error}", { 
         error: errorMessage 
       }));
     } finally {
@@ -453,11 +453,11 @@ function RegisterFacePageContent() {
         {/* Left: Camera & Preview */}
         <div className="bg-card rounded-lg border p-6">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("registerFace.sections.camera.title", "Kamera & Pratinjau")}
+            {t("registerFace.sections.camera.title", "Camera & Preview")}
           </p>
-          <h3 className="text-lg font-semibold mb-3">{t("registerFace.sections.camera.subtitle", "Tangkap wajah")}</h3>
+          <h3 className="text-lg font-semibold mb-3">{t("registerFace.sections.camera.subtitle", "Capture face")}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {t("registerFace.header.subtitle", "Ambil foto dari kamera atau unggah gambar untuk menambahkan identitas baru ke database.")}
+            {t("registerFace.header.subtitle", "Take a photo from camera or upload an image to add new identity to database.")}
           </p>
 
           <div className="relative overflow-hidden rounded-2xl border bg-muted/30">
@@ -489,7 +489,7 @@ function RegisterFacePageContent() {
               {cameraActive && (
                 <Button type="button" onClick={capturePhoto} disabled={isRegistering}>
                   <Icon name="Camera" className="mr-2 h-4 w-4" />
-                  {t("registerFace.actions.capture", "Tangkap")}
+                  {t("registerFace.actions.capture", "Capture")}
                 </Button>
               )}
               <Button
@@ -509,7 +509,7 @@ function RegisterFacePageContent() {
               <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-background/75 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Icon name="Loader2" className="h-4 w-4 animate-spin" />
-                  {t("registerFace.status.processingCrop", "Memproses foto...")}
+                  {t("registerFace.status.processingCrop", "Processing photo...")}
                 </div>
               </div>
             )}
@@ -518,13 +518,13 @@ function RegisterFacePageContent() {
           <div className="mt-4 flex items-center gap-2">
             <Button onClick={cameraActive ? stopCamera : startCamera}>
               <Icon name={cameraActive ? "CameraOff" : "Camera"} className="h-4 w-4 mr-2" />
-              {cameraActive ? t("registerFace.actions.stopCamera", "Hentikan Kamera") : t("registerFace.actions.openCamera", "Gunakan Kamera")}
+              {cameraActive ? t("registerFace.actions.stopCamera", "Stop Camera") : t("registerFace.actions.openCamera", "Use Camera")}
             </Button>
             <div className="ml-auto flex items-center gap-3">
               <span className="text-sm text-muted-foreground">{statusText}</span>
               <span className="inline-flex items-center gap-1 rounded-full border bg-background/80 backdrop-blur px-2.5 py-0.5 text-xs font-medium">
                 <Icon name="UserScan" className="h-3 w-3" />
-                {t("registerFace.status.faceBadge", "{count} wajah", { count: facesCount })}
+                {t("registerFace.status.faceBadge", "{count} faces", { count: facesCount })}
               </span>
             </div>
           </div>
@@ -535,14 +535,14 @@ function RegisterFacePageContent() {
         {/* Right: Identity Information */}
         <div className="bg-card rounded-lg border p-6">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("registerFace.sections.details.title", "Detail Wajah")}
+            {t("registerFace.sections.details.title", "Face Details")}
           </p>
-          <h3 className="text-lg font-semibold mb-4 border-b">{t("registerFace.sections.details.subtitle", "Informasi Identitas")}</h3>
+          <h3 className="text-lg font-semibold mb-4 border-b">{t("registerFace.sections.details.subtitle", "Identity Information")}</h3>
         <span className="border-b"></span>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                {t("registerFace.fields.label", "Label / Nama")}
+                {t("registerFace.fields.label", "Label / Name")}
               </label>
               <input
                 type="text"
@@ -551,13 +551,13 @@ function RegisterFacePageContent() {
                 onChange={(e) => setUserName(e.target.value)}
                 onKeyDown={handleNameKeyDown}
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder={t("registerFace.fields.labelPlaceholder", "Nama lengkap")}
+                placeholder={t("registerFace.fields.labelPlaceholder", "Full name")}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                {t("registerFace.fields.upload", "Unggah Gambar")}
+                {t("registerFace.fields.upload", "Upload Image")}
               </label>
               <div className="flex items-center gap-3 mb-3">
                 <Button
@@ -565,10 +565,10 @@ function RegisterFacePageContent() {
                   variant="outline"
                   onClick={() => uploadInputRef.current?.click()}
                 >
-                  {t("registerFace.fields.chooseFile", "Pilih berkas")}
+                  {t("registerFace.fields.chooseFile", "Choose file")}
                 </Button>
                 <span className="text-sm text-muted-foreground truncate">
-                  {uploadFile?.name || t("registerFace.fields.noFile", "Tidak ada berkas yang dipilih")}
+                  {uploadFile?.name || t("registerFace.fields.noFile", "No file selected")}
                 </span>
               </div>
               
@@ -631,14 +631,14 @@ function RegisterFacePageContent() {
                 accept="image/*"
                 onChange={handleFileChange}
                 className="sr-only"
-                aria-label={t("registerFace.fields.upload", "Unggah Gambar")}
+                aria-label={t("registerFace.fields.upload", "Upload Image")}
               />
             </div>
 
             <div className="pt-2">
               <Button onClick={startRegistration} disabled={isRegistering}>
                 <Icon name="Send" className="h-4 w-4 mr-2" />
-                {t("registerFace.actions.submit", "Daftarkan")}
+                {t("registerFace.actions.submit", "Register")}
               </Button>
               <Button onClick={resetRegistration} variant="outline" className="ml-2" disabled={isRegistering}>
                 {t("registerFace.actions.reset", "Reset")}
@@ -655,7 +655,7 @@ export default function RegisterFacePage() {
   const { t } = useI18n();
   
   return (
-    <ClientOnly loaderText={t("common.loading", "Memuat...")}>
+    <ClientOnly loaderText={t("common.loading", "Loading...")}>
       <RegisterFacePageContent />
     </ClientOnly>
   );
