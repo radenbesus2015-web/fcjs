@@ -11,6 +11,29 @@ import type { ToastOptions } from './types';
 import { TYPE_METHOD, DEFAULTS } from './constants';
 import { fallbackTitle, translate } from './utils';
 
+const TOAST_AUDIO_MAP: Record<string, string> = {
+  success: "/assets/audio/success.mp3",
+  error: "/assets/audio/error.mp3",
+};
+
+const audioCache: Record<string, HTMLAudioElement> = {};
+
+const playToastAudio = (type: string) => {
+  if (typeof window === "undefined") return;
+  const src = TOAST_AUDIO_MAP[type];
+  if (!src) return;
+  try {
+    if (!audioCache[src]) {
+      audioCache[src] = new Audio(src);
+    }
+    const audio = audioCache[src];
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  } catch {
+    // ignore audio errors
+  }
+};
+
 /**
  * Menampilkan toast notification
  * @param options - String message atau object ToastOptions
@@ -103,6 +126,7 @@ export const toast = {
       message, 
       ...extra 
     };
+    playToastAudio('success');
     return show(opts);
   },
 
@@ -125,6 +149,7 @@ export const toast = {
       message, 
       ...extra 
     };
+    playToastAudio('error');
     return show(opts);
   },
 

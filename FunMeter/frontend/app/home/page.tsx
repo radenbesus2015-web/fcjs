@@ -65,6 +65,17 @@ export default function HomePage() {
   const adVideoRef = useRef<HTMLVideoElement>(null);
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [repeatCount, setRepeatCount] = useState(3); // Jumlah repeat iklan ke kanan dan kiri (total = 1 center + 3 kiri + 3 kanan = 7)
+  const [adsAudioUnlocked, setAdsAudioUnlocked] = useState(false);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      setAdsAudioUnlocked(true);
+    };
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+    };
+  }, []);
   
   // Preload semua iklan saat component mount untuk render cepat
   useEffect(() => {
@@ -198,7 +209,21 @@ export default function HomePage() {
     return () => {
       if (adTimerRef.current) clearTimeout(adTimerRef.current);
     };
-  }, [currentAdIndex, adMediaList, goToNextAd]);
+  }, [currentAdIndex, adMediaList, goToNextAd, adsAudioUnlocked]);
+
+  useEffect(() => {
+    if (adVideoRef.current) {
+      adVideoRef.current.muted = !adsAudioUnlocked;
+      adVideoRef.current.volume = adsAudioUnlocked ? 1 : 0;
+      if (adsAudioUnlocked) {
+        adVideoRef.current
+          .play()
+          .catch(() => {
+            /* ignore */
+          });
+      }
+    }
+  }, [adsAudioUnlocked, currentAdIndex]);
 
   // (Header/Footer strips removed; use static assets like attendance-fun-meter)
 
@@ -321,6 +346,45 @@ export default function HomePage() {
 
   // Helper functions
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  const clampBoundingBox = (
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    displayWidth: number,
+    displayHeight: number,
+  ) => {
+    let nx = x;
+    let ny = y;
+    let nw = w;
+    let nh = h;
+
+    if (!Number.isFinite(nx) || !Number.isFinite(ny) || !Number.isFinite(nw) || !Number.isFinite(nh)) {
+      return null;
+    }
+
+    if (nx < 0) {
+      nw += nx;
+      nx = 0;
+    }
+    if (ny < 0) {
+      nh += ny;
+      ny = 0;
+    }
+    if (nx + nw > displayWidth) {
+      nw = displayWidth - nx;
+    }
+    if (ny + nh > displayHeight) {
+      nh = displayHeight - ny;
+    }
+
+    if (nw < 2 || nh < 2) {
+      return null;
+    }
+
+    return { x: nx, y: ny, w: nw, h: nh };
+  };
   
   const mapExprLabel = (s: string): string => {
     const k = String(s || "").toLowerCase().trim();
@@ -528,6 +592,9 @@ export default function HomePage() {
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     ctx.lineWidth = 3;
     const { sx, sy, ox, oy } = getLetterboxTransform();
+    const overlayRect = overlay.getBoundingClientRect();
+    const displayWidth = overlayRect.width || 0;
+    const displayHeight = overlayRect.height || 0;
     
     // Debug logging (bisa di-disable setelah fix)
     if (results && results.length > 0) {
@@ -552,6 +619,10 @@ export default function HomePage() {
       const y = oy + by * sy;
       const w = bw * sx;
       const h = bh * sy;
+      const clamped = clampBoundingBox(x, y, w, h, displayWidth, displayHeight);
+      if (!clamped) {
+        return;
+      }
       
       const exprRaw = (r.top?.label || r.expression || r.emotion || "Biasa").trim();
       const expr = mapExprLabel(exprRaw);
@@ -559,7 +630,7 @@ export default function HomePage() {
       const name = fused || r.label || r.name || "Unknown";
       if (!fused) missingName = true;
       const color = EXP_COLORS[expr] || "#38bdf8";
-      drawBoxWithLabels(x, y, w, h, name, expr, color);
+      drawBoxWithLabels(clamped.x, clamped.y, clamped.w, clamped.h, name, expr, color);
     });
     const now = Date.now();
     if (missingName && now - lastAttPush > 400) {
@@ -881,7 +952,7 @@ export default function HomePage() {
                     ref={adVideoRef}
                     src={adMediaList[currentAdIndex].src}
                     autoPlay
-                    muted
+                    muted={!adsAudioUnlocked}
                     playsInline
                     preload="auto"
                     crossOrigin="anonymous"

@@ -702,14 +702,26 @@ export default function AdminSchedulePage() {
   return (
     <div className="space-y-6">
       {/* Action Bar */}
-      <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" onClick={resetToDefault}>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={resetToDefault}
+          className="whitespace-normal text-center leading-tight px-3 py-2 min-h-[2.5rem]"
+        >
           {t("adminSchedule.actions.resetDefault", "Reset to Default")}
         </Button>
-        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={resetChanges} disabled={!isDirty}>
+        <Button
+          className="bg-orange-500 hover:bg-orange-600 text-white whitespace-normal text-center leading-tight px-3 py-2 min-h-[2.5rem]"
+          onClick={resetChanges}
+          disabled={!isDirty}
+        >
           {t("adminSchedule.actions.discard", "Discard Changes")}
         </Button>
-        <Button onClick={saveAll} disabled={!isDirty}>
+        <Button
+          onClick={saveAll}
+          disabled={!isDirty}
+          className="whitespace-normal text-center leading-tight px-3 py-2 min-h-[2.5rem]"
+        >
           {t("adminSchedule.actions.saveSchedule", "Save Schedule")}
         </Button>
       </div>
@@ -934,7 +946,11 @@ export default function AdminSchedulePage() {
         </DialogContent>
       </Dialog>
           </div>
-          <Button size="sm" onClick={addOverride}>
+          <Button
+            size="sm"
+            onClick={addOverride}
+            className="whitespace-normal text-center leading-tight px-3 py-2 min-h-[2.5rem]"
+          >
             <Icon name="Plus" className="h-4 w-4 mr-2" />
             {t("adminSchedule.overrides.add", "Add Override")}
           </Button>
