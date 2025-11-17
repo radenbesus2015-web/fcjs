@@ -344,7 +344,9 @@ export function useLazyLoad(
 ) {
   const [isVisible, setIsVisible] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const elementRef = useRef<HTMLElement>(null);
+
+  // FIX: harus HTMLDivElement agar cocok dengan <div ref={ref}>
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const element = elementRef.current;
@@ -368,6 +370,7 @@ export function useLazyLoad(
 
   return { ref: elementRef, isVisible, hasLoaded };
 }
+
 
 // Memory optimization utilities
 export const memoizeWithCache = <T extends (...args: unknown[]) => unknown>(
