@@ -5,7 +5,8 @@ python-socketio==5.13.0
 
 # Database and caching
 redis==6.4.0
-supabase==2.22.0
+#supabase==2.22.0
+supabase==1.2.0
 SQLAlchemy==2.0.44
 
 # Computer vision and ML
