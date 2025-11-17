@@ -220,11 +220,56 @@ export default function AttendancePage() {
         
         // Show blocked messages if any
         for (const block of blocked) {
-          if (block.message) {
-            console.log("[ATTENDANCE] Blocked:", block.message);
-            // Use block message directly (might need translation in future)
-            toast.info(block.message, { duration: 4000 });
+          console.log("[ATTENDANCE] Blocked:", block);
+          
+          let translatedMessage: string;
+          
+          // Type assertion for block with extended properties
+          const blockData = block as any;
+          
+          // Check if we have structured data from backend
+          if (blockData.code === 'cooldown' && blockData.until_formatted && blockData.remaining_sec !== undefined) {
+            // Use structured data with formatDuration for multilingual support
+            const { formatDuration } = require('@/lib/format');
+            const duration = formatDuration(blockData.remaining_sec, locale === 'id' ? 'id' : 'en');
+            
+            translatedMessage = t(
+              "attendance.toast.blockedWithRetry",
+              "{label}: Can attend again at {time} ({duration}).",
+              { 
+                label: blockData.label || 'Unknown', 
+                time: blockData.until_formatted, 
+                duration 
+              }
+            );
+          } else if (blockData.message) {
+            // Legacy: Parse old message format if structured data not available
+            const match = blockData.message.match(/^(.+?):\s*Bisa absen lagi pada\s+(.+?)\s+\(sisa\s+(.+?)\)\./);
+            
+            if (match) {
+              const [, label, retryTime, duration] = match;
+              translatedMessage = t(
+                "attendance.toast.blockedWithRetry",
+                "{label}: Can attend again at {time} ({duration}).",
+                { label: label.trim(), time: retryTime.trim(), duration: duration.trim() }
+              );
+            } else {
+              translatedMessage = t(
+                "attendance.toast.blockedGeneric",
+                "Cannot attend at this time. Please try again later.",
+                {}
+              );
+            }
+          } else {
+            // Fallback if no message available
+            translatedMessage = t(
+              "attendance.toast.blockedGeneric",
+              "Cannot attend at this time. Please try again later.",
+              {}
+            );
           }
+          
+          toast.info(translatedMessage, { duration: 4000 });
         }
         
         // Refresh log when attendance is marked - always go to page 1 to see latest entries
@@ -775,13 +820,13 @@ export default function AttendancePage() {
             {t("attendance.sections.camera.title", "Camera")}
           </p>
           <h3 className="text-lg font-semibold mb-4">{t("attendance.sections.camera.subtitle", "Attendance streaming")}</h3>
-          <div className="relative rounded-lg border bg-muted/30 overflow-hidden mb-4">
+          <div className="relative rounded-lg border bg-muted/30 overflow-hidden mb-4 aspect-video">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-auto object-contain block"
+              className="w-full h-full object-cover block"
             />
             <canvas
               ref={overlayRef}

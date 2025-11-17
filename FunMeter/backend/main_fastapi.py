@@ -1610,8 +1610,8 @@ def _create_blocked_info(label: str, code: str, info: dict | None, allow_msgs: b
                     until_txt = _time_fmt_wib_full(dt)
                 else:
                     until_txt = info.get("until_iso")
-            msg = (f"{label}: Bisa absen lagi pada {until_txt} (sisa {_time_humanize_secs(int(sisa))})."
-                   if until_txt else None)
+            # Don't format message here, let frontend handle i18n
+            msg = None
         else:
             msg = legacy_reason
 
@@ -1619,6 +1619,7 @@ def _create_blocked_info(label: str, code: str, info: dict | None, allow_msgs: b
         "label": label,
         "reason": legacy_reason,
         "until": (info or {}).get("until_iso"),
+        "until_formatted": until_txt if code == "cooldown" else None,
         "code": code,
         "message": msg,
         **(info or {}),

@@ -82,3 +82,31 @@ export function fmtAttendanceMultilingual(iso: string | null | undefined, locale
     return String(iso);
   }
 }
+
+/**
+ * Format duration in seconds to human-readable format with i18n support
+ * @param seconds - Duration in seconds
+ * @param locale - Language locale ('id' or 'en')
+ * @returns Formatted duration string (e.g., "4 seconds" or "4 detik")
+ */
+export function formatDuration(seconds: number, locale: string = 'id'): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const d = s % 60;
+  
+  const parts: string[] = [];
+  
+  if (locale === 'en') {
+    if (h > 0) parts.push(`${h} hour${h > 1 ? 's' : ''}`);
+    if (m > 0) parts.push(`${m} minute${m > 1 ? 's' : ''}`);
+    if (d > 0 || parts.length === 0) parts.push(`${d} second${d !== 1 ? 's' : ''}`);
+  } else {
+    // Indonesian
+    if (h > 0) parts.push(`${h} jam`);
+    if (m > 0) parts.push(`${m} menit`);
+    if (d > 0 || parts.length === 0) parts.push(`${d} detik`);
+  }
+  
+  return parts.join(' ');
+}

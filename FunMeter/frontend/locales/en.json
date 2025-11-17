@@ -102,7 +102,13 @@
       "importJsonDeprecated": "JSON import not supported. Use Upload button to add new ads.",
       "titleUpdated": "Ad name updated successfully.",
       "titleUpdateFailed": "Failed to update ad name.",
-      "updateFailed": "Failed to update ad status."
+      "updateFailed": "Failed to update ad status.",
+      "invalidFileType": "File must be an image or video",
+      "titleRequired": "Ad name is required",
+      "uploading": "Uploading new file...",
+      "replaced": "Ad successfully replaced",
+      "updated": "Ad successfully updated",
+      "importing": "Importing {count} files..."
     },
     "confirm": {
       "delete": {
@@ -401,14 +407,6 @@
       "panelTitle": "Copy {day} to:",
       "apply": "Apply",
       "cancel": "Cancel"
-    },
-    "common": {
-      "active": "Active",
-      "off": "Off",
-      "holiday": "Holiday",
-      "offHoliday": "Off / Holiday",
-      "onLabel": "Working Day",
-      "offLabel": "Holiday"
     },
     "form": {
       "label": "Schedule Label",
@@ -721,6 +719,16 @@
     }
   },
   "common": {
+    "you": "You",
+    "role": "Role",
+    "actions": "Actions",
+    "deleteAccount": "Delete Account",
+    "active": "Active",
+    "off": "Off",
+    "holiday": "Holiday",
+    "offHoliday": "Off / Holiday",
+    "onLabel": "Working Day",
+    "offLabel": "Holiday",
     "close": "Close",
     "cancel": "Cancel",
     "clear": "Clear",
@@ -783,6 +791,31 @@
     "first": "First",
     "last": "Last"
   },
+  "attendance": {
+    "toast": {
+      "wsConnected": "Connected to server (WebSocket).",
+      "wsDisconnected": "WebSocket connection lost.",
+      "attendanceError": "Attendance error: {message}",
+      "success": "Attendance successful.",
+      "successWithLabel": "Attendance successful: {label}",
+      "blockedMessage": "{label}: {reason}{retry}",
+      "blockedReasonDefault": "Cannot attend (rules apply).",
+      "blockedRetry": " • Try again: {time}",
+      "blockedFallback": "Cannot attend (already attended today or still in cooldown).",
+      "blockedWithRetry": "{label}: Can attend again at {time} ({duration}).",
+      "blockedGeneric": "Cannot attend at this time. Please try again later.",
+      "cameraStarting": "Starting camera...",
+      "cameraStarted": "✅ Camera started successfully",
+      "cameraStopping": "Stopping camera...",
+      "cameraStopped": "✅ Camera stopped successfully",
+      "cameraError": "❌ Failed to access camera: {error}",
+      "refreshSuccess": "Attendance data refreshed successfully",
+      "fetchError": "Failed to load attendance data",
+      "attendanceSuccess": "Attendance recorded: {name}",
+      "attendanceMarked": "Attendance marked: {name}",
+      "logError": "Failed to load Attendance Log. Try again."
+    }
+  },
   "settings": {
     "breadcrumb": "Preferences",
     "title": "Settings",
@@ -841,6 +874,133 @@
     "toast": {
       "saved": "Settings saved.",
       "reset": "Settings reset to default."
+    }
+  },
+  "adminListMembers": {
+    "title": "Manage Members",
+    "actions": {
+      "export": "Export",
+      "bulkUpload": "Bulk Upload",
+      "deleteSelected": "Delete",
+      "refresh": "Refresh",
+      "addMember": "Add Member",
+      "edit": "Edit",
+      "replacePhoto": "Replace Photo",
+      "delete": "Delete"
+    },
+    "selectAll": "Select all",
+    "selected": "{count} item selected",
+    "bulk": {
+      "title": "Bulk Upload",
+      "description": "Upload many photos at once",
+      "selectFiles": "Choose Files",
+      "hint": "Choose one or more image files",
+      "forceUpload": "Force upload (override duplicates)",
+      "uploading": "Uploading...",
+      "files": "Files ({count})",
+      "statusReady": "Ready to upload",
+      "labelEmpty": "Empty label, skipped",
+      "labelPlaceholder": "Label",
+      "duplicate": "Duplicate: {msg}",
+      "error": "Error: {msg}",
+      "success": "Success: {label}",
+      "completed": "Done. {summary}",
+      "summarySuccess": "Success: {count}",
+      "summaryDuplicate": "Duplicate: {count}",
+      "summaryError": "Failed: {count}",
+      "summarySkip": "Skipped: {count}",
+      "empty": "No files selected yet",
+      "totalFiles": "{count} files ready to upload",
+      "start": "Start Upload",
+      "cancel": "Close"
+    },
+    "search": {
+      "placeholder": "Search label…"
+    },
+    "table": {
+      "label": "Name",
+      "photo": "Photo",
+      "timestamp": "Timestamp",
+      "actions": "Actions",
+      "empty": "No members registered yet"
+    },
+    "order": {
+      "newest": "Newest",
+      "oldest": "Oldest"
+    },
+    "perPage": {
+      "all": "All"
+    },
+    "pagination": {
+      "info": "Showing {start}-{end} of {total} members",
+      "infoAll": "Showing all {total} members",
+      "previous": "Previous",
+      "current": "Page {page} of {total}",
+      "next": "Next"
+    },
+    "grid": {
+      "edit": "Edit",
+      "replacePhoto": "Replace photo"
+    },
+    "edit": {
+      "empty": "Label cannot be empty",
+      "success": "Data updated successfully.",
+      "error": "Failed to save: {msg}",
+      "modalTitle": "Edit",
+      "modalSubtitle": "Edit member data",
+      "saving": "Saving...",
+      "photo": "Photo",
+      "currentPhoto": "Current photo",
+      "photoHint": "Choose a new photo to replace the current one",
+      "dragDrop": "Drag & drop photo here or click to select",
+      "chooseFile": "Choose File"
+    },
+    "replacePhoto": {
+      "title": "Replace Photo",
+      "subtitle": "For: {label}",
+      "currentPhoto": "Current photo",
+      "hint": "Drag & drop photo here or choose from device",
+      "dragDrop": "Drag & drop photo here or click to select",
+      "chooseFile": "Choose File",
+      "useCamera": "Use Camera",
+      "submit": "Replace Now",
+      "uploading": "Uploading...",
+      "success": "Photo successfully replaced for: {label}",
+      "error": "Failed to replace photo: {error}",
+      "noFile": "Please select a file first"
+    },
+    "confirm": {
+      "delete": {
+        "title": "Delete Member",
+        "desc": "Are you sure you want to delete {name}? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "deleteMultiple": {
+        "title": "Delete Multiple Members",
+        "desc": "Are you sure you want to delete {count} selected members?",
+        "confirm": "Delete All",
+        "cancel": "Cancel"
+      }
+    },
+    "toast": {
+      "fileNotImage": "{name} is not an image, skipped",
+      "noBulkItems": "No files selected",
+      "fetchError": "Failed to load member data",
+      "deleteSuccess": "Member successfully deleted: {name}",
+      "deleteError": "Failed to delete member: {error}",
+      "deleteMultipleSuccess": "{count} members successfully deleted",
+      "deleteMultipleError": "Failed to delete members: {error}",
+      "noSelection": "No members selected",
+      "exportSuccess": "Export completed: {filename}",
+      "exportError": "Export failed: {error}",
+      "reordered": "Items reordered successfully"
+    },
+    "dragToReorder": "Drag to reorder",
+    "subtitle": "Manage member face database ({total} members)",
+    "viewMode": {
+      "grid": "Grid",
+      "list": "List"
     }
   }
 }
