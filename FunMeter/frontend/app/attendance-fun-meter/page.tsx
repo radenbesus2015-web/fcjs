@@ -685,7 +685,46 @@ function AttendanceFunMeterPageContent() {
   };
   
   // Drawing functions
-  const drawBoxWithLabels = (x: number, y: number, w: number, h: number, name: string, expr: string, color: string) => {
+const clampBoundingBox = (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  displayWidth: number,
+  displayHeight: number,
+) => {
+  let nx = x;
+  let ny = y;
+  let nw = w;
+  let nh = h;
+
+  if (!Number.isFinite(nx) || !Number.isFinite(ny) || !Number.isFinite(nw) || !Number.isFinite(nh)) {
+    return null;
+  }
+
+  if (nx < 0) {
+    nw += nx;
+    nx = 0;
+  }
+  if (ny < 0) {
+    nh += ny;
+    ny = 0;
+  }
+  if (nx + nw > displayWidth) {
+    nw = displayWidth - nx;
+  }
+  if (ny + nh > displayHeight) {
+    nh = displayHeight - ny;
+  }
+
+  if (nw < 2 || nh < 2) {
+    return null;
+  }
+
+  return { x: nx, y: ny, w: nw, h: nh };
+};
+
+const drawBoxWithLabels = (x: number, y: number, w: number, h: number, name: string, expr: string, color: string) => {
     const ctx = ctxRef.current;
     if (!ctx) return;
     ctx.strokeStyle = color;
@@ -746,6 +785,9 @@ function AttendanceFunMeterPageContent() {
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     ctx.lineWidth = 3;
     const { sx, sy, ox, oy } = getLetterboxTransform();
+    const overlayRect = overlay.getBoundingClientRect();
+    const displayWidth = overlayRect.width || 0;
+    const displayHeight = overlayRect.height || 0;
     
     // Debug logging (bisa di-disable setelah fix)
     if (results && results.length > 0) {
@@ -770,6 +812,10 @@ function AttendanceFunMeterPageContent() {
       const y = oy + by * sy;
       const w = bw * sx;
       const h = bh * sy;
+      const clamped = clampBoundingBox(x, y, w, h, displayWidth, displayHeight);
+      if (!clamped) {
+        return;
+      }
       
       // Type-safe access to r.top.label
       const top = r.top as { label?: string } | undefined;
@@ -779,7 +825,7 @@ function AttendanceFunMeterPageContent() {
       const name = String(fused || r.label || r.name || "Unknown");
       if (!fused) missingName = true;
       const color = EXP_COLORS[expr] || "#38bdf8";
-      drawBoxWithLabels(x, y, w, h, name, expr, color);
+      drawBoxWithLabels(clamped.x, clamped.y, clamped.w, clamped.h, name, expr, color);
     });
     const now = Date.now();
     if (missingName && now - lastAttPush > 400) {
@@ -2178,24 +2224,7 @@ function AttendanceFunMeterPageContent() {
           loading: eager;
         }
         
-        /* Loading indicator untuk video ads */
-        .video-loading {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: rgba(0, 0, 0, 0.7);
-          color: white;
-          padding: 8px 16px;
-          border-radius: 4px;
-          font-size: 12px;
-          z-index: 40;
-          display: none;
-        }
-        
-        .video-loading.show {
-          display: block;
-        }
+        /* Loading indicator untuk video ads - Removed */
         
         /* Preload hints untuk browser */
         .preload-hint {
@@ -2244,13 +2273,6 @@ function AttendanceFunMeterPageContent() {
             className="block w-full h-full object-cover"
           />
           <canvas ref={overlayRef} id="overlay" className="absolute inset-0 w-full h-full z-20 pointer-events-none" />
-          
-          {/* Video Loading Indicator */}
-          {adMediaList[currentAdIndex]?.type === 'video' && (
-            <div className="video-loading" id="video-loading">
-              Loading video...
-            </div>
-          )}
           
           {/* Advertisement Overlay - 1 center stay still + repeat kanan kiri */}
           {adMediaList.length > 0 && adMediaList[currentAdIndex] && (
@@ -2330,16 +2352,13 @@ function AttendanceFunMeterPageContent() {
                     className="select-none w-full h-auto object-contain block"
                     style={{ filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5))', marginBottom: 0, paddingBottom: 0 }}
                     onLoadStart={() => {
-                      const loadingEl = document.getElementById('video-loading');
-                      if (loadingEl) loadingEl.classList.add('show');
+                      // Loading indicator removed
                     }}
                     onLoadedData={() => {
-                      const loadingEl = document.getElementById('video-loading');
-                      if (loadingEl) loadingEl.classList.remove('show');
+                      // Loading indicator removed
                     }}
                     onCanPlay={() => {
-                      const loadingEl = document.getElementById('video-loading');
-                      if (loadingEl) loadingEl.classList.remove('show');
+                      // Loading indicator removed
                     }}
                     onLoadedMetadata={(e) => {
                       const video = e.currentTarget;
@@ -2357,19 +2376,15 @@ function AttendanceFunMeterPageContent() {
                     onEnded={goToNextAd}
                     onError={(e) => {
                       console.error('[AD_VIDEO] Failed to load:', adMediaList[currentAdIndex].src);
-                      const loadingEl = document.getElementById('video-loading');
-                      if (loadingEl) loadingEl.classList.remove('show');
                       e.currentTarget.style.display = 'none';
                       // Try next ad if current fails
                       setTimeout(goToNextAd, 1000);
                     }}
                     onWaiting={() => {
-                      const loadingEl = document.getElementById('video-loading');
-                      if (loadingEl) loadingEl.classList.add('show');
+                      // Loading indicator removed
                     }}
                     onPlaying={() => {
-                      const loadingEl = document.getElementById('video-loading');
-                      if (loadingEl) loadingEl.classList.remove('show');
+                      // Loading indicator removed
                     }}
                   />
                 )}

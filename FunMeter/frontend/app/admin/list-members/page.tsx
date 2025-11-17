@@ -641,9 +641,25 @@ export default function AdminListMembersPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {/* View switch */}
-            <div className="hidden md:flex items-center gap-1 mr-2">
-              <Button variant={viewMode==="grid"?"default":"outline"} size="sm" onClick={() => setViewMode("grid")}>{t("adminListMembers.viewMode.grid", "Grid")}</Button>
-              <Button variant={viewMode==="table"?"default":"outline"} size="sm" onClick={() => setViewMode("table")}>{t("adminListMembers.viewMode.list", "List")}</Button>
+            <div className="hidden md:flex items-center border rounded-md">
+              <Button 
+                variant={viewMode === "grid" ? "default" : "ghost"} 
+                size="icon"
+                className="rounded-r-none"
+                onClick={() => setViewMode("grid")}
+                title={t("adminListMembers.viewMode.grid", "Grid")}
+              >
+                <Icon name="LayoutGrid" className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={viewMode === "table" ? "default" : "ghost"} 
+                size="icon"
+                className="rounded-l-none border-l"
+                onClick={() => setViewMode("table")}
+                title={t("adminListMembers.viewMode.list", "List")}
+              >
+                <Icon name="LayoutList" className="h-4 w-4" />
+              </Button>
             </div>
             <select
               className="h-9 rounded-md border px-2 text-sm bg-background text-foreground"

@@ -680,10 +680,10 @@
       "refresh": "Segarkan",
       "refreshing": "Memuat…",
       "viewJson": "Lihat JSON",
-      "resetFace": "Atur Ulang Face Engine",
+      "resetFace": "Atur Ulang setelan",
       "resetAttendance": "Atur Ulang Absensi",
       "resetAll": "Atur Ulang Semua",
-      "saveFace": "Simpan Face Engine",
+      "saveFace": "Simpan setelan",
       "saveAttendance": "Simpan Absensi"
     },
     "json": {
@@ -708,7 +708,7 @@
     },
     "reset": {
       "scopeAll": "seluruh konfigurasi",
-      "scopeFace": "konfigurasi face engine",
+      "scopeFace": "konfigurasi setelan",
       "scopeAttendance": "konfigurasi attendance",
       "confirm": "Atur ulang {scope}?",
       "title": "Konfirmasi Reset",
@@ -716,20 +716,21 @@
     },
     "sections": {
       "faceEngine": {
-        "title": "Face Engine",
+        "title": "Setelan",
         "subtitle": "Atur interval WebSocket dan ambang YuNet."
       },
       "attendance": {
-        "title": "Halaman Absensi"
+        "title": "Halaman Absensi",
+        "subtitle": "Atur waktu tunggu dan ambang batas absensi"
       }
     },
     "fields": {
-      "minCosine": "Min Cosine Accept",
-      "funInterval": "Fun WS Interval (detik)",
-      "attInterval": "Attendance WS Interval (detik)",
-      "scoreThreshold": "YuNet Score Threshold",
-      "nmsThreshold": "YuNet NMS Threshold",
-      "topK": "YuNet Top K",
+      "minCosine": "Ambang Batas Cosine Minimum",
+      "funInterval": "Interval WS Fun (detik)",
+      "attInterval": "Interval WS Absensi (detik)",
+      "scoreThreshold": "Ambang Batas Skor YuNet",
+      "nmsThreshold": "Ambang Batas NMS YuNet",
+      "topK": "Top K YuNet",
       "cooldownSec": "Waktu tunggu",
       "sameDayLock": "Kunci sekali per hari"
     },

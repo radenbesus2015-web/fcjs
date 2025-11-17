@@ -36,7 +36,7 @@ _UUID_RE = None
 ATT_OVERRIDES: List[Dict[str, Any]] = []
 ATT_CONFIG: Dict[str, Any] = {}
 
-_COOLDOWN_SEC: int = 5
+_COOLDOWN_SEC: int = 4860
 _DOUBLE_MARK_INTERVAL: int = 0
 _ATT_GRACE_IN: int = 10
 _ATT_GRACE_OUT: int = 5
@@ -73,7 +73,7 @@ def configure_attendance(att_cfg: Dict[str, Any], default_cfg: Dict[str, Any], *
     for key, value in (att_cfg or {}).items():
         cfg[key] = value
 
-    _COOLDOWN_SEC = int(cfg.get("cooldown_sec", default_cfg.get("cooldown_sec", 5)))
+    _COOLDOWN_SEC = int(cfg.get("cooldown_sec", default_cfg.get("cooldown_sec", 4860)))
     _DOUBLE_MARK_INTERVAL = int(cfg.get("double_mark_interval_sec", default_cfg.get("double_mark_interval_sec", 0)))
     _ATT_GRACE_IN = _clamp_int(cfg.get("grace_in_min"), 0, 240, default_cfg.get("grace_in_min", 10))
     _ATT_GRACE_OUT = _clamp_int(cfg.get("grace_out_min"), 0, 240, default_cfg.get("grace_out_min", 5))
