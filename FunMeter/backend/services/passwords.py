@@ -30,13 +30,39 @@ def set_password(username: str, password: str, *, set_by: Optional[str] = None) 
 
 def verify_password(username: str, password: str) -> bool:
     client = get_client()
-    org_id = get_default_org_id()
-    res = client.table("user_passwords").select("salt, hash").eq("org_id", org_id).eq("username", username).limit(1).execute()
-    row = res.data[0] if getattr(res, "data", None) else None
-    if not row:
-        return False
+    username = username.strip()
+    
+    # Cari password di semua org_id berdasarkan username
+    # Ini lebih aman karena username mungkin ada di org_id yang berbeda
     try:
-        salt = bytes.fromhex(row["salt"])
-        return _hash_pw(password, salt) == row.get("hash")
-    except Exception:
+        res = client.table("user_passwords").select("salt, hash, org_id").eq("username", username).execute()
+        rows = getattr(res, "data", []) or []
+        
+        if not rows:
+            # Jika tidak ada password sama sekali, return False
+            return False
+        
+        # Coba verifikasi dengan setiap password yang ditemukan
+        # (untuk handle case dimana username sama di multiple org)
+        for row in rows:
+            try:
+                salt_hex = row.get("salt", "")
+                hash_stored = row.get("hash", "")
+                
+                if not salt_hex or not hash_stored:
+                    continue
+                
+                salt = bytes.fromhex(salt_hex)
+                hash_calculated = _hash_pw(password, salt)
+                
+                if hash_calculated == hash_stored:
+                    return True
+            except (ValueError, TypeError, AttributeError):
+                # Skip jika ada error parsing salt/hash
+                continue
+        
+        return False
+    except Exception as e:
+        # Log error untuk debugging (jika diperlukan)
+        print(f"[WARN] verify_password error for {username}: {e}")
         return False

@@ -144,11 +144,39 @@ def auth_login(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer_security),
 ):
     if payload and payload.username and payload.password:
-        if not verify_password(payload.username, payload.password):
+        username = payload.username.strip()
+        password = payload.password.strip()
+        
+        if not verify_password(username, password):
             raise HTTPException(status_code=401, detail="invalid username/password")
-        for entry in list_users():
-            if str(entry.get("username", "")) == payload.username:
-                return {"ok": True, "user": _public_user_payload(entry, include_api_key=True)}
+        
+        # Cari user di semua org_id (konsisten dengan verify_password)
+        from db.supabase_client import get_client
+        client = get_client()
+        res = client.table("users").select(
+            "id, username, api_key, is_admin, is_owner, promoted_by, promoted_at, "
+            "demoted_by, demoted_at, api_key_rotated_by, api_key_rotated_at, created_by, created_at"
+        ).eq("username", username).limit(1).execute()
+        rows = getattr(res, "data", []) or []
+        
+        if rows:
+            entry = {
+                "id": rows[0].get("id"),
+                "username": rows[0].get("username"),
+                "api_key": rows[0].get("api_key"),
+                "is_admin": bool(rows[0].get("is_admin")),
+                "is_owner": bool(rows[0].get("is_owner")),
+                "promoted_by": rows[0].get("promoted_by"),
+                "promoted_at": rows[0].get("promoted_at"),
+                "demoted_by": rows[0].get("demoted_by"),
+                "demoted_at": rows[0].get("demoted_at"),
+                "api_key_rotated_by": rows[0].get("api_key_rotated_by"),
+                "api_key_rotated_at": rows[0].get("api_key_rotated_at"),
+                "created_by": rows[0].get("created_by"),
+                "created_at": rows[0].get("created_at"),
+            }
+            return {"ok": True, "user": _public_user_payload(entry, include_api_key=True)}
+        
         raise HTTPException(status_code=404, detail="user not found")
     raise HTTPException(status_code=401, detail="Missing Authorization header")
 
